@@ -1,2 +1,2 @@
-# CSCI_499_Project
+# CSCI 499 Project
 Repository for CSCI 499 project
