@@ -1,7 +1,6 @@
 import { Brain, CheckCircle } from 'lucide-react';
-
 function App() {
-  const navButtons = ['Home', 'About', 'Login'];
+  const navButtons = ['Home', 'About','Resource','Login'];
   const featuresLeft = [
     "Monthly mental health check-ins",
     "Safe student forums"
