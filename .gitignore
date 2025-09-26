@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Node.js
+node_modules/
+dist/
+
+# PHP (if using Composer)
+vendor/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+
+# IDE settings
+.vscode/
+.idea/
+
+
