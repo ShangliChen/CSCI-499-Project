@@ -1,22 +1,30 @@
-# macOS
+# ----------------------------------------
+# macOS system files
 .DS_Store
 
+# ----------------------------------------
 # Node.js
 node_modules/
 dist/
 
-# PHP (if using Composer)
+# ----------------------------------------
+# PHP (if still using Composer)
 vendor/
 
-# Environment files
+# ----------------------------------------
+# Environment variables
 .env
 .env.local
 
+# ----------------------------------------
 # Logs
 *.log
 
-# IDE settings
+# ----------------------------------------
+# IDE/editor settings
 .vscode/
 .idea/
 
-
+# ----------------------------------------
+# Optional build artifacts (if using Vite or React)
+*.cache/
