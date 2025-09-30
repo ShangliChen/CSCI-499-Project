@@ -13,7 +13,6 @@ const k10Questions = [
   "In the past 4 weeks, about how often did you feel worthless?"
 ];
 
-// Keep original text & values
 const k10Options = [
   { text: "None of the time", value: 1, img: "/images/satisfy.png" },
   { text: "A little of the time", value: 2, img: "/images/good.png" },
@@ -31,10 +30,9 @@ export default function HealthAssessment() {
   };
 
   const getButtonColor = (value) => {
-    // Change color dynamically based on value
     switch (value) {
       case 1:
-        return "bg-green-400 border-green-500"; // satisfied
+        return "bg-green-400 border-green-500"; 
       case 2:
         return "bg-lime-300 border-lime-400";
       case 3:
@@ -42,7 +40,7 @@ export default function HealthAssessment() {
       case 4:
         return "bg-orange-400 border-orange-500";
       case 5:
-        return "bg-red-500 border-red-600"; // unsatisfied
+        return "bg-red-500 border-red-600"; 
       default:
         return "bg-white border-gray-300";
     }
@@ -52,7 +50,6 @@ export default function HealthAssessment() {
     e.preventDefault();
     const values = { ...answers };
 
-    // Apply skip rules: Q3 depends on Q2, Q6 depends on Q5
     if (values[1] === 1) values[2] = 1;
     if (values[4] === 1) values[5] = 1;
 
@@ -68,19 +65,18 @@ export default function HealthAssessment() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-300 py-8">
-      <div className="container mx-auto px-4 max-w-3xl bg-white p-6 rounded-xl shadow-md">
+    <div className="min-h-screen bg-[#f5f5f0] py-8"> {/* Pearl white outer background */}
+      <div className="container mx-auto px-4 max-w-3xl bg-[#26619C] p-6 rounded-xl shadow-md"> {/* Lapis Lazuli container */}
         
-        <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">
+        <h1 className="text-3xl font-bold text-center mb-6 text-white">
           Health Assessment Tool
         </h1>
 
         <form className="space-y-8">
           {k10Questions.map((q, i) => (
             <div key={i}>
-              <p className="font-medium mb-3 text-gray-800">{i + 1}. {q}</p>
+              <p className="font-medium mb-3 text-white">{i + 1}. {q}</p>
 
-              {/* Circle options with images and text below */}
               <div className="flex gap-4 flex-wrap justify-center">
                 {k10Options.map((opt, j) => (
                   <div key={j} className="flex flex-col items-center">
@@ -94,14 +90,13 @@ export default function HealthAssessment() {
                     >
                       <img src={opt.img} alt={opt.text} className="w-10 h-10" />
                     </button>
-                    <span className="mt-1 text-xs text-gray-700 text-center">{opt.text}</span>
+                    <span className="mt-1 text-xs text-white text-center">{opt.text}</span>
                   </div>
                 ))}
               </div>
             </div>
           ))}
 
-          {/* Styled Submit button */}
           <div className="text-center mt-6">
             <button
               onClick={calculateScore}
@@ -119,7 +114,7 @@ export default function HealthAssessment() {
           </div>
         )}
 
-        <p className="mt-6 text-sm text-gray-600 text-center">
+        <p className="mt-6 text-sm text-white text-center">
           Disclaimer: This tool is for informational purposes only and does not replace professional medical advice.
         </p>
       </div>
