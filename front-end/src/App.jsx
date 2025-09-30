@@ -1,4 +1,3 @@
-// App.jsx
 import { Routes, Route, Link } from "react-router-dom";
 import { Brain } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
@@ -8,11 +7,11 @@ import Resource from './pages/Resource';
 import UserType from './UserType';
 import Login from './login';     // Your actual login form
 import Signup from './Signup';   // Signup form
+import HealthAssessment from './pages/HealthAssessment'; // ✅ NEW
 
 function App() {
-    
-    const location = useLocation();
-    const currentPath = location.pathname;
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f5f0]">
@@ -26,48 +25,47 @@ function App() {
           
           {/* Navigation buttons */}
           <div className="flex items-center space-x-3">
-  <Link
-    to="/"
-    className={`px-4 py-2 rounded-lg font-medium transition border ${
-      currentPath === '/' 
-        ? 'bg-blue-500 text-white border-blue-500' 
-        : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
-    }`}
-  >
-    Home
-  </Link>
-  <Link
-    to="/about"
-    className={`px-4 py-2 rounded-lg font-medium transition border ${
-      currentPath === '/about' 
-        ? 'bg-blue-500 text-white border-blue-500' 
-        : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
-    }`}
-  >
-    About
-  </Link>
-  <Link
-    to="/resource"
-    className={`px-4 py-2 rounded-lg font-medium transition border ${
-      currentPath === '/resource' 
-        ? 'bg-blue-500 text-white border-blue-500' 
-        : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
-    }`}
-  >
-    Resource
-  </Link>
-  <Link
-    to="/user-type"
-    className={`px-4 py-2 rounded-lg font-medium transition border ${
-      currentPath === '/user-type' 
-        ? 'bg-blue-500 text-white border-blue-500' 
-        : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
-    }`}
-  >
-    Login
-  </Link>
-</div>
-
+            <Link
+              to="/"
+              className={`px-4 py-2 rounded-lg font-medium transition border ${
+                currentPath === '/' 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              to="/about"
+              className={`px-4 py-2 rounded-lg font-medium transition border ${
+                currentPath === '/about' 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              About
+            </Link>
+            <Link
+              to="/resource"
+              className={`px-4 py-2 rounded-lg font-medium transition border ${
+                currentPath === '/resource' 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Resource
+            </Link>
+            <Link
+              to="/user-type"
+              className={`px-4 py-2 rounded-lg font-medium transition border ${
+                currentPath === '/user-type' 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Login
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -80,6 +78,7 @@ function App() {
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
+          <Route path="/resources/health-assessment" element={<HealthAssessment />} /> {/* ✅ NEW */}
         </Routes>
       </main>
     </div>
