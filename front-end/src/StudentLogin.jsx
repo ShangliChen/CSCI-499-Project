@@ -21,35 +21,42 @@ function StudentLogin() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
-        <h2 className="text-xl font-bold mb-6 text-center">Student Login</h2>
+return (
+  <div
+    className="min-h-screen flex items-center justify-center bg-cover bg-center"
+    style={{ backgroundImage: "url('/images/background.jpg')" }}
+  >
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+      <h2 className="text-xl font-bold mb-6 text-center">Student Login</h2>
 
-        <input
-          type="text"
-          placeholder="School ID"
-          value={schoolId}
-          onChange={(e) => setSchoolId(e.target.value)}
-          className="w-full mb-4 p-2 border rounded"
-        />
+      <input
+        type="text"
+        placeholder="School ID"
+        value={schoolId}
+        onChange={(e) => setSchoolId(e.target.value)}
+        className="w-full mb-4 p-2 border rounded"
+      />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-4 p-2 border rounded"
-        />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full mb-4 p-2 border rounded"
+      />
 
-        <button type="submit" className="bg-blue-600 text-white w-full py-2 rounded-lg hover:bg-blue-700 transition">
-          Login
-        </button>
+      <button
+        type="submit"
+        className="bg-[#98D7C2] text-white w-full py-2 rounded-lg hover:bg-green-700 transition"
+      >
+        Login
+      </button>
 
-        {message && <p className="mt-4 text-center text-gray-700">{message}</p>}
-      </form>
-    </div>
-  );
+      {message && <p className="mt-4 text-center text-gray-700">{message}</p>}
+    </form>
+  </div>
+);
+
 }
 
 export default StudentLogin;

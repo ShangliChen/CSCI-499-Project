@@ -25,7 +25,10 @@ function CounselorSignup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div
+    className="min-h-screen flex items-center justify-center bg-cover bg-center"
+    style={{ backgroundImage: "url('/images/background.jpg')" }}
+  >
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
         <h2 className="text-xl font-bold mb-6 text-center">Counselor Signup</h2>
 
@@ -69,7 +72,7 @@ function CounselorSignup() {
           className="w-full mb-4 p-2 border rounded"
         />
 
-        <button type="submit" className="bg-green-600 text-white w-full py-2 rounded-lg hover:bg-green-700 transition">
+        <button type="submit" className="bg-[#87CEEB] text-white w-full py-2 rounded-lg hover:bg-blue-700 transition">
           Sign Up
         </button>
 

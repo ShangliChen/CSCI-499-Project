@@ -8,6 +8,9 @@ import UserType from './UserType';
 import Login from './login';     // Your actual login form
 import Signup from './Signup';   // Signup form
 import HealthAssessment from './pages/HealthAssessment'; // ✅ NEW
+import StudentDashboard from "./pages/StudentDashboard"; // ✅ NEW
+import CounselorDashboard from "./pages/CounselorDashboard"; // ✅ NEW
+
 
 function App() {
   const location = useLocation();
@@ -78,6 +81,8 @@ function App() {
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
+          <Route path="/dashboard/student" element={<StudentDashboard />} /> {/* ✅ NEW */}
+          <Route path="/dashboard/counselor" element={<CounselorDashboard />} /> {/* ✅ NEW */}
           <Route path="/resources/health-assessment" element={<HealthAssessment />} /> {/* ✅ NEW */}
         </Routes>
       </main>
