@@ -1,0 +1,15 @@
+{
+  "name": "csci-499-project-main",
+  "version": "1.0.0",
+  "description": "Repository for CSCI 499 project",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix front-end\" \"npm run dev --prefix backend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
