@@ -1,7 +1,7 @@
 // pages/Resource.jsx
-import { BookOpen, Video, FileText, Calendar } from 'lucide-react';
+import { BookOpen, FileText, Calendar } from 'lucide-react';
 import { Gamepad2 } from 'lucide-react';
-
+import { Link } from "react-router-dom";  // ✅ added
 
 function Resource() {
   const resources = [
@@ -11,10 +11,10 @@ function Resource() {
       description: "Access our library of resources on managing stress, anxiety, and other mental health concerns."
     },
     {
-        icon: <Gamepad2 className="h-8 w-8 text-blue-500" />,
-        title: "Relaxing Games",
-        description: "Play our therapeutic games designed to reduce stress and improve mental wellbeing."
-      },
+      icon: <Gamepad2 className="h-8 w-8 text-blue-500" />,
+      title: "Relaxing Games",
+      description: "Play our therapeutic games designed to reduce stress and improve mental wellbeing."
+    },
     {
       icon: <FileText className="h-8 w-8 text-blue-500" />,
       title: "Health Assessment Tool",
@@ -45,9 +45,20 @@ function Resource() {
                 <h2 className="text-xl font-semibold text-gray-900">{resource.title}</h2>
               </div>
               <p className="text-gray-700 ml-14">{resource.description}</p>
-              <button className="ml-14 mt-4 text-blue-500 font-medium hover:text-blue-700 transition">
-                Explore →
-              </button>
+
+              {/* ✅ If Health Assessment Tool → Link to quiz page */}
+              {resource.title === "Health Assessment Tool" ? (
+                <Link 
+                  to="/resources/health-assessment" 
+                  className="ml-14 mt-4 text-blue-500 font-medium hover:text-blue-700 transition"
+                >
+                  Explore →
+                </Link>
+              ) : (
+                <button className="ml-14 mt-4 text-blue-500 font-medium hover:text-blue-700 transition">
+                  Explore →
+                </button>
+              )}
             </div>
           ))}
         </div>
