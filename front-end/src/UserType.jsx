@@ -24,7 +24,7 @@ function UserType() {
           <div
             onClick={() => setUser("student")}
             className={`cursor-pointer bg-white rounded-xl p-6 w-64 shadow-md hover:shadow-xl transition ${
-              user === "student" ? "ring-2 ring-blue-500" : ""
+              user === "student" ? "ring-2 ring-[#BDFCC9]" : ""
             }`}
           >
             <img src="/images/student.png" alt="Student" className="w-20 h-20 mx-auto mb-2" />
@@ -34,7 +34,7 @@ function UserType() {
           <div
             onClick={() => setUser("counselor")}
             className={`cursor-pointer bg-white rounded-xl p-6 w-64 shadow-md hover:shadow-xl transition ${
-              user === "counselor" ? "ring-2 ring-blue-500" : ""
+              user === "counselor" ? "ring-2 ring-[#BDFCC9]" : ""
             }`}
           >
             <img src="/images/counselor.png" alt="Counselor" className="w-20 h-20 mx-auto mb-2" />
@@ -45,7 +45,7 @@ function UserType() {
         {/* Login Button */}
         <button
           onClick={() => handleAction("login")}
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-blue-700 transition mb-4"
+          className="bg-[#BDFCC9] text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-green-700 transition mb-4"
         >
           Login
         </button>
@@ -59,7 +59,7 @@ function UserType() {
               e.preventDefault();
               handleAction("signup");
             }}
-            className="text-blue-600 font-semibold hover:underline"
+            className="text-[#BDFCC9] font-semibold hover:underline"
           >
             Sign up now
           </a>

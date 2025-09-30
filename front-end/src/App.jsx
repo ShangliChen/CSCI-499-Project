@@ -5,11 +5,11 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Resource from './pages/Resource';
 import UserType from './UserType';
-import Login from './login';     // Your actual login form
-import Signup from './Signup';   // Signup form
-import HealthAssessment from './pages/HealthAssessment'; // ✅ NEW
-import StudentDashboard from "./pages/StudentDashboard"; // ✅ NEW
-import CounselorDashboard from "./pages/CounselorDashboard"; // ✅ NEW
+import Login from './login';
+import Signup from './Signup';
+import HealthAssessment from './pages/HealthAssessment';
+import StudentDashboard from "./pages/StudentDashboard";
+import CounselorDashboard from "./pages/CounselorDashboard";
 
 
 function App() {
@@ -17,12 +17,12 @@ function App() {
   const currentPath = location.pathname;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f5f0]">
+    <div className="min-h-screen flex flex-col bg-[#f0fff0]">
       {/* Header Section */}
-      <header className="bg-[#f5f5f0] py-3 sticky top-0 z-10 shadow-sm">
+      <header className="bg-[#f0fff0] py-3 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2 cursor-pointer">
-            <Brain className="h-8 w-8 text-blue-500" />
+            <Brain className="h-8 w-8 text-[#98FF98]" />
             <span className="text-2xl font-bold text-gray-900">MindConnect</span>
           </Link>
           
@@ -32,8 +32,8 @@ function App() {
               to="/"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
                 currentPath === '/' 
-                  ? 'bg-blue-500 text-white border-blue-500' 
-                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                  : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
               Home
@@ -42,8 +42,8 @@ function App() {
               to="/about"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
                 currentPath === '/about' 
-                  ? 'bg-blue-500 text-white border-blue-500' 
-                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                  : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
               About
@@ -52,8 +52,8 @@ function App() {
               to="/resource"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
                 currentPath === '/resource' 
-                  ? 'bg-blue-500 text-white border-blue-500' 
-                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                  : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
               Resource
@@ -62,8 +62,8 @@ function App() {
               to="/user-type"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
                 currentPath === '/user-type' 
-                  ? 'bg-blue-500 text-white border-blue-500' 
-                  : 'bg-white text-blue-500 border-gray-300 hover:bg-gray-100'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                  : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
               Login
@@ -81,9 +81,9 @@ function App() {
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
-          <Route path="/dashboard/student" element={<StudentDashboard />} /> {/* ✅ NEW */}
-          <Route path="/dashboard/counselor" element={<CounselorDashboard />} /> {/* ✅ NEW */}
-          <Route path="/resources/health-assessment" element={<HealthAssessment />} /> {/* ✅ NEW */}
+          <Route path="/dashboard/student" element={<StudentDashboard />} />
+          <Route path="/dashboard/counselor" element={<CounselorDashboard />} />
+          <Route path="/resources/health-assessment" element={<HealthAssessment />} />
         </Routes>
       </main>
     </div>

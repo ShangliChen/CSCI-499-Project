@@ -23,7 +23,7 @@ function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="py-8 bg-[#f5f5f0]">
+      <section className="py-8 bg-[#f0fff0]">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
           {/* Text Content */}
           <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0">
@@ -36,10 +36,10 @@ function Home() {
               wellbeing.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-              <button className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
+              <button className="bg-[#98FF98] text-black px-5 py-2.5 rounded-lg font-medium hover:bg-[#87e687] transition">
                 Learn More
               </button>
-              <button className="bg-white text-blue-500 px-5 py-2.5 rounded-lg font-medium hover:bg-gray-100 transition border border-gray-300">
+              <button className="bg-white text-[#98FF98] px-5 py-2.5 rounded-lg font-medium hover:bg-gray-100 transition border border-gray-300">
                 Login
               </button>
             </div>
@@ -55,7 +55,7 @@ function Home() {
         </div>
       </section>
       {/* Features Section */}
-      <section className="bg-[#f5f5f0] py-6">
+      <section className="bg-[#f0fff0] py-6">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-gray-900 mb-4 text-left">Why MindConnect?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
@@ -63,7 +63,7 @@ function Home() {
               {featuresLeft.map((feature) => (
                 <FeatureItem 
                   key={feature}
-                  icon={<CheckCircle className="h-5 w-5 text-blue-500" />}
+                  icon={<CheckCircle className="h-5 w-5 text-[#98FF98]" />}
                   text={feature}
                 />
               ))}
@@ -72,7 +72,7 @@ function Home() {
               {featuresRight.map((feature) => (
                 <FeatureItem 
                   key={feature}
-                  icon={<CheckCircle className="h-5 w-5 text-blue-500" />}
+                  icon={<CheckCircle className="h-5 w-5 text-[#98FF98]" />}
                   text={feature}
                 />
               ))}
@@ -85,15 +85,15 @@ function Home() {
       <div className="border-t border-gray-300 max-w-5xl mx-auto mt-3"></div>
 
       {/* Footer */}
-      <footer className="py-3 bg-[#f5f5f0]">
+      <footer className="py-3 bg-[#f0fff0]">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-600 mb-1 md:mb-0">
               © 2025 MindConnect
             </div>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-600 hover:text-blue-500 transition">Contact</a>
-              <a href="#" className="text-gray-600 hover:text-blue-500 transition">Privacy Policy</a>
+              <a href="#" className="text-gray-600 hover:text-[#98FF98] transition">Contact</a>
+              <a href="#" className="text-gray-600 hover:text-[#98FF98] transition">Privacy Policy</a>
             </div>
           </div>
         </div>

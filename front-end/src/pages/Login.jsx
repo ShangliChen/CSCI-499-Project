@@ -7,13 +7,13 @@ function Login() {
   const [isStudent, setIsStudent] = useState(true);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] py-8 flex items-center justify-center">
+    <div className="min-h-screen bg-[#f0fff0] py-8 flex items-center justify-center">
       <div className="container mx-auto px-4 max-w-md">
         <div className="bg-white rounded-xl p-8 shadow-md">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <LogIn className="h-8 w-8 text-blue-500" />
+              <div className="bg-[#e6ffee] p-3 rounded-full">
+                <LogIn className="h-8 w-8 text-[#98FF98]" />
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
@@ -24,7 +24,7 @@ function Login() {
             <button
               onClick={() => setIsStudent(true)}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition ${
-                isStudent ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600'
+                isStudent ? 'bg-white shadow-sm text-[#98FF98]' : 'text-gray-600'
               }`}
             >
               Student Login
@@ -32,7 +32,7 @@ function Login() {
             <button
               onClick={() => setIsStudent(false)}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition ${
-                !isStudent ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600'
+                !isStudent ? 'bg-white shadow-sm text-[#98FF98]' : 'text-gray-600'
               }`}
             >
               Counselor Login
@@ -51,7 +51,7 @@ function Login() {
                 <input
                   type="email"
                   id="email"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#98FF98] focus:border-[#98FF98]"
                   placeholder="you@example.com"
                 />
               </div>
@@ -68,7 +68,7 @@ function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
-                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-[#98FF98] focus:border-[#98FF98]"
                   placeholder="Enter your password"
                 />
                 <button
@@ -91,20 +91,20 @@ function Login() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-[#98FF98] focus:ring-[#98FF98] border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-gray-700">
                   Remember me
                 </label>
               </div>
-              <a href="#" className="text-blue-600 hover:text-blue-500">
+              <a href="#" className="text-[#98FF98] hover:text-[#87e687]">
                 Forgot password?
               </a>
             </div>
 
             <button
               type="submit"
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-black bg-[#98FF98] hover:bg-[#87e687] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#98FF98]"
             >
               Sign in
             </button>
@@ -113,7 +113,7 @@ function Login() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500 font-medium">
+              <a href="#" className="text-[#98FF98] hover:text-[#87e687] font-medium">
                 Sign up
               </a>
             </p>

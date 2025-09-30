@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function StudentLogin() {
   const [schoolId, setSchoolId] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,6 +17,9 @@ function StudentLogin() {
       });
       const data = await res.json();
       setMessage(data.message || "Login successful!");
+      if (res.ok) {
+        navigate("/dashboard/student");
+      }
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong!");

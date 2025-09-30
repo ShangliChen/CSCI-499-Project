@@ -19,7 +19,7 @@ const CounselorDashboard = () => {
           <h3 className="text-lg font-semibold mb-2">Upcoming Sessions</h3>
           <p className="text-gray-600 mb-4">Alex – Today, Tomorrow, 10 AM</p>
           <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Start Session</button>
+            <button className="px-4 py-2 bg-[#BDFCC9] text-white rounded hover:bg-green-700">Start Session</button>
             <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100">Login</button>
           </div>
         </div>
@@ -28,7 +28,7 @@ const CounselorDashboard = () => {
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
           <h3 className="text-lg font-semibold mb-4">Student Progress</h3>
           {/* Placeholder for chart */}
-          <div className="w-full h-32 bg-blue-100 rounded flex items-center justify-center text-blue-600 font-semibold">
+          <div className="w-full h-32 bg-blue-100 rounded flex items-center justify-center text-[#BDFCC9] font-semibold">
             Graph Placeholder
           </div>
           <p className="text-center mt-2 text-sm text-gray-500">Overall student wellbeing</p>
@@ -46,9 +46,9 @@ const CounselorDashboard = () => {
                 </div>
                 <div>
                   {name === "Maya" ? (
-                    <button className="text-blue-600 hover:underline">Message</button>
+                    <button className="text-[#BDFCC9] hover:underline">Message</button>
                   ) : (
-                    <button className="text-blue-600 hover:underline">View Profile</button>
+                    <button className="text-[#BDFCC9] hover:underline">View Profile</button>
                   )}
                 </div>
               </li>

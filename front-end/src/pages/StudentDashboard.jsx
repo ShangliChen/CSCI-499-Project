@@ -21,7 +21,7 @@ const StudentDashboard = () => {
             {/* Monthly Check-in */}
             <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
               <h2 className="text-lg font-semibold mb-3">Monthly Check-in</h2>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              <button className="px-4 py-2 bg-[#BDFCC9] text-white rounded-md hover:bg-green-700">
                 Start Now
               </button>
             </div>
@@ -48,10 +48,10 @@ const StudentDashboard = () => {
               <h2 className="text-lg font-semibold mb-2">Upcoming Session</h2>
               <p className="text-gray-600">Dec 15, 2024 at 10 AM</p>
               <div className="mt-4 space-x-2">
-                <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <button className="px-3 py-1 bg-[#BDFCC9] text-white rounded hover:bg-green-700">
                   Browse
                 </button>
-                <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <button className="px-3 py-1 bg-[#BDFCC9] text-white rounded hover:bg-green-700">
                   Browse
                 </button>
               </div>
@@ -75,7 +75,7 @@ const StudentDashboard = () => {
               <ul className="space-y-2 text-gray-700">
                 <li className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0"
+                    className="w-5 h-5 text-[#BDFCC9] mr-2 flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +90,7 @@ const StudentDashboard = () => {
                 </li>
                 <li className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0"
+                    className="w-5 h-5 text-[#BDFCC9] mr-2 flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"
@@ -105,7 +105,7 @@ const StudentDashboard = () => {
                 </li>
                 <li className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0"
+                    className="w-5 h-5 text-[#BDFCC9] mr-2 flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"

@@ -7,7 +7,7 @@ function About() {
 
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] py-8">
+    <div className="min-h-screen bg-[#f0fff0] py-8">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
@@ -23,8 +23,8 @@ function About() {
         <div className="bg-white rounded-xl p-8 shadow-md mb-12">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="md:w-1/3 flex justify-center">
-              <div className="bg-blue-100 p-6 rounded-full">
-                <Target className="h-16 w-16 text-blue-500" />
+              <div className="bg-[#e6ffee] p-6 rounded-full">
+                <Target className="h-16 w-16 text-[#98FF98]" />
               </div>
             </div>
             <div className="md:w-2/3">

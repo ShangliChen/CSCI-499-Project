@@ -72,7 +72,7 @@ function CounselorSignup() {
           className="w-full mb-4 p-2 border rounded"
         />
 
-        <button type="submit" className="bg-[#87CEEB] text-white w-full py-2 rounded-lg hover:bg-blue-700 transition">
+        <button type="submit" className="bg-[#98FF98] text-black w-full py-2 rounded-lg hover:bg-[#87e687] transition">
           Sign Up
         </button>
 
