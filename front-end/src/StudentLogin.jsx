@@ -16,9 +16,12 @@ function StudentLogin() {
         body: JSON.stringify({ school_id: schoolId, password }),
       });
       const data = await res.json();
-      setMessage(data.message || "Login successful!");
-      if (res.ok) {
+      if (data.success) {
+        localStorage.setItem('user', JSON.stringify({ role: data.role, userId: data.userId }));
+        setMessage(data.message || "Login successful!");
         navigate("/dashboard/student");
+      } else {
+        setMessage(data.message || "Login failed!");
       }
     } catch (error) {
       console.error(error);

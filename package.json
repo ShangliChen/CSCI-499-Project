@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "multer": "^2.0.2"
   }
 }

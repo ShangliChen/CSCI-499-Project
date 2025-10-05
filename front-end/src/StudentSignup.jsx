@@ -1,23 +1,34 @@
 import { useState } from "react";
 
 function StudentSignup() {
+  const [name, setName] = useState("");
   const [schoolId, setSchoolId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dob, setDob] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form submitted");
+    const studentData = { name, school_id: schoolId, email, password, dob, phoneNumber };
+    console.log("Sending data:", studentData);
+
     try {
       const res = await fetch("http://localhost:5000/signup/student", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ school_id: schoolId, email, password }),
+        body: JSON.stringify(studentData),
       });
+
+      console.log("Received response:", res);
       const data = await res.json();
+      console.log("Response data:", data);
+
       setMessage(data.message || "Signup successful!");
     } catch (error) {
-      console.error(error);
+      console.error("Signup fetch error:", error);
       setMessage("Something went wrong!");
     }
   };
@@ -29,6 +40,14 @@ function StudentSignup() {
   >
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
         <h2 className="text-xl font-bold mb-6 text-center">Student Signup</h2>
+
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+        />
 
         <input
           type="text"
@@ -51,6 +70,22 @@ function StudentSignup() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+        />
+
+        <input
+          type="date"
+          placeholder="Date of Birth"
+          value={dob}
+          onChange={(e) => setDob(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+        />
+
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
           className="w-full mb-4 p-2 border rounded"
         />
 

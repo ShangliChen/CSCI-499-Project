@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function CounselorSignup() {
+  const [name, setName] = useState("");
   const [schoolId, setSchoolId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [license, setLicense] = useState("");
-  const [photoId, setPhotoId] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,10 +16,14 @@ function CounselorSignup() {
       const res = await fetch("http://localhost:5000/signup/counselor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ school_id: schoolId, email, password, license, photo_id: photoId }),
+        body: JSON.stringify({ name, school_id: schoolId, email, password, license }),
       });
       const data = await res.json();
-      setMessage(data.message || "Signup successful!");
+      if (data.success) {
+        navigate(`/counselor-docs?userId=${data.userId}`);
+      } else {
+        setMessage(data.message || "Signup failed!");
+      }
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong!");
@@ -31,6 +37,14 @@ function CounselorSignup() {
   >
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
         <h2 className="text-xl font-bold mb-6 text-center">Counselor Signup</h2>
+
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+        />
 
         <input
           type="text"
@@ -61,14 +75,6 @@ function CounselorSignup() {
           placeholder="License Number"
           value={license}
           onChange={(e) => setLicense(e.target.value)}
-          className="w-full mb-4 p-2 border rounded"
-        />
-
-        <input
-          type="text"
-          placeholder="Photo ID"
-          value={photoId}
-          onChange={(e) => setPhotoId(e.target.value)}
           className="w-full mb-4 p-2 border rounded"
         />
 
