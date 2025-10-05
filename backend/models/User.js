@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
   school_id: {
     type: String,
     required: true,
@@ -23,12 +27,25 @@ const UserSchema = new mongoose.Schema({
     enum: ['student', 'counselor'],
     required: true,
   },
+  // Student-specific fields
+  dob: {
+    type: Date,
+    default: null,
+  },
+  phoneNumber: {
+    type: String,
+    default: null,
+  },
   // Counselor-specific fields
   license: {
     type: String,
     default: null,
   },
-  photo_id: {
+  idPicture: {
+    type: String, // Assuming this will be a path to the uploaded photo
+    default: null,
+  },
+  licensePicture: {
     type: String, // Assuming this will be a path to the uploaded photo
     default: null,
   },

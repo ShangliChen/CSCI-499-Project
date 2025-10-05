@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { Brain } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -10,11 +10,26 @@ import Signup from './Signup';
 import HealthAssessment from './pages/HealthAssessment';
 import StudentDashboard from "./pages/StudentDashboard";
 import CounselorDashboard from "./pages/CounselorDashboard";
-
+import CounselorDocs from "./pages/CounselorDocs";
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  const handleDashboardClick = () => {
+    if (user && user.role) {
+      navigate(`/dashboard/${user.role}`);
+    } else {
+      navigate('/user-type');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f0fff0]">
@@ -58,16 +73,35 @@ function App() {
             >
               Resource
             </Link>
-            <Link
-              to="/user-type"
+            <button
+              onClick={handleDashboardClick}
               className={`px-4 py-2 rounded-lg font-medium transition border ${
-                currentPath === '/user-type' 
+                currentPath.startsWith('/dashboard') 
                   ? 'bg-[#98FF98] text-black border-[#98FF98]' 
                   : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
-              Login
-            </Link>
+              Dashboard
+            </button>
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-lg font-medium transition border bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/user-type"
+                className={`px-4 py-2 rounded-lg font-medium transition border ${
+                  currentPath === '/user-type' 
+                    ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                    : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -81,6 +115,7 @@ function App() {
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
+          <Route path="/counselor-docs" element={<CounselorDocs />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/counselor" element={<CounselorDashboard />} />
           <Route path="/resources/health-assessment" element={<HealthAssessment />} />
