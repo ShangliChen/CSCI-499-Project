@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 
-const k10Questions = [
-  "In the past 4 weeks, about how often did you feel tired out for no good reason?",
-  "In the past 4 weeks, about how often did you feel nervous?",
-  "In the past 4 weeks, about how often did you feel so nervous that nothing could calm you down?",
-  "In the past 4 weeks, about how often did you feel hopeless?",
-  "In the past 4 weeks, about how often did you feel restless or fidgety?",
-  "In the past 4 weeks, about how often did you feel so restless you could not sit still?",
-  "In the past 4 weeks, about how often did you feel depressed?",
-  "In the past 4 weeks, about how often did you feel that everything was an effort?",
-  "In the past 4 weeks, about how often did you feel so sad that nothing could cheer you up?",
-  "In the past 4 weeks, about how often did you feel worthless?"
+const anxietyQuestions = [
+  "In the past 4 weeks, how often did you feel nervous, anxious, or on edge?",
+  "How often did you feel restless or unable to relax?",
+  "How often did you have difficulty controlling worry?",
+  "How often did you feel panic or sudden fear?",
+  "How often did you feel uneasy in social situations?",
+  "How often did you feel your mind going blank due to worry?",
+  "How often did you experience physical symptoms (sweating, palpitations)?",
+  "How often did you feel tense in anticipation of events?",
+  "How often did you avoid situations due to anxiety?",
+  "How often did you feel anxious even without a clear reason?"
 ];
 
-const k10Options = [
+
+const options = [
   { text: "None of the time", value: 1, img: "/images/satisfy.png" },
   { text: "A little of the time", value: 2, img: "/images/good.png" },
   { text: "Some of the time", value: 3, img: "/images/neutral.png" },
@@ -21,7 +22,7 @@ const k10Options = [
   { text: "All of the time", value: 5, img: "/images/unsatisfy.png" },
 ];
 
-export default function HealthAssessment() {
+export default function AnxietyAssessment() {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
 
@@ -31,61 +32,47 @@ export default function HealthAssessment() {
 
   const getButtonColor = (value) => {
     switch (value) {
-      case 1:
-        return "bg-green-400 border-green-500"; 
-      case 2:
-        return "bg-lime-300 border-lime-400";
-      case 3:
-        return "bg-yellow-300 border-yellow-400";
-      case 4:
-        return "bg-orange-400 border-orange-500";
-      case 5:
-        return "bg-red-500 border-red-600"; 
-      default:
-        return "bg-white border-gray-300";
+      case 1: return "bg-green-400 border-green-500";
+      case 2: return "bg-lime-300 border-lime-400";
+      case 3: return "bg-yellow-300 border-yellow-400";
+      case 4: return "bg-orange-400 border-orange-500";
+      case 5: return "bg-red-500 border-red-600";
+      default: return "bg-white border-gray-300";
     }
   };
 
   const calculateScore = (e) => {
     e.preventDefault();
-    const values = { ...answers };
-
-    if (values[1] === 1) values[2] = 1;
-    if (values[4] === 1) values[5] = 1;
-
-    const total = Object.values(values).reduce((a, b) => a + (b || 0), 0);
+    const total = Object.values(answers).reduce((a, b) => a + (b || 0), 0);
 
     let interpretation = "";
-    if (total <= 19) interpretation = "Below stress level 🙂 (Likely to be well)";
-    else if (total <= 24) interpretation = "Mild psychological distress 💡";
-    else if (total <= 29) interpretation = "Moderate psychological distress ⚠️";
-    else interpretation = "Severe psychological distress ❗ We recommend consulting a therapist.";
+    if (total <= 8) interpretation = "Low anxiety 🙂";
+    else if (total <= 15) interpretation = "Moderate anxiety ⚠️";
+    else interpretation = "High anxiety ❗ Consider consulting a professional.";
 
     setResult({ score: total, interpretation });
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] py-8"> {/* Pearl white outer background */}
-      <div className="container mx-auto px-4 max-w-3xl bg-[#26619C] p-6 rounded-xl shadow-md"> {/* Lapis Lazuli container */}
-        
+    <div className="min-h-screen bg-[#f5f5f0] py-8">
+      <div className="container mx-auto px-4 max-w-3xl bg-[#26619C] p-6 rounded-xl shadow-md">
         <h1 className="text-3xl font-bold text-center mb-6 text-white">
-          Health Assessment Tool
+          Anxiety Assessment
         </h1>
 
         <form className="space-y-8">
-          {k10Questions.map((q, i) => (
+          {anxietyQuestions.map((q, i) => (
             <div key={i}>
               <p className="font-medium mb-3 text-white">{i + 1}. {q}</p>
-
               <div className="flex gap-4 flex-wrap justify-center">
-                {k10Options.map((opt, j) => (
+                {options.map((opt, j) => (
                   <div key={j} className="flex flex-col items-center">
                     <button
                       type="button"
                       onClick={() => handleChange(i, opt.value)}
                       className={`flex items-center justify-center w-16 h-16 rounded-full border-2 transition transform
-                        ${answers[i] === opt.value 
-                          ? getButtonColor(opt.value) + " scale-105 shadow-lg" 
+                        ${answers[i] === opt.value
+                          ? getButtonColor(opt.value) + " scale-105 shadow-lg"
                           : "bg-white border-gray-300 hover:scale-105 hover:shadow-md"}`}
                     >
                       <img src={opt.img} alt={opt.text} className="w-10 h-10" />
@@ -115,7 +102,7 @@ export default function HealthAssessment() {
         )}
 
         <p className="mt-6 text-sm text-white text-center">
-          Disclaimer: This tool is for informational purposes only and does not replace professional medical advice.
+          Disclaimer: This tool is for informational purposes only.
         </p>
       </div>
     </div>
