@@ -34,40 +34,40 @@ const CounselorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-8">
-      {/* ✅ Top Navbar */}
-      <nav className="flex justify-between items-center mb-8 bg-white shadow-md p-4 rounded-xl">
-        <h1 className="text-2xl font-bold text-gray-800">MindConnect</h1>
-        <div className="space-x-4">
-          <button
-            onClick={goToProfile}
-            className="px-4 py-2 bg-[#98D7C2] text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Profile
-          </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-          >
-            Logout
-          </button>
-            <button
-  onClick={() => navigate("/counselor/assessments")}
-  className="px-4 py-2 bg-[#BDFCC9] text-gray-800 rounded-lg hover:bg-green-200 transition"
->
-  View Assessments
-</button>
-        </div>
-      </nav>
 
       {/* Welcome Message */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-1">
+    <section className="mb-8">
+      <div className="flex items-center space-x-3">
+        <h2 className="text-2xl font-semibold text-gray-800">
           Welcome, {userName}!
         </h2>
-        <p className="text-gray-500">
-          Your space to support students and track progress
-        </p>
-      </section>
+        <button
+          onClick={goToProfile}
+          className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition"
+          title="Go to Profile"
+        >
+          {/* 👤 SVG Profile Icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7 text-gray-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5.121 17.804A4 4 0 0112 15a4 4 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        </button>
+      </div>
+      <p className="text-gray-500">
+        Your space to support students and track progress
+      </p>
+    </section>
+
 
       {/* Main Dashboard Grid */}
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -97,30 +97,42 @@ const CounselorDashboard = () => {
         </div>
 
         {/* My Students */}
-        <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
-          <h3 className="text-lg font-semibold mb-4">My Students</h3>
-          <ul className="space-y-4">
-            {["Alex", "Jordan", "Maya"].map((name, i) => (
-              <li key={i} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full" />
-                  <span>{name}</span>
-                </div>
-                <div>
-                  {name === "Maya" ? (
-                    <button className="text-[#BDFCC9] hover:underline">
-                      Message
-                    </button>
-                  ) : (
-                    <button className="text-[#BDFCC9] hover:underline">
-                      View Profile
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* ✅ My Students (with "View All" link added) */}
+          <div className="bg-white p-6 rounded-xl shadow-md col-span-1 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">My Students</h3>
+              <ul className="space-y-4">
+                {["Alex", "Jordan", "Maya"].map((name, i) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-300 rounded-full" />
+                      <span>{name}</span>
+                    </div>
+                    <div>
+                      {name === "Maya" ? (
+                        <button className="text-[#BDFCC9] hover:underline">
+                          Message
+                        </button>
+                      ) : (
+                        <button className="text-[#BDFCC9] hover:underline">
+                          View Profile
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* ✅ View All Link */}
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => navigate("/counselor/assessments")}
+                className="text-sm text-[#BDFCC9] hover:underline"
+              >
+                View All
+              </button>
+            </div>
+          </div>
 
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
