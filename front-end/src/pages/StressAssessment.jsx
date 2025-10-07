@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 const stressQuestions = [
   "In the past 4 weeks, how often did you feel tense or 'on edge'?",
   "How often did you feel unable to relax?",
@@ -9,9 +10,8 @@ const stressQuestions = [
   "How often did you feel fatigue due to stress?",
   "How often did you experience headaches or muscle tension?",
   "How often did you feel anxious about the future?",
-  "How often did you feel you couldn’t cope with problems?"
+  "How often did you feel you couldn’t cope with problems?",
 ];
-
 
 const options = [
   { text: "None of the time", value: 1, img: "/images/satisfy.png" },
@@ -20,6 +20,7 @@ const options = [
   { text: "Most of the time", value: 4, img: "/images/bad.png" },
   { text: "All of the time", value: 5, img: "/images/unsatisfy.png" },
 ];
+
 export default function StressAssessment() {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
@@ -30,12 +31,18 @@ export default function StressAssessment() {
 
   const getButtonColor = (value) => {
     switch (value) {
-      case 1: return "bg-green-400 border-green-500";
-      case 2: return "bg-lime-300 border-lime-400";
-      case 3: return "bg-yellow-300 border-yellow-400";
-      case 4: return "bg-orange-400 border-orange-500";
-      case 5: return "bg-red-500 border-red-600";
-      default: return "bg-white border-gray-300";
+      case 1:
+        return "bg-green-400 border-green-500";
+      case 2:
+        return "bg-lime-300 border-lime-400";
+      case 3:
+        return "bg-yellow-300 border-yellow-400";
+      case 4:
+        return "bg-orange-400 border-orange-500";
+      case 5:
+        return "bg-red-500 border-red-600";
+      default:
+        return "bg-white border-gray-300";
     }
   };
 
@@ -52,16 +59,18 @@ export default function StressAssessment() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] py-8">
-      <div className="container mx-auto px-4 max-w-3xl bg-[#26619C] p-6 rounded-xl shadow-md">
-        <h1 className="text-3xl font-bold text-center mb-6 text-white">
+    <div className="min-h-screen py-8" style={{ backgroundColor: "#A8E6CF" }}>
+      <div className="container mx-auto px-4 max-w-3xl">
+        <h1 className="text-3xl font-bold text-center mb-6 text-black">
           Stress Assessment
         </h1>
 
         <form className="space-y-8">
           {stressQuestions.map((q, i) => (
             <div key={i}>
-              <p className="font-medium mb-3 text-white">{i + 1}. {q}</p>
+              <p className="font-bold mb-3 text-black text-lg">
+                {i + 1}. {q}
+              </p>
               <div className="flex gap-4 flex-wrap justify-center">
                 {options.map((opt, j) => (
                   <div key={j} className="flex flex-col items-center">
@@ -69,13 +78,17 @@ export default function StressAssessment() {
                       type="button"
                       onClick={() => handleChange(i, opt.value)}
                       className={`flex items-center justify-center w-16 h-16 rounded-full border-2 transition transform
-                        ${answers[i] === opt.value
-                          ? getButtonColor(opt.value) + " scale-105 shadow-lg"
-                          : "bg-white border-gray-300 hover:scale-105 hover:shadow-md"}`}
+                        ${
+                          answers[i] === opt.value
+                            ? getButtonColor(opt.value) + " scale-105 shadow-lg"
+                            : "bg-white border-gray-300 hover:scale-105 hover:shadow-md"
+                        }`}
                     >
                       <img src={opt.img} alt={opt.text} className="w-10 h-10" />
                     </button>
-                    <span className="mt-1 text-xs text-white text-center">{opt.text}</span>
+                    <span className="mt-1 text-xs font-semibold text-black text-center">
+                      {opt.text}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -85,7 +98,7 @@ export default function StressAssessment() {
           <div className="text-center mt-6">
             <button
               onClick={calculateScore}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-full shadow-lg hover:from-purple-500 hover:to-blue-500 transform hover:scale-105 transition-all duration-300"
+              className="px-8 py-3 bg-teal-500 text-white font-semibold rounded-full shadow-lg hover:bg-teal-600 transform hover:scale-105 transition-all duration-300"
             >
               Submit Assessment
             </button>
@@ -93,15 +106,14 @@ export default function StressAssessment() {
         </form>
 
         {result && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-            <p className="font-bold text-lg text-blue-700">Your Score: {result.score}</p>
-            <p className="mt-2">{result.interpretation}</p>
+          <div className="mt-6 p-4 bg-white border border-green-300 rounded-lg text-center">
+            <p className="font-bold text-lg text-black">
+              Your Score: {result.score}
+            </p>
+            <p className="mt-2 font-bold text-black">{result.interpretation}</p>
           </div>
         )}
 
-        <p className="mt-6 text-sm text-white text-center">
-          Disclaimer: This tool is for informational purposes only.
-        </p>
       </div>
     </div>
   );

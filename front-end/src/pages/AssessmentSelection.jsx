@@ -12,8 +12,8 @@ const AssessmentSelection = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-blue-100 flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-bold text-blue-800 mb-8">
+    <div className="min-h-screen bg-green-100 flex flex-col items-center justify-center p-6">
+      <h1 className="text-3xl font-bold text-green-800 mb-8">
         Health Assessment Selection
       </h1>
 
