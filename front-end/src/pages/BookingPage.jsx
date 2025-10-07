@@ -5,6 +5,7 @@ const BookingPage = () => {
   const [counselors, setCounselors] = useState([]);
   const [selectedCounselor, setSelectedCounselor] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState({
@@ -43,6 +44,13 @@ const BookingPage = () => {
     }
   ];
 
+  // Available time slots
+  const timeSlots = [
+    "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", 
+    "11:00 AM", "11:30 AM", "02:00 PM", "02:30 PM", 
+    "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM"
+  ];
+
   useEffect(() => {
     setCounselors(sampleCounselors);
   }, []);
@@ -55,15 +63,20 @@ const BookingPage = () => {
   const prevStep = () => setCurrentStep(prev => prev - 1);
   const skipToResults = () => setCurrentStep(6);
 
+  const handleCounselorSelect = (counselor) => {
+    setSelectedCounselor(counselor);
+    setCurrentStep(7); // Move to appointment scheduling page
+  };
+
   const handleBooking = () => {
-    if (!selectedCounselor || !selectedDate) {
-      setMessage("Please select a counselor and date.");
+    if (!selectedCounselor || !selectedDate || !selectedTime) {
+      setMessage("Please select a counselor, date, and time.");
       return;
     }
     const formattedDate = new Date(selectedDate).toLocaleDateString("en-US", {
       weekday: "long", month: "long", day: "numeric", year: "numeric",
     });
-    setMessage(`✅ Booking confirmed with ${selectedCounselor.name} on ${formattedDate}.`);
+    setMessage(`✅ Booking confirmed with ${selectedCounselor.name} on ${formattedDate} at ${selectedTime}.`);
   };
 
   // Generate calendar data for current month
@@ -140,14 +153,21 @@ const BookingPage = () => {
   const buttonStyles = (isSelected = false) => 
     `p-6 rounded-xl border text-left transition-all hover:shadow-sm group w-full ${
       isSelected 
-        ? "border-gray-900 bg-gray-900 text-white" 
+        ? "border-[#2e8b57] bg-[#2e8b57] text-white" 
         : "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
     }`;
 
   const smallButtonStyles = (isSelected = false) =>
     `p-4 rounded-lg border text-center transition-all hover:shadow-sm ${
       isSelected
-        ? "border-gray-900 bg-gray-900 text-white"
+        ? "border-[#2e8b57] bg-[#2e8b57] text-white"
+        : "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
+    }`;
+
+  const timeButtonStyles = (isSelected = false) =>
+    `p-3 rounded-lg border text-center transition-all ${
+      isSelected
+        ? "border-[#2e8b57] bg-[#2e8b57] text-white"
         : "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
     }`;
 
@@ -178,7 +198,7 @@ const BookingPage = () => {
             <button onClick={skipToResults} className="px-8 py-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all text-lg">
               Show All Counselors
             </button>
-            <button onClick={nextStep} className="px-8 py-4 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-all flex items-center text-lg">
+            <button onClick={nextStep} className="px-8 py-4 bg-[#2e8b57] text-white rounded-lg font-semibold hover:bg-[#267349] transition-all flex items-center text-lg">
               Get Started
               <ArrowRight className="ml-3 h-6 w-6" />
             </button>
@@ -203,7 +223,7 @@ const BookingPage = () => {
                   <div className="text-sm text-gray-600">{option.description}</div>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ml-4 ${answers.seekingFor === option.value ? "border-white bg-white" : "border-gray-400"}`}>
-                  {answers.seekingFor === option.value && <div className="w-2 h-2 bg-gray-900 rounded-full" />}
+                  {answers.seekingFor === option.value && <div className="w-2 h-2 bg-[#2e8b57] rounded-full" />}
                 </div>
               </div>
             </button>
@@ -248,7 +268,7 @@ const BookingPage = () => {
           <p className="text-gray-600 text-lg text-center">Have you taken any anxiety, depression, or stress assessments recently?</p>
           <div className="flex gap-4 justify-center mb-8">
             {["yes", "no"].map(answer => (
-              <button key={answer} onClick={() => answer === "no" ? (handleAnswer("takenTest", answer), nextStep()) : handleAnswer("takenTest", answer)} className={`px-12 py-4 rounded-lg border font-semibold text-lg ${answers.takenTest === answer ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-[#d4f8d4] text-gray-700"}`}>
+              <button key={answer} onClick={() => answer === "no" ? (handleAnswer("takenTest", answer), nextStep()) : handleAnswer("takenTest", answer)} className={`px-12 py-4 rounded-lg border font-semibold text-lg ${answers.takenTest === answer ? "border-[#2e8b57] bg-[#2e8b57] text-white" : "border-gray-300 bg-[#d4f8d4] text-gray-700"}`}>
                 {answer.charAt(0).toUpperCase() + answer.slice(1)}
               </button>
             ))}
@@ -256,8 +276,8 @@ const BookingPage = () => {
           {answers.takenTest === "yes" && (
             <div className="bg-[#d4f8d4] p-6 rounded-xl animate-fadeIn">
               <label className="block text-gray-700 font-medium mb-4 text-center text-lg">What was your assessment score? (if known)</label>
-              <input type="number" min="0" max="100" value={answers.testScore} onChange={(e) => handleAnswer("testScore", e.target.value)} placeholder="Enter score 0-50" className="w-full p-4 border border-gray-300 rounded-lg text-center text-lg focus:outline-none focus:border-gray-900 mb-4" />
-              <button onClick={nextStep} className="w-full bg-gray-900 text-white py-4 rounded-lg font-semibold hover:bg-gray-800 transition-all text-lg">
+              <input type="number" min="0" max="100" value={answers.testScore} onChange={(e) => handleAnswer("testScore", e.target.value)} placeholder="Enter score 0-100" className="w-full p-4 border border-gray-300 rounded-lg text-center text-lg focus:outline-none focus:border-gray-900 mb-4" />
+              <button onClick={nextStep} className="w-full bg-[#2e8b57] text-white py-4 rounded-lg font-semibold hover:bg-[#267349] transition-all text-lg">
                 Continue to Results
                 <ArrowRight className="ml-2 h-5 w-5 inline" />
               </button>
@@ -272,7 +292,7 @@ const BookingPage = () => {
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredCounselors.map((counselor) => (
-              <div key={counselor._id} onClick={() => setSelectedCounselor(counselor)} className={`cursor-pointer p-6 rounded-xl border transition-all hover:shadow-sm group ${selectedCounselor?._id === counselor._id ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-[#d4f8d4] hover:border-gray-400"}`}>
+              <div key={counselor._id} onClick={() => handleCounselorSelect(counselor)} className={`cursor-pointer p-6 rounded-xl border transition-all hover:shadow-sm group ${selectedCounselor?._id === counselor._id ? "border-[#2e8b57] bg-[#2e8b57] text-white" : "border-gray-300 bg-[#d4f8d4] hover:border-gray-400"}`}>
                 <h2 className="text-xl font-bold text-center mb-2">{counselor.name}</h2>
                 <p className={`text-center font-semibold text-lg mb-3 ${selectedCounselor?._id === counselor._id ? "text-gray-200" : "text-gray-600"}`}>
                   {counselor.specialty}
@@ -282,7 +302,7 @@ const BookingPage = () => {
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {counselor.tags.map(tag => (
-                    <span key={tag} className={`px-3 py-1 text-sm rounded-full font-medium ${selectedCounselor?._id === counselor._id ? "bg-white text-gray-900" : "bg-gray-100 text-gray-700"}`}>
+                    <span key={tag} className={`px-3 py-1 text-sm rounded-full font-medium ${selectedCounselor?._id === counselor._id ? "bg-white text-[#2e8b57]" : "bg-gray-100 text-gray-700"}`}>
                       {tag}
                     </span>
                   ))}
@@ -290,15 +310,28 @@ const BookingPage = () => {
               </div>
             ))}
           </div>
+        </div>
+      )
+    },
+    7: {
+      title: "Schedule Your Appointment",
+      content: (
+        <div className="space-y-8">
+          {/* Selected Counselor Info */}
+          <div className="bg-[#d4f8d4] p-6 rounded-xl border border-gray-300">
+            <h2 className="text-2xl font-bold text-center mb-4">Booking with {selectedCounselor?.name}</h2>
+            <p className="text-center text-gray-600">{selectedCounselor?.specialty}</p>
+          </div>
 
-          {selectedCounselor && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Date Selection */}
             <div className="bg-white p-6 rounded-xl border border-gray-300">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Select Date & Time</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Date</h3>
               
               {/* Calendar Header */}
               <div className="text-center mb-6">
-                <h4 className="text-xl font-bold text-gray-900">{month}</h4>
-                <p className="text-lg text-gray-600">{year}</p>
+                <h4 className="text-lg font-bold text-gray-900">{month}</h4>
+                <p className="text-gray-600">{year}</p>
               </div>
 
               {/* Week Days Header */}
@@ -311,7 +344,7 @@ const BookingPage = () => {
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1 mb-6">
+              <div className="grid grid-cols-7 gap-1">
                 {calendar.map((day, index) => {
                   const dateString = day.date.toISOString().split('T')[0];
                   const isSelected = selectedDate === dateString;
@@ -324,7 +357,7 @@ const BookingPage = () => {
                       disabled={!day.isAvailable}
                       className={`p-3 rounded-lg border transition-all text-center ${
                         isSelected
-                          ? "border-gray-900 bg-gray-900 text-white"
+                          ? "border-[#2e8b57] bg-[#2e8b57] text-white"
                           : day.isAvailable
                           ? "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
                           : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
@@ -337,33 +370,78 @@ const BookingPage = () => {
                   );
                 })}
               </div>
+            </div>
 
-              {/* Selected Date Display */}
-              {selectedDate && (
-                <div className="bg-[#d4f8d4] border border-gray-300 p-4 rounded-lg text-center mb-6">
-                  <p className="text-gray-700 font-medium">
-                    Selected: {new Date(selectedDate).toLocaleDateString('en-US', { 
+            {/* Time Selection */}
+            <div className="bg-white p-6 rounded-xl border border-gray-300">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Time</h3>
+              
+              {selectedDate ? (
+                <>
+                  <p className="text-center text-gray-600 mb-4">
+                    Available times for {new Date(selectedDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {timeSlots.map((time) => (
+                      <button
+                        key={time}
+                        onClick={() => setSelectedTime(time)}
+                        className={timeButtonStyles(selectedTime === time)}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-center text-gray-500 py-8">
+                  Please select a date first to see available times
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Selection Summary */}
+          {(selectedDate || selectedTime) && (
+            <div className="bg-[#d4f8d4] border border-gray-300 p-6 rounded-xl">
+              <h4 className="text-lg font-bold text-gray-900 mb-3 text-center">Appointment Summary</h4>
+              <div className="text-center space-y-2">
+                {selectedDate && (
+                  <p className="text-gray-700">
+                    <strong>Date:</strong> {new Date(selectedDate).toLocaleDateString('en-US', { 
                       weekday: 'long', 
                       month: 'long', 
                       day: 'numeric',
                       year: 'numeric'
                     })}
                   </p>
-                </div>
-              )}
-
-              {/* Confirm Button */}
-              <div className="text-center">
-                <button 
-                  onClick={handleBooking} 
-                  disabled={!selectedDate}
-                  className="bg-gray-900 text-white px-12 py-4 rounded-lg font-bold text-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Confirm Booking with {selectedCounselor.name}
-                </button>
+                )}
+                {selectedTime && (
+                  <p className="text-gray-700">
+                    <strong>Time:</strong> {selectedTime}
+                  </p>
+                )}
               </div>
             </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center">
+            <button onClick={() => setCurrentStep(6)} className="px-8 py-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all text-lg">
+              Back to Counselors
+            </button>
+            <button 
+              onClick={handleBooking} 
+              disabled={!selectedDate || !selectedTime}
+              className="px-8 py-4 bg-[#2e8b57] text-white rounded-lg font-semibold hover:bg-[#267349] transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm Booking
+            </button>
+          </div>
         </div>
       )
     }
@@ -382,7 +460,7 @@ const BookingPage = () => {
                 <span className="text-lg font-medium text-gray-600">{Math.round(((currentStep - 1) / 4) * 100)}% Complete</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gray-900 h-2 rounded-full transition-all duration-500" style={{ width: `${((currentStep - 1) / 4) * 100}%` }} />
+                <div className="bg-[#2e8b57] h-2 rounded-full transition-all duration-500" style={{ width: `${((currentStep - 1) / 4) * 100}%` }} />
               </div>
             </div>
             <button onClick={prevStep} className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-all group text-lg font-medium">
@@ -392,7 +470,14 @@ const BookingPage = () => {
           </>
         )}
 
-        <div className="animate-fadeIn max-w-2xl mx-auto">
+        {currentStep === 7 && (
+          <button onClick={() => setCurrentStep(6)} className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-all group text-lg font-medium">
+            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to Counselors
+          </button>
+        )}
+
+        <div className="animate-fadeIn max-w-4xl mx-auto">
           {currentStep !== 1 && currentStep !== 6 && <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">{currentStepData.title}</h1>}
           {currentStepData.content}
         </div>

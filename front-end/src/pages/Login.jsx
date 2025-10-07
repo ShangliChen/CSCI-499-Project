@@ -1,10 +1,28 @@
 // pages/Login.jsx
 import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isStudent, setIsStudent] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Simple mock authentication (replace later with real backend call)
+    if (email && password) {
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userType", isStudent ? "student" : "counselor");
+      alert(`Welcome back, ${isStudent ? "student" : "counselor"}!`);
+      navigate("/resources"); // Redirect back to resources or previous page
+    } else {
+      alert("Please enter both email and password.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f0fff0] py-8 flex items-center justify-center">
@@ -20,6 +38,7 @@ function Login() {
             <p className="text-gray-600">Sign in to access your MindConnect account</p>
           </div>
 
+          {/* Login type toggle */}
           <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
             <button
               onClick={() => setIsStudent(true)}
@@ -39,7 +58,8 @@ function Login() {
             </button>
           </div>
 
-          <form className="space-y-4">
+          {/* Login form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
@@ -51,6 +71,8 @@ function Login() {
                 <input
                   type="email"
                   id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#98FF98] focus:border-[#98FF98]"
                   placeholder="you@example.com"
                 />
@@ -68,6 +90,8 @@ function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-[#98FF98] focus:border-[#98FF98]"
                   placeholder="Enter your password"
                 />
@@ -124,4 +148,4 @@ function Login() {
   );
 }
 
-export default Login;//
+export default Login;
