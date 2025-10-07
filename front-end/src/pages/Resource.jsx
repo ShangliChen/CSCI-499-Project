@@ -1,7 +1,6 @@
-// pages/Resource.jsx
-import { BookOpen, FileText, Calendar } from 'lucide-react';
-import { Gamepad2 } from 'lucide-react';
-import { Link } from "react-router-dom";  // ✅ added
+// src/pages/Resource.jsx
+import { BookOpen, FileText, Calendar, Gamepad2 } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 function Resource() {
   const resources = [
@@ -34,7 +33,7 @@ function Resource() {
         <p className="text-lg text-gray-600 mb-8 text-center max-w-2xl mx-auto">
           Explore our collection of mental health resources designed to support your wellbeing journey.
         </p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
           {resources.map((resource, index) => (
             <div key={index} className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
@@ -46,10 +45,10 @@ function Resource() {
               </div>
               <p className="text-gray-700 ml-14">{resource.description}</p>
 
-              {/* ✅ If Health Assessment Tool → Link to quiz page */}
+              {/* Link to AssessmentSelection if Health Assessment Tool */}
               {resource.title === "Health Assessment Tool" ? (
                 <Link 
-                  to="/resources/health-assessment" 
+                  to="/resources/assessment-selection" // ✅ corrected link
                   className="ml-14 mt-4 text-[#98FF98] font-medium hover:text-[#87e687] transition"
                 >
                   Explore →
@@ -62,7 +61,7 @@ function Resource() {
             </div>
           ))}
         </div>
-        
+
         <div className="bg-[#e6ffee] rounded-xl p-8 mt-12 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Need Immediate Help?</h2>
           <p className="text-gray-700 mb-6">

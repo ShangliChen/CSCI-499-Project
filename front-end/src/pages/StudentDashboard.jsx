@@ -38,12 +38,12 @@ const StudentDashboard = () => {
           <h1 className="text-4xl font-bold text-gray-800">
             Welcome, {userName || "Student"}!
           </h1>
-            <button
-              onClick={() => navigate(`/student/profile/${studentId}`)}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              View Profile
-            </button>
+          <button
+            onClick={() => navigate(`/student/profile/${studentId}`)}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            View Profile
+          </button>
           <p className="text-lg text-gray-600">
             Your space for mental-wellbeing and growth
           </p>
@@ -53,7 +53,10 @@ const StudentDashboard = () => {
             {/* Monthly Check-in */}
             <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
               <h2 className="text-lg font-semibold mb-3">Monthly Check-in</h2>
-              <button className="px-4 py-2 bg-[#BDFCC9] text-white rounded-md hover:bg-green-700">
+              <button
+                onClick={() => navigate("/resources/assessment-selection")}
+                className="px-4 py-2 bg-[#BDFCC9] text-white rounded-md hover:bg-green-700"
+              >
                 Start Now
               </button>
             </div>
@@ -94,14 +97,11 @@ const StudentDashboard = () => {
         {/* RIGHT COLUMN */}
         <div>
           <div className="bg-white p-6 rounded-xl shadow hover:shadow-md flex flex-col items-center">
-            {/* Illustration Inside Box */}
             <img
               src="../images/student_dashboard.png"
               alt="Group discussion illustration"
               className="max-w-full rounded-xl mb-6"
             />
-
-            {/* Quick Resources Inside Same Box */}
             <div className="w-full">
               <h2 className="text-lg font-semibold mb-4">Quick Resources</h2>
               <ul className="space-y-2 text-gray-700">
@@ -110,7 +110,6 @@ const StudentDashboard = () => {
                     className="w-5 h-5 text-[#BDFCC9] mr-2 flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       fillRule="evenodd"
@@ -125,7 +124,6 @@ const StudentDashboard = () => {
                     className="w-5 h-5 text-[#BDFCC9] mr-2 flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       fillRule="evenodd"
@@ -140,7 +138,6 @@ const StudentDashboard = () => {
                     className="w-5 h-5 text-[#BDFCC9] mr-2 flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       fillRule="evenodd"
@@ -156,7 +153,6 @@ const StudentDashboard = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="flex justify-between items-center px-4 py-6 text-sm text-gray-500 border-t mt-12">
         <span>© 2025 MindConnect</span>
         <div className="space-x-4">

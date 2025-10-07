@@ -7,13 +7,16 @@ import Resource from './pages/Resource';
 import UserType from './UserType';
 import Login from './login';
 import Signup from './Signup';
-import HealthAssessment from './pages/HealthAssessment';
 import StudentDashboard from "./pages/StudentDashboard";
 import CounselorDashboard from "./pages/CounselorDashboard";
 import CounselorDocs from "./pages/CounselorDocs";
 import StudentProfile from "./pages/StudentProfile";
 import CounselorProfile from "./pages/CounselorProfile";
 import AssessmentList from "./pages/AssessmentList";
+import AssessmentSelection from "./pages/AssessmentSelection";
+import StressAssessment from "./pages/StressAssessment";
+import AnxietyAssessment from "./pages/AnxietyAssessment";
+import DepressionAssessment from "./pages/DepressionAssessment";
 
 function App() {
   const location = useLocation();
@@ -43,14 +46,14 @@ function App() {
             <Brain className="h-8 w-8 text-[#98FF98]" />
             <span className="text-2xl font-bold text-gray-900">MindConnect</span>
           </Link>
-          
+
           {/* Navigation buttons */}
           <div className="flex items-center space-x-3">
             <Link
               to="/"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
-                currentPath === '/' 
-                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                currentPath === '/'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]'
                   : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
@@ -59,8 +62,8 @@ function App() {
             <Link
               to="/about"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
-                currentPath === '/about' 
-                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                currentPath === '/about'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]'
                   : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
@@ -69,8 +72,8 @@ function App() {
             <Link
               to="/resource"
               className={`px-4 py-2 rounded-lg font-medium transition border ${
-                currentPath === '/resource' 
-                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                currentPath === '/resource'
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]'
                   : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
@@ -79,8 +82,8 @@ function App() {
             <button
               onClick={handleDashboardClick}
               className={`px-4 py-2 rounded-lg font-medium transition border ${
-                currentPath.startsWith('/dashboard') 
-                  ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                currentPath.startsWith('/dashboard')
+                  ? 'bg-[#98FF98] text-black border-[#98FF98]'
                   : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
               }`}
             >
@@ -97,8 +100,8 @@ function App() {
               <Link
                 to="/user-type"
                 className={`px-4 py-2 rounded-lg font-medium transition border ${
-                  currentPath === '/user-type' 
-                    ? 'bg-[#98FF98] text-black border-[#98FF98]' 
+                  currentPath === '/user-type'
+                    ? 'bg-[#98FF98] text-black border-[#98FF98]'
                     : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'
                 }`}
               >
@@ -121,11 +124,13 @@ function App() {
           <Route path="/counselor-docs" element={<CounselorDocs />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/counselor" element={<CounselorDashboard />} />
-          <Route path="/resources/health-assessment" element={<HealthAssessment />} />
           <Route path="/student/profile/:id" element={<StudentProfile />} />
           <Route path="/counselor/profile/:id" element={<CounselorProfile />} />
           <Route path="/counselor/assessments" element={<AssessmentList />} />
-
+          <Route path="/resources/assessment-selection" element={<AssessmentSelection />} />
+          <Route path="/resources/stress-assessment" element={<StressAssessment />} />
+          <Route path="/resources/anxiety-assessment" element={<AnxietyAssessment />} />
+          <Route path="/resources/depression-assessment" element={<DepressionAssessment />} />
         </Routes>
       </main>
     </div>
