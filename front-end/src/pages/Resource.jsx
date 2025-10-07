@@ -1,4 +1,3 @@
-// src/pages/Resource.jsx
 import { BookOpen, FileText, Calendar, Gamepad2 } from 'lucide-react';
 import { Link } from "react-router-dom";
 
@@ -22,7 +21,7 @@ function Resource() {
     {
       icon: <Calendar className="h-8 w-8 text-blue-500" />,
       title: "Booking with a counselor",
-      description: "View upcoming availability"
+      description: "View upcoming availability and schedule a session."
     }
   ];
 
@@ -43,13 +42,21 @@ function Resource() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">{resource.title}</h2>
               </div>
+
               <p className="text-gray-700 ml-14">{resource.description}</p>
 
-              {/* Link to AssessmentSelection if Health Assessment Tool */}
+              {/* Conditional links for each resource */}
               {resource.title === "Health Assessment Tool" ? (
-                <Link 
-                  to="/resources/assessment-selection" // ✅ corrected link
-                  className="ml-14 mt-4 text-[#98FF98] font-medium hover:text-[#87e687] transition"
+                <Link
+                  to="/resources/assessment-selection"
+                  className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
+                >
+                  Explore →
+                </Link>
+              ) : resource.title === "Booking with a counselor" ? (
+                <Link
+                  to="/resources/booking"
+                  className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
                 >
                   Explore →
                 </Link>
@@ -62,6 +69,7 @@ function Resource() {
           ))}
         </div>
 
+        {/* Emergency Section */}
         <div className="bg-[#e6ffee] rounded-xl p-8 mt-12 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Need Immediate Help?</h2>
           <p className="text-gray-700 mb-6">
