@@ -11,6 +11,9 @@ import HealthAssessment from './pages/HealthAssessment';
 import StudentDashboard from "./pages/StudentDashboard";
 import CounselorDashboard from "./pages/CounselorDashboard";
 import CounselorDocs from "./pages/CounselorDocs";
+import StudentProfile from "./pages/StudentProfile";
+import CounselorProfile from "./pages/CounselorProfile";
+import AssessmentList from "./pages/AssessmentList";
 
 function App() {
   const location = useLocation();
@@ -119,6 +122,10 @@ function App() {
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/counselor" element={<CounselorDashboard />} />
           <Route path="/resources/health-assessment" element={<HealthAssessment />} />
+          <Route path="/student/profile/:id" element={<StudentProfile />} />
+          <Route path="/counselor/profile/:id" element={<CounselorProfile />} />
+          <Route path="/counselor/assessments" element={<AssessmentList />} />
+
         </Routes>
       </main>
     </div>

@@ -1,7 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const StudentDashboard = () => {
-  const userName = "Alex"; // Replace with dynamic name as needed
+  const [userName, setUserName] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("user"));
+    if (stored?.userId) {
+      setStudentId(stored.userId);
+
+      const fetchUser = async () => {
+        try {
+          const res = await fetch(`http://localhost:5000/api/student/profile/${stored.userId}`);
+          const data = await res.json();
+          if (data.success) {
+            setUserName(data.data.name);
+          } else {
+            console.error("❌ Failed to fetch profile:", data.message);
+          }
+        } catch (error) {
+          console.error("❌ Error fetching profile:", error);
+        }
+      };
+
+      fetchUser();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] font-sans px-8 py-10">
@@ -10,8 +36,14 @@ const StudentDashboard = () => {
         {/* LEFT COLUMN */}
         <div className="space-y-8">
           <h1 className="text-4xl font-bold text-gray-800">
-            Welcome, {userName}!
+            Welcome, {userName || "Student"}!
           </h1>
+            <button
+              onClick={() => navigate(`/student/profile/${studentId}`)}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              View Profile
+            </button>
           <p className="text-lg text-gray-600">
             Your space for mental-wellbeing and growth
           </p>
@@ -30,7 +62,7 @@ const StudentDashboard = () => {
             <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
               <h2 className="text-lg font-semibold mb-3">Your Progress</h2>
               <img
-                src="https://via.placeholder.com/250x100?text=Mood+Chart"
+                src="/images/mood-chart.png"
                 alt="Mood over time"
                 className="rounded"
               />

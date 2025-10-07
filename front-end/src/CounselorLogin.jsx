@@ -17,7 +17,11 @@ function CounselorLogin() {
       });
       const data = await res.json();
       if (data.success) {
-        localStorage.setItem('user', JSON.stringify({ role: data.role, userId: data.userId }));
+        localStorage.setItem('user', JSON.stringify({
+          role: data.role,
+          userId: data.userId,
+          name: data.name // 👈 Save name from backend
+        }));
         setMessage(data.message || "Login successful!");
         navigate("/dashboard/counselor");
       } else {
