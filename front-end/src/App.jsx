@@ -17,6 +17,7 @@ import AssessmentSelection from "./pages/AssessmentSelection";
 import StressAssessment from "./pages/StressAssessment";
 import AnxietyAssessment from "./pages/AnxietyAssessment";
 import DepressionAssessment from "./pages/DepressionAssessment";
+import BookingPage from "./pages/BookingPage";
 
 function App() {
   const location = useLocation();
@@ -131,6 +132,7 @@ function App() {
           <Route path="/resources/stress-assessment" element={<StressAssessment />} />
           <Route path="/resources/anxiety-assessment" element={<AnxietyAssessment />} />
           <Route path="/resources/depression-assessment" element={<DepressionAssessment />} />
+          <Route path="/resources/booking" element={<BookingPage />} />
         </Routes>
       </main>
     </div>
