@@ -46,25 +46,34 @@ function Resource() {
               <p className="text-gray-700 ml-14">{resource.description}</p>
 
               {/* Conditional links for each resource */}
-              {resource.title === "Health Assessment Tool" ? (
-                <Link
-                  to="/resources/assessment-selection"
-                  className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
-                >
-                  Explore →
-                </Link>
-              ) : resource.title === "Booking with a counselor" ? (
-                <Link
-                  to="/resources/booking"
-                  className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
-                >
-                  Explore →
-                </Link>
-              ) : (
-                <button className="ml-14 mt-4 text-[#98FF98] font-medium hover:text-[#87e687] transition">
-                  Explore →
-                </button>
-              )}
+              {/* Add this inside the resource.map loop */}
+                {resource.title === "Self-Help Guides" ? (
+                  <Link
+                    to="/resources/self-help-guide"  // Link to the new Self-Help Guide page
+                    className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
+                  >
+                    Explore →
+                  </Link>
+                ) : resource.title === "Health Assessment Tool" ? (
+                  <Link
+                    to="/resources/assessment-selection"
+                    className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
+                  >
+                    Explore →
+                  </Link>
+                ) : resource.title === "Booking with a counselor" ? (
+                  <Link
+                    to="/resources/booking"
+                    className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
+                  >
+                    Explore →
+                  </Link>
+                ) : (
+                  <button className="ml-14 mt-4 text-[#98FF98] font-medium hover:text-[#87e687] transition">
+                    Explore →
+                  </button>
+                )}
+
             </div>
           ))}
         </div>
