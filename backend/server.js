@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
 import User from './models/User.js';
+import assessmentRoutes from "./routes/assessmentRoutes.js";
+
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(path.resolve(), '/uploads')));
+app.use("/api/assessments", assessmentRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("🚀 Server is running on port 5000");

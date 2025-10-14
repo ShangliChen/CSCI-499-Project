@@ -1,5 +1,7 @@
+// src/pages/AnxietyAssessment.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 // === Reusable Assessment Component ===
 function Assessment({ title, questions, options, interpretScore, onComplete, pdfLink }) {
@@ -34,7 +36,7 @@ function Assessment({ title, questions, options, interpretScore, onComplete, pdf
     const interpretation = interpretScore(total);
     const resultObj = { score: total, interpretation };
     setResult(resultObj);
-    onComplete(title.toLowerCase(), total, interpretation.toLowerCase()); // send score + severity
+    onComplete(title.toLowerCase(), total, interpretation.toLowerCase());
   };
 
   return (
@@ -82,26 +84,27 @@ function Assessment({ title, questions, options, interpretScore, onComplete, pdf
       </form>
 
       {result && (
-        <div className="mt-6 p-4 border border-green-300 rounded-lg text-center" style={{ backgroundColor: '#D5D5CC' }}>
+        <div
+          className="mt-6 p-4 border border-green-300 rounded-lg text-center"
+          style={{ backgroundColor: "#D5D5CC" }}
+        >
           <p className="font-bold text-lg text-black">Your Score: {result.score}</p>
           <p className="mt-2 font-bold text-black">{result.interpretation}</p>
         </div>
       )}
-          
-      {pdfLink && (
-          <div className="mt-6">
-            <a
-              href={pdfLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 underline font-medium hover:text-blue-700 transition text-xs"
-            >
-              View Full Assessment Guide (PDF)
-            </a>
-          </div>
-        )}
 
-       
+      {pdfLink && (
+        <div className="mt-6">
+          <a
+            href={pdfLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline font-medium hover:text-blue-700 transition text-xs"
+          >
+            View Full Assessment Guide (PDF)
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -204,9 +207,7 @@ const interpretWHO5 = (score) => {
 // === Summary Component ===
 function Summary({ severityList, combinedIndex }) {
   const moderateConditions = severityList.filter(
-    (s) =>
-      s.severity.includes("moderate") &&
-      !s.severity.includes("severe")
+    (s) => s.severity.includes("moderate") && !s.severity.includes("severe")
   );
   const severeConditions = severityList.filter(
     (s) => s.severity.includes("severe") || s.severity.includes("high")
@@ -217,13 +218,58 @@ function Summary({ severityList, combinedIndex }) {
     severeConditions.length === 0 &&
     severityList.length === 4;
 
-  return (
-    <div className="max-w-3xl mx-auto p-6 mt-12 mb-24 rounded-lg shadow-lg" style={{ background: 'linear-gradient(to bottom, #F7F7F0, #E0E0D9)' }}>
-      <h2 className="text-2xl font-bold mb-4 text-center text-black">
-        Summary
-      </h2>
+  // === 🔥 Save to Database once all assessments are complete ===
+  const user = JSON.parse(localStorage.getItem("user"));
 
-      {/* Combined Index */}
+  const handleFinalSubmit = async () => {
+  // Get user data from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // Check if user data exists and has an _id
+  if (!user || !user.userId) {
+    alert("User not logged in. Please log in first.");
+    return;
+  }
+
+  if (severityList.length !== 4 || combinedIndex === null) {
+    alert("Please complete all assessments before submitting.");
+    return;
+  }
+
+  const anxiety = severityList.find((r) => r.test.includes("anxiety"));
+  const depression = severityList.find((r) => r.test.includes("depression"));
+  const stress = severityList.find((r) => r.test.includes("stress"));
+  const wellbeing = severityList.find((r) => r.test.includes("well-being"));
+
+  const payload = {
+    userId: user.userId,
+    anxiety_assessment: anxiety?.score || 0,
+    depression_assessment: depression?.score || 0,
+    stress_assessment: stress?.score || 0,
+    wellbeing_assessment: wellbeing?.score || 0,
+    overall_result: combinedIndex,
+    overall_status: severeConditions.length
+      ? "Severe"
+      : moderateConditions.length
+      ? "Moderate"
+      : "Good",
+  };
+
+  try {
+    const res = await axios.post("http://localhost:5000/api/assessments/save", payload);
+    alert("✅ Assessment submitted successfully!");
+    console.log("✅ Saved:", res.data);
+  } catch (err) {
+    console.error("❌ Error submitting assessment:", err);
+    alert("Failed to submit assessment.");
+  }
+};
+
+
+  return (
+    <div className="max-w-3xl mx-auto p-6 mt-12 mb-24 rounded-lg shadow-lg bg-gradient-to-b from-gray-50 to-gray-100">
+      <h2 className="text-2xl font-bold mb-4 text-center text-black">Summary</h2>
+
       {combinedIndex !== null && (
         <div className="text-center mb-8">
           <h3 className="text-xl font-semibold text-black">
@@ -231,21 +277,30 @@ function Summary({ severityList, combinedIndex }) {
           </h3>
           <p className="text-sm text-gray-600 mt-2">
             *This is an approximate wellness indicator combining all four
-            assessments for reflection purposes only. It is not a clinical diagnosis.*
-            <br />
-              <a
-                href="/docs/Monthly_Mental_Health_Index_Report.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline mt-2 inline-block"
-              >
-                View PDF: How the summary result is calculated
-              </a>
+            assessments for reflection purposes only.*<br />
+            <a
+              href="/docs/Monthly_Mental_Health_Index_Report.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline mt-2 inline-block"
+            >
+              View PDF: How the summary result is calculated
+            </a>
           </p>
-          
         </div>
       )}
 
+      {/* 🔘 NEW SUBMIT BUTTON */}
+      <div className="text-center mt-6">
+        <button
+          onClick={handleFinalSubmit}
+          className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300"
+        >
+          Submit Final Assessment
+        </button>
+      </div>
+
+      {/* Rest of Summary remains the same */}
       {severeConditions.length > 0 && (
         <div className="mb-6 text-red-700 font-semibold text-center">
           <p className="mb-4">
@@ -265,7 +320,6 @@ function Summary({ severityList, combinedIndex }) {
             >
               Booking Counselor Appointment
             </Link>
-
           </div>
           <div className="mt-8 text-sm text-red-800 text-center">
             <p className="font-semibold mb-2">
@@ -290,14 +344,13 @@ function Summary({ severityList, combinedIndex }) {
             You're not alone. Below are trusted resources that can support you.
           </p>
           <Link
-              to="/resource"
-              className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition inline-block text-center"
-            >
-              Resources
-            </Link>
+            to="/resource"
+            className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition inline-block text-center"
+          >
+            Resources
+          </Link>
         </div>
       )}
-
       {showPositiveMessage && (
         <div className="text-center text-green-700 font-semibold">
           <p className="mb-4 text-lg">
@@ -305,44 +358,44 @@ function Summary({ severityList, combinedIndex }) {
           </p>
         </div>
       )}
-          <div className="max-w-3xl mx-auto bg-gray-100 p-6 mt-12 mb-20 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4 text-black text-center">📚 Official Assessment Tools Used</h2>
-              <p className="text-sm text-gray-800 mb-4">
-                The mental health assessments in this tool are based on widely recognized and clinically validated psychological screening instruments:
-              </p>
 
-              <ul className="list-disc list-inside space-y-2 text-sm text-gray-800">
-                <li>
-                  <strong>GAD-7 (Generalized Anxiety Disorder-7):</strong> Developed by Spitzer et al., 2006. 
-                  <a href="https://www.phqscreeners.com/select-screener" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                    View official resource
-                  </a>
-                </li>
-                <li>
-                  <strong>PHQ-9 (Patient Health Questionnaire-9):</strong> Developed by Kroenke, Spitzer & Williams, 2001.
-                  <a href="https://www.phqscreeners.com/select-screener" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                    View official resource
-                  </a>
-                </li>
-                <li>
-                  <strong>K10 (Kessler Psychological Distress Scale):</strong> Developed by Ronald C. Kessler et al., 2002.
-                  <a href="https://www.hcp.med.harvard.edu/ncs/k6_scales.php" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                    Learn more
-                  </a>
-                </li>
-                <li>
-                  <strong>WHO-5 Well-Being Index:</strong> Developed by the World Health Organization.
-                  <a href="https://www.psykiatri-regionh.dk/who-5/Pages/default.aspx" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                    WHO official page
-                  </a>
-                </li>
-              </ul>
+      <div className="max-w-3xl mx-auto bg-gray-100 p-6 mt-12 mb-20 rounded-lg shadow">
+        <h2 className="text-xl font-bold mb-4 text-black text-center">📚 Official Assessment Tools Used</h2>
+        <p className="text-sm text-gray-800 mb-4">
+          The mental health assessments in this tool are based on widely recognized and clinically validated psychological screening instruments:
+        </p>
 
-              <p className="text-xs text-gray-600 mt-6">
-                ⚠️ These tools are screening instruments and not intended to provide a clinical diagnosis. For personalized support, consult a licensed mental health professional.
-              </p>
-            </div>
+        <ul className="list-disc list-inside space-y-2 text-sm text-gray-800">
+          <li>
+            <strong>GAD-7 (Generalized Anxiety Disorder-7):</strong> Developed by Spitzer et al., 2006.
+            <a href="https://www.phqscreeners.com/select-screener" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+              View official resource
+            </a>
+          </li>
+          <li>
+            <strong>PHQ-9 (Patient Health Questionnaire-9):</strong> Developed by Kroenke, Spitzer & Williams, 2001.
+            <a href="https://www.phqscreeners.com/select-screener" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+              View official resource
+            </a>
+          </li>
+          <li>
+            <strong>K10 (Kessler Psychological Distress Scale):</strong> Developed by Ronald C. Kessler et al., 2002.
+            <a href="https://www.hcp.med.harvard.edu/ncs/k6_scales.php" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+              Learn more
+            </a>
+          </li>
+          <li>
+            <strong>WHO-5 Well-Being Index:</strong> Developed by the World Health Organization.
+            <a href="https://www.psykiatri-regionh.dk/who-5/Pages/default.aspx" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+              WHO official page
+            </a>
+          </li>
+        </ul>
 
+        <p className="text-xs text-gray-600 mt-6">
+          ⚠️ These tools are screening instruments and not intended to provide a clinical diagnosis. For personalized support, consult a licensed mental health professional.
+        </p>
+      </div>
     </div>
   );
 }
@@ -355,7 +408,6 @@ export default function CombinedAssessments() {
   const handleAssessmentComplete = (test, score, severity) => {
     setSeverityList((prev) => {
       const updated = [...prev.filter((s) => s.test !== test), { test, score, severity }];
-      // calculate new combined index when all 4 done
       if (updated.length === 4) {
         const newIndex = calculateCombinedIndex(updated);
         setCombinedIndex(newIndex);
@@ -364,7 +416,6 @@ export default function CombinedAssessments() {
     });
   };
 
-  // === Weighted Combined Index Formula ===
   const calculateCombinedIndex = (results) => {
     const gad = results.find((r) => r.test.includes("anxiety"))?.score || 0;
     const k10 = results.find((r) => r.test.includes("depression"))?.score || 0;
@@ -377,7 +428,7 @@ export default function CombinedAssessments() {
       (phq / 27) * 25 +
       ((100 - who * 4) / 100) * 25;
 
-    return 100 - normalized; // higher = better
+    return 100 - normalized;
   };
 
   return (

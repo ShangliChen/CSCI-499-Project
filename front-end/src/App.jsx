@@ -18,6 +18,7 @@ import AnxietyAssessment from "./pages/AnxietyAssessment";
 import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
+import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
 
 function App() {
   const location = useLocation();
@@ -114,6 +115,7 @@ function App() {
           <Route path="/resources/depression-assessment" element={<DepressionAssessment />} />
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
+          <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
         </Routes>
       </main>
     </div>

@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 const AssessmentSelection = () => {
   const navigate = useNavigate();
 
+  // Get user info from localStorage (adjust if you use context or redux)
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userRole = user?.role; // e.g., "student" or "counselor"
+
   const tests = [
     { title: "Stress Assessment", img: "/images/stress.png" },
     { title: "Anxiety Assessment", img: "/images/anxiety.png" },
@@ -18,9 +22,9 @@ const AssessmentSelection = () => {
       </h1>
 
       <p className="text-gray-800 mb-12 text-center max-w-2xl text-xl leading-relaxed">
-        Our mental health assessments help you understand your emotional well-being in areas like 
-        stress, anxiety, and depression. Each test uses short, research-based questions to measure 
-        how you've been feeling recently. Your overall score reflects your current mental health 
+        Our mental health assessments help you understand your emotional well-being in areas like{" "}
+        stress, anxiety, and depression. Each test uses short, research-based questions to measure{" "}
+        how you've been feeling recently. Your overall score reflects your current mental health{" "}
         status. Lower scores indicate more severe symptoms.
       </p>
 
@@ -35,20 +39,25 @@ const AssessmentSelection = () => {
               alt={test.title}
               className="w-40 h-40 object-contain mb-6"
             />
-            <span className="text-2xl font-bold text-gray-900">
-              {test.title}
-            </span>
+            <span className="text-2xl font-bold text-gray-900">{test.title}</span>
           </div>
         ))}
       </div>
 
       <div className="mt-16">
-        <button
-          onClick={() => navigate("/resources/anxiety-assessment")}
-          className="px-10 py-4 bg-teal-600 text-white font-semibold text-xl rounded-full shadow-lg hover:bg-teal-700 transform hover:scale-105 transition-all duration-300"
-        >
-          Start Assessment →
-        </button>
+        {/* Show button only if user role is "student" */}
+        {userRole === "student" ? (
+          <button
+            onClick={() => navigate("/resources/anxiety-assessment")}
+            className="px-10 py-4 bg-teal-600 text-white font-semibold text-xl rounded-full shadow-lg hover:bg-teal-700 transform hover:scale-105 transition-all duration-300"
+          >
+            Start Assessment →
+          </button>
+        ) : (
+          <p className="text-center text-gray-600 italic">
+            Only students can start an assessment.
+          </p>
+        )}
       </div>
     </div>
   );

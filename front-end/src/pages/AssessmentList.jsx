@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // ⬅️ Import Link
 
 const AssessmentList = () => {
   const [students, setStudents] = useState([]);
@@ -35,7 +36,8 @@ const AssessmentList = () => {
               <th className="py-3 px-4 rounded-tl-lg">Name</th>
               <th className="py-3 px-4">School ID</th>
               <th className="py-3 px-4">Assessment Date</th>
-              <th className="py-3 px-4 rounded-tr-lg">Score</th>
+              <th className="py-3 px-4">Score</th>
+              <th className="py-3 px-4 rounded-tr-lg">Action</th> {/* NEW */}
             </tr>
           </thead>
           <tbody>
@@ -50,6 +52,14 @@ const AssessmentList = () => {
                 </td>
                 <td className="py-3 px-4">
                   {student.assessment_score || "N/A"}
+                </td>
+                <td className="py-3 px-4">
+                  <Link
+                    to={`/counselor/user/${student._id}`}
+                    className="inline-block bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium hover:bg-blue-700 transition"
+                  >
+                    See More
+                  </Link>
                 </td>
               </tr>
             ))}
