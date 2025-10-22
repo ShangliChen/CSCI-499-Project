@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import User from './models/User.js';
 import assessmentRoutes from "./routes/assessmentRoutes.js";
 
@@ -12,6 +14,14 @@ dotenv.config();
 
 const app = express();
 const PORT = 5000;
+
+// Ensure uploads directory exists at runtime (resolved relative to this file)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -22,7 +32,8 @@ mongoose.connect(process.env.MONGO_URI, {
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(path.resolve(), '/uploads')));
+// Serve uploaded files statically from the correct path
+app.use('/uploads', express.static(uploadsDir));
 app.use("/api/assessments", assessmentRoutes);
 
 
@@ -33,7 +44,7 @@ app.get("/", (req, res) => {
 // --- Multer Storage ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/')
+    cb(null, uploadsDir)
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
@@ -67,6 +78,7 @@ app.post("/signup/:userType", async (req, res) => {
       dob: userType === 'student' ? dob : null,
       phoneNumber: userType === 'student' ? phoneNumber : null,
       license: userType === 'counselor' ? license : null,
+      verificationStatus: userType === 'counselor' ? 'pending' : 'approved',
     });
 
     await newUser.save();
@@ -86,8 +98,20 @@ app.post("/api/counselor/upload-docs", upload.fields([{ name: 'idPicture', maxCo
     const user = await User.findById(userId);
     if (!user || user.role !== 'counselor') return res.status(404).json({ success: false, message: "Counselor not found" });
 
-    if (req.files['idPicture']) user.idPicture = req.files['idPicture'][0].path;
-    if (req.files['licensePicture']) user.licensePicture = req.files['licensePicture'][0].path;
+    if (req.files['idPicture']) {
+      const filename = path.basename(req.files['idPicture'][0].path);
+      user.idPicture = `/uploads/${filename}`;
+    }
+    if (req.files['licensePicture']) {
+      const filename = path.basename(req.files['licensePicture'][0].path);
+      user.licensePicture = `/uploads/${filename}`;
+    }
+
+    // Keep counselor in pending state for admin review
+    if (user.role === 'counselor' && user.verificationStatus !== 'approved') {
+      user.verificationStatus = 'pending';
+      user.rejectionReason = '';
+    }
 
     await user.save();
     res.status(200).json({ success: true, message: "Documents uploaded successfully" });
@@ -112,12 +136,22 @@ app.post("/login/:userType", async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
-    res.json({ 
-      success: true, 
-      message: "Login successful", 
-      role: user.role, 
+    // Gate counselor access based on verification
+    if (userType === 'counselor') {
+      if (user.verificationStatus === 'pending') {
+        return res.status(403).json({ success: false, status: 'pending', message: 'Your registration is under review. Please wait for admin approval.' });
+      }
+      if (user.verificationStatus === 'rejected') {
+        return res.status(403).json({ success: false, status: 'rejected', message: user.rejectionReason || 'Your registration was rejected.' });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      role: user.role,
       userId: user._id,
-      name: user.name // 👈 send name to frontend
+      name: user.name
     });
   } catch (error) {
     console.error(`❌ ${userType} login error:`, error);
@@ -182,7 +216,9 @@ app.post("/api/student/upload-profile-pic/:id", upload.single("profilePicture"),
       return res.status(404).json({ success: false, message: "Student not found" });
     }
 
-    user.profilePicture = req.file.path;
+    // Store a web-accessible path instead of absolute filesystem path
+    const filename = path.basename(req.file.path);
+    user.profilePicture = `/uploads/${filename}`;
     await user.save();
 
     res.status(200).json({ success: true, message: "Profile picture uploaded successfully", imagePath: req.file.path });
@@ -202,6 +238,80 @@ app.get("/api/users/students", async (req, res) => {
   } catch (err) {
     console.error("Error fetching students:", err);
     res.status(500).json({ message: "Error fetching students" });
+  }
+});
+
+// --- Admin Middleware and Routes ---
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'CSCI-499-Admin';
+const adminAuth = (req, res, next) => {
+  const secret = req.header('x-admin-secret');
+  if (secret !== ADMIN_SECRET) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  next();
+};
+
+// List all counselors (optionally filter by status via query)
+app.get('/api/admin/counselors', adminAuth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const query = { role: 'counselor' };
+    if (status) query.verificationStatus = status;
+    const counselors = await User.find(query)
+      .select('name email school_id license idPicture licensePicture verificationStatus rejectionReason createdAt');
+    res.json({ success: true, data: counselors });
+  } catch (err) {
+    console.error('Admin list counselors error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get counselor details
+app.get('/api/admin/counselors/:id', adminAuth, async (req, res) => {
+  try {
+    const counselor = await User.findById(req.params.id).select('-password');
+    if (!counselor || counselor.role !== 'counselor') {
+      return res.status(404).json({ success: false, message: 'Counselor not found' });
+    }
+    res.json({ success: true, data: counselor });
+  } catch (err) {
+    console.error('Admin get counselor error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Approve counselor
+app.post('/api/admin/counselors/:id/approve', adminAuth, async (req, res) => {
+  try {
+    const counselor = await User.findByIdAndUpdate(
+      req.params.id,
+      { verificationStatus: 'approved', rejectionReason: '' },
+      { new: true }
+    ).select('-password');
+    if (!counselor || counselor.role !== 'counselor') {
+      return res.status(404).json({ success: false, message: 'Counselor not found' });
+    }
+    res.json({ success: true, message: 'Counselor approved', data: counselor });
+  } catch (err) {
+    console.error('Admin approve counselor error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Reject counselor
+app.post('/api/admin/counselors/:id/reject', adminAuth, async (req, res) => {
+  try {
+    const { reason } = req.body || {};
+    const counselor = await User.findByIdAndUpdate(
+      req.params.id,
+      { verificationStatus: 'rejected', rejectionReason: reason || '' },
+      { new: true }
+    ).select('-password');
+    if (!counselor || counselor.role !== 'counselor') {
+      return res.status(404).json({ success: false, message: 'Counselor not found' });
+    }
+    res.json({ success: true, message: 'Counselor rejected', data: counselor });
+  } catch (err) {
+    console.error('Admin reject counselor error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
