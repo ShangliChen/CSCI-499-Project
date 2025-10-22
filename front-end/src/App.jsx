@@ -4,7 +4,8 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Resource from './pages/Resource';
 import UserType from './UserType';
-import Login from './Login';
+// Fix import path to match actual filename `login.jsx`
+import Login from './login';
 import Signup from './Signup';
 import StudentDashboard from "./pages/StudentDashboard";
 import CounselorDashboard from "./pages/CounselorDashboard";
@@ -19,6 +20,9 @@ import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
 import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminCounselorDetail from './pages/AdminCounselorDetail';
 
 function App() {
   const location = useLocation();
@@ -103,6 +107,9 @@ function App() {
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/counselors/:id" element={<AdminCounselorDetail />} />
           <Route path="/counselor-docs" element={<CounselorDocs />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/counselor" element={<CounselorDashboard />} />

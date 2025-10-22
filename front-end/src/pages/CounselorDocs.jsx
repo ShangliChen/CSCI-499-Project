@@ -28,8 +28,8 @@ function CounselorDocs() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage("Documents uploaded successfully!");
-        setTimeout(() => navigate("/login"), 2000); // Redirect to login after 2 seconds
+        setMessage("Documents uploaded. Your registration is under review by an administrator.");
+        setTimeout(() => navigate("/user-type"), 2500);
       } else {
         setMessage(data.message || "Upload failed!");
       }

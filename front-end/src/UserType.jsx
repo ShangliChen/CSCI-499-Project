@@ -64,6 +64,20 @@ function UserType() {
             Sign up now
           </a>
         </p>
+
+        {/* Administrator Login link */}
+        <div className="mt-4">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/admin-login');
+            }}
+            className="text-sm text-gray-700 hover:underline"
+          >
+            Administrator Login
+          </a>
+        </div>
         
       </main>
     </div>

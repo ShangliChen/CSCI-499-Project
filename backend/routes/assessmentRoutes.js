@@ -1,6 +1,7 @@
 import express from "express";
 import AssessmentResult from "../models/assessmentResult.js";
-import User from "../models/user.js";
+// Fix case-sensitive import to match actual filename
+import User from "../models/User.js";
 
 const router = express.Router();
 

@@ -25,7 +25,14 @@ function CounselorLogin() {
         setMessage(data.message || "Login successful!");
         navigate("/dashboard/counselor");
       } else {
-        setMessage(data.message || "Login failed!");
+        // Show specific messages for pending or rejected
+        if (data.status === 'pending') {
+          setMessage(data.message || 'Your registration is under review.');
+        } else if (data.status === 'rejected') {
+          setMessage(data.message || 'Your registration was rejected.');
+        } else {
+          setMessage(data.message || "Login failed!");
+        }
       }
     } catch (error) {
       console.error(error);

@@ -38,16 +38,23 @@ const UserSchema = new mongoose.Schema(
     assessment_date: { type: Date, default: null },
     assessment_score: { type: String, default: null },
     // 🔗 Link to multiple detailed assessments
-    assessments: [
+  assessments: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "AssessmentResult",
       },
-    ],
-    // Counselor-specific fields
-    license: { type: String, default: null },
-    idPicture: { type: String, default: null },
-    licensePicture: { type: String, default: null },
+  ],
+  // Counselor-specific fields
+  license: { type: String, default: null },
+  idPicture: { type: String, default: null },
+  licensePicture: { type: String, default: null },
+  // Counselor verification status
+  verificationStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "approved", // Students are approved by default; counselors set to pending at signup
+  },
+  rejectionReason: { type: String, default: "" },
   },
   { timestamps: true }
 );
