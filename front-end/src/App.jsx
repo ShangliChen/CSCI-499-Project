@@ -4,7 +4,6 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Resource from './pages/Resource';
 import UserType from './UserType';
-// Fix import path to match actual filename `login.jsx`
 import Login from './login';
 import Signup from './Signup';
 import StudentDashboard from "./pages/StudentDashboard";
@@ -23,6 +22,7 @@ import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
+import ViewAllAppointments from "./pages/ViewAllAppointments";
 
 function App() {
   const location = useLocation();
@@ -123,6 +123,11 @@ function App() {
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
+          <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student" element={<StudentDashboard />} />
+
+          
         </Routes>
       </main>
     </div>

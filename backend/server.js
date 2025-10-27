@@ -8,6 +8,8 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import User from './models/User.js';
 import assessmentRoutes from "./routes/assessmentRoutes.js";
+import CounselorAvailability from "./models/CounselorAvailability.js";// new added
+import Booking from "./models/Booking.js";
 
 
 dotenv.config();
@@ -176,6 +178,46 @@ app.get("/api/student/profile/:id", async (req, res) => {
   }
 });
 
+  // ✅ Counselor adds availability（new added）
+  app.post("/api/counselor/availability", async (req, res) => {
+    try {
+      const { counselorId, date, timeSlots } = req.body;
+      const availability = new CounselorAvailability({ counselor: counselorId, date, timeSlots });
+      await availability.save();
+      res.json({ success: true, message: "Availability saved" });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "Error saving availability" });
+    }
+  });
+
+// ✅ Student fetches counselors + availability (final version)
+  app.get("/api/counselors", async (req, res) => {
+    try {
+      const counselors = await User.find({ role: "counselor" })
+
+        .select("name email license specialization");
+
+      const availability = await CounselorAvailability.find()
+        .populate("counselor", "name email license specialization");
+
+      // ✅ Merge by counselor ID
+      const mapped = counselors.map(c => ({
+        ...c.toObject(),
+        availability: availability
+          .filter(a => a.counselor._id.toString() === c._id.toString())
+          .map(a => ({
+            date: a.date,
+            timeSlots: a.timeSlots
+          }))
+      }));
+
+      res.json({ success: true, counselors: mapped });
+
+    } catch (err) {
+      console.error("Error fetching counselors:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
 
 
 // ✅ Get counselor profile
@@ -315,9 +357,63 @@ app.post('/api/admin/counselors/:id/reject', adminAuth, async (req, res) => {
   }
 });
 
-
-
-
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
 });
+
+
+// ✅ Create a booking
+  app.post("/api/bookings", async (req, res) => {
+    console.log("📌 Booking Request Received:", req.body);
+    try {
+        const { studentId, counselorId, date, time, status, meetingType } = req.body;
+
+        const booking = new Booking({
+          student: studentId,
+          counselor: counselorId,
+          date,
+          time,
+          meetingType, // ✅ added
+          status: status || "confirmed",
+        });
+
+    await booking.save();
+
+    res.json({ success: true, message: "Booking saved", data: booking });
+  } catch (error) {
+    console.error("❌ Booking creation error:", error);
+    res.status(500).json({ success: false, message: "Error creating booking" });
+  }
+});
+// ✅ Get all bookings for a student (history)
+app.get("/api/bookings/student/:studentId", async (req, res) => {
+  try {
+    const bookings = await Booking.find({ student: req.params.studentId })
+      .populate("counselor", "name email")
+      .sort({ date: 1 });
+
+    res.json({ success: true, data: bookings });
+  } catch (error) {
+    console.error("❌ Fetch all bookings error:", error);
+    res.status(500).json({ success: false, message: "Error fetching bookings" });
+  }
+});
+app.put("/api/bookings/:id/cancel", async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status: "canceled" },
+      { new: true }  // ✅ Important: return updated result
+    );
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    res.json({ success: true, data: booking });
+  } catch (error) {
+    console.error("❌ Cancel booking error:", error);
+    res.status(500).json({ success: false, message: "Server error while canceling booking" });
+  }
+});
+

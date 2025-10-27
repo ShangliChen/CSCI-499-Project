@@ -1,13 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const BookingPage = () => {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+  const baseURL = "http://localhost:5000";
+
+  // --- Auth guard (unchanged)
+  useEffect(() => {
+    if (!user) {
+      alert("Please log in as a student to access booking.");
+      navigate("/login/student");
+    } else if (user.role !== "student") {
+      alert("Only students can book a counselor. Please log in with a student account.");
+      navigate("/login/student");
+    }
+  }, [navigate, user]);
+
+  // --- State (kept same structure)
   const [counselors, setCounselors] = useState([]);
   const [selectedCounselor, setSelectedCounselor] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
+
   const [answers, setAnswers] = useState({
     seekingFor: "",
     patientAge: "",
@@ -16,45 +34,179 @@ const BookingPage = () => {
     testScore: ""
   });
 
-  const sampleCounselors = [
-    {
-      _id: 1, name: "Dr. Emily Carter", specialty: "Anxiety & Stress",
-      bio: "Emily helps individuals regain control and peace through mindfulness and behavioral therapy.",
-      tags: ["Anxiety", "Stress", "Mindfulness", "Adults"]
-    },
-    {
-      _id: 2, name: "Dr. Jason Lee", specialty: "Depression & Mood Disorders",
-      bio: "Jason focuses on emotional regulation and cognitive reframing for lasting mental wellness.",
-      tags: ["Depression", "Mood Disorders", "Cognitive Therapy", "Adults"]
-    },
-    {
-      _id: 3, name: "Dr. Sofia Ramirez", specialty: "Trauma Recovery",
-      bio: "Sofia empowers her clients to heal and build resilience with compassionate therapy.",
-      tags: ["Trauma", "PTSD", "Resilience", "Adults"]
-    },
-    {
-      _id: 4, name: "Dr. Michael Chen", specialty: "Child & Teen Counseling",
-      bio: "Michael specializes in adolescent mental health and family dynamics.",
-      tags: ["Children", "Teens", "Adolescent", "Family"]
-    },
-    {
-      _id: 5, name: "Dr. Sarah Johnson", specialty: "Family & Couples Therapy",
-      bio: "Sarah works with families and couples to improve communication and strengthen relationships.",
-      tags: ["Family", "Couples", "Relationships", "Communication"]
-    }
-  ];
-
-  // Available time slots
-  const timeSlots = [
-    "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", 
-    "11:00 AM", "11:30 AM", "02:00 PM", "02:30 PM", 
-    "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM"
-  ];
-
+  // *******************************
+  // 1) Fetch real counselors + availability
+  // *******************************
   useEffect(() => {
-    setCounselors(sampleCounselors);
+    const fetchCounselors = async () => {
+      try {
+        const res = await fetch(`${baseURL}/api/counselors`);
+        const payload = await res.json();
+
+        if (!payload || payload.success === false) {
+          console.error("Failed to load counselors");
+          setCounselors([]);
+          return;
+        }
+
+        // Handle both response shapes
+        // A) payload.counselors = [{..., availability: [...] }]
+        // B) payload.counselors = [...], payload.availability = [...]
+        const rawCounselors = Array.isArray(payload.counselors) ? payload.counselors : [];
+        const rawAvailability = Array.isArray(payload.availability) ? payload.availability : null;
+
+        if (!rawAvailability) {
+          // Shape A: counselors already have availability embedded
+          const normalized = rawCounselors.map(c => ({
+            _id: c._id,
+            name: c.name,
+            email: c.email,
+            license: c.license,
+            specialization: c.specialization,
+            // ensure array
+            availability: Array.isArray(c.availability) ? c.availability : []
+          }));
+          setCounselors(normalized);
+        } else {
+          // Shape B: merge availability into counselors by _id
+          const byId = new Map();
+          rawCounselors.forEach(c => {
+            byId.set(String(c._id), {
+              _id: c._id,
+              name: c.name,
+              email: c.email,
+              license: c.license,
+              specialization: c.specialization,
+              availability: []
+            });
+          });
+
+          rawAvailability.forEach(a => {
+            const counselorId =
+              typeof a.counselor === "string" ? a.counselor : a.counselor?._id;
+            if (!counselorId) return;
+
+            // If this counselor wasn't in list, create a minimal one from availability
+            if (!byId.has(String(counselorId))) {
+              byId.set(String(counselorId), {
+                _id: counselorId,
+                name: typeof a.counselor === "object" && a.counselor?.name ? a.counselor.name : "Counselor",
+                email: "N/A",
+                license: "",
+                specialization: "",
+                availability: []
+              });
+            }
+
+            const entry = byId.get(String(counselorId));
+            entry.availability.push({
+              date: a.date, // "YYYY-MM-DD"
+              timeSlots: Array.isArray(a.timeSlots) ? a.timeSlots : []
+            });
+          });
+
+          setCounselors(Array.from(byId.values()));
+        }
+      } catch (err) {
+        console.error("Error fetching counselors:", err);
+        setCounselors([]);
+      }
+    };
+
+    fetchCounselors();
   }, []);
 
+  // *******************************
+  // 2) Original calendar generator — kept as-is but we’ll gate clickable days by real availability
+  // *******************************
+  const generateCalendar = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+
+    const calendar = [];
+
+    // Prev month padding
+    const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+    for (let i = startDay - 1; i >= 0; i--) {
+      calendar.push({
+        date: new Date(currentYear, currentMonth - 1, prevMonthLastDay - i),
+        isCurrentMonth: false,
+        isAvailable: false
+      });
+    }
+
+    // Current month days
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(currentYear, currentMonth, i);
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      // We'll override availability below based on counselor availability
+      calendar.push({
+        date,
+        isCurrentMonth: true,
+        isAvailable: !isWeekend && date > today
+      });
+    }
+
+    // Next month padding to fill 6 rows (42 cells)
+    const totalCells = 42;
+    const nextMonthDays = totalCells - calendar.length;
+    for (let i = 1; i <= nextMonthDays; i++) {
+      calendar.push({
+        date: new Date(currentYear, currentMonth + 1, i),
+        isCurrentMonth: false,
+        isAvailable: false
+      });
+    }
+
+    return {
+      calendar,
+      month: new Date(currentYear, currentMonth, 1).toLocaleDateString("en-US", { month: "long" }),
+      year: currentYear
+    };
+  };
+    // ✅ Determine month/year to show on calendar dynamically
+  const displayedMonthDate = selectedDate
+    ? new Date(selectedDate)
+    : (selectedCounselor?.availability?.length > 0
+        ? new Date(selectedCounselor.availability[0].date)
+        : new Date()
+      );
+
+
+  const { calendar, month, year } = generateCalendar();
+  const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  // *******************************
+  // 3) Availability helpers (real data)
+  // *******************************
+  const availableDates = useMemo(() => {
+    if (!selectedCounselor || !Array.isArray(selectedCounselor.availability)) return new Set();
+    // Only dates in YYYY-MM-DD; store in a Set for quick lookup
+    return new Set(selectedCounselor.availability.map(a => a.date));
+  }, [selectedCounselor]);
+
+  const availableTimes = useMemo(() => {
+    if (!selectedCounselor || !selectedDate) return [];
+    const found = selectedCounselor.availability?.find(a => a.date === selectedDate);
+    return found?.timeSlots || [];
+  }, [selectedCounselor, selectedDate]);
+
+  // *******************************
+  // 4) Original filters — keep behavior (tags not present on real data, so we keep all)
+  // *******************************
+  const filteredCounselors = useMemo(() => {
+    return Array.isArray(counselors) ? counselors : [];
+  }, [counselors]);
+
+  // *******************************
+  // 5) Handlers — kept your original logic
+  // *******************************
   const handleAnswer = (question, value) => {
     setAnswers(prev => ({ ...prev, [question]: value }));
   };
@@ -65,91 +217,54 @@ const BookingPage = () => {
 
   const handleCounselorSelect = (counselor) => {
     setSelectedCounselor(counselor);
-    setCurrentStep(7); // Move to appointment scheduling page
+    setSelectedDate("");
+    setSelectedTime("");
+    setCurrentStep(7);
   };
 
-  const handleBooking = () => {
-    if (!selectedCounselor || !selectedDate || !selectedTime) {
-      setMessage("Please select a counselor, date, and time.");
-      return;
-    }
-    const formattedDate = new Date(selectedDate).toLocaleDateString("en-US", {
-      weekday: "long", month: "long", day: "numeric", year: "numeric",
+const handleBooking = async () => {
+  if (!selectedCounselor || !selectedDate || !selectedTime) {
+    return setMessage("⚠️ Please select counselor, date, and time.");
+  }
+
+  if (!answers.appointmentType) {
+    return setMessage("⚠️ Please choose a session type (Video, In-Person, Phone...)");
+  }
+
+  try {
+    const res = await fetch(`${baseURL}/api/bookings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentId: user.userId,
+        counselorId: selectedCounselor._id,
+        date: selectedDate,
+        time: selectedTime,
+        meetingType: answers.appointmentType,
+        status: "confirmed",
+      }),
     });
-    setMessage(`✅ Booking confirmed with ${selectedCounselor.name} on ${formattedDate} at ${selectedTime}.`);
-  };
 
-  // Generate calendar data for current month
-  const generateCalendar = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDay = firstDay.getDay();
-    
-    const calendar = [];
-    
-    // Previous month's days
-    const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
-    for (let i = startDay - 1; i >= 0; i--) {
-      calendar.push({
-        date: new Date(currentYear, currentMonth - 1, prevMonthLastDay - i),
-        isCurrentMonth: false,
-        isAvailable: false
-      });
-    }
-    
-    // Current month's days
-    for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(currentYear, currentMonth, i);
-      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-      calendar.push({
-        date,
-        isCurrentMonth: true,
-        isAvailable: !isWeekend && date > today
-      });
-    }
-    
-    // Next month's days
-    const totalCells = 42;
-    const nextMonthDays = totalCells - calendar.length;
-    for (let i = 1; i <= nextMonthDays; i++) {
-      calendar.push({
-        date: new Date(currentYear, currentMonth + 1, i),
-        isCurrentMonth: false,
-        isAvailable: false
-      });
-    }
-    
-    return {
-      calendar,
-      month: today.toLocaleDateString('en-US', { month: 'long' }),
-      year: currentYear
-    };
-  };
+    const data = await res.json();
 
-  const { calendar, month, year } = generateCalendar();
-  const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+          if (data.success) {
+        navigate("/student/dashboard");
+        window.location.reload(); 
+      } else {
+        setMessage("❌ Booking failed. Please try again.");
+      }
+  } catch (error) {
+    console.error("Booking error:", error);
+    setMessage("❌ Server error occurred. Try again later.");
+  }
+};
 
-  const filteredCounselors = counselors.filter(counselor => {
-    if (answers.seekingFor === "adult") {
-      return counselor.tags.some(tag => ["Adults"].includes(tag));
-    }
-    if (answers.seekingFor === "child") {
-      return counselor.tags.some(tag => ["Children", "Teens", "Adolescent"].includes(tag));
-    }
-    if (answers.seekingFor === "couple") {
-      return counselor.tags.some(tag => ["Couples", "Relationships"].includes(tag));
-    }
-    if (answers.seekingFor === "family") {
-      return counselor.tags.some(tag => ["Family", "Group Therapy"].includes(tag));
-    }
-    return true;
-  });
 
+
+
+  // *******************************
+  // 6) Original button styles — unchanged
+  // *******************************
   const buttonStyles = (isSelected = false) => 
     `p-6 rounded-xl border text-left transition-all hover:shadow-sm group w-full ${
       isSelected 
@@ -161,7 +276,7 @@ const BookingPage = () => {
     `p-4 rounded-lg border text-center transition-all hover:shadow-sm ${
       isSelected
         ? "border-[#2e8b57] bg-[#2e8b57] text-white"
-        : "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
+      : "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
     }`;
 
   const timeButtonStyles = (isSelected = false) =>
@@ -171,41 +286,46 @@ const BookingPage = () => {
         : "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
     }`;
 
+  // *******************************
+  // 7) Steps — preserved from your original structure (Only counselor/availability bits changed)
+  // *******************************
   const steps = {
     1: {
-      title: "",
-      content: (
-        <div className="text-center animate-fadeIn">
-          <img 
-            src="/images/bookingIcon.png" 
-            alt="Booking" 
-            className="h-32 w-32 mx-auto mb-8"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'block';
-            }}
-          />
-          <div style={{display: 'none'}} className="text-gray-600 text-sm">
-            Booking Icon
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-6">
-            Find Your Perfect Counselor
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Answer a few questions to help us match you with the right mental health professional for your specific needs.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <button onClick={skipToResults} className="px-8 py-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all text-lg">
-              Show All Counselors
-            </button>
-            <button onClick={nextStep} className="px-8 py-4 bg-[#2e8b57] text-white rounded-lg font-semibold hover:bg-[#267349] transition-all flex items-center text-lg">
-              Get Started
-              <ArrowRight className="ml-3 h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      )
-    },
+  title: "",
+  content: (
+    <div className="text-center animate-fadeIn">
+      <img 
+        src="/images/bookingIcon.png" 
+        alt="Booking" 
+        className="h-32 w-32 mx-auto mb-8"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+          const fallback = e.currentTarget.nextSibling;
+          if (fallback) fallback.style.display = 'block';
+        }}
+      />
+      <div style={{display: 'none'}} className="text-gray-600 text-sm">
+        Booking Icon
+      </div>
+      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        Find Your Perfect Counselor
+      </h1>
+      <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+        Answer a few quick questions so we can match you with the right mental health professional.
+      </p>
+
+      {/* ✅ Only one button now */}
+      <button
+        onClick={nextStep}
+        className="px-8 py-4 bg-[#2e8b57] text-white rounded-lg font-semibold hover:bg-[#267349] transition-all flex items-center text-lg mx-auto"
+      >
+        Get Started
+        <ArrowRight className="ml-3 h-6 w-6" />
+      </button>
+    </div>
+  )
+},
+
     2: {
       title: "Who are you seeking care for?",
       content: (
@@ -286,166 +406,183 @@ const BookingPage = () => {
         </div>
       )
     },
-    6: {
-      title: "Recommended Counselors",
-      content: (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredCounselors.map((counselor) => (
-              <div key={counselor._id} onClick={() => handleCounselorSelect(counselor)} className={`cursor-pointer p-6 rounded-xl border transition-all hover:shadow-sm group ${selectedCounselor?._id === counselor._id ? "border-[#2e8b57] bg-[#2e8b57] text-white" : "border-gray-300 bg-[#d4f8d4] hover:border-gray-400"}`}>
-                <h2 className="text-xl font-bold text-center mb-2">{counselor.name}</h2>
-                <p className={`text-center font-semibold text-lg mb-3 ${selectedCounselor?._id === counselor._id ? "text-gray-200" : "text-gray-600"}`}>
-                  {counselor.specialty}
-                </p>
-                <p className={`text-center mb-4 leading-relaxed ${selectedCounselor?._id === counselor._id ? "text-gray-200" : "text-gray-600"}`}>
-                  {counselor.bio}
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {counselor.tags.map(tag => (
-                    <span key={tag} className={`px-3 py-1 text-sm rounded-full font-medium ${selectedCounselor?._id === counselor._id ? "bg-white text-[#2e8b57]" : "bg-gray-100 text-gray-700"}`}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+  6: {
+    title: "Recommended Counselors",
+    content: (
+      <div className="space-y-8">
+        {/* ✅ Always 2 per row on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {filteredCounselors.map((c) => (
+            <div
+              key={c._id}
+              onClick={() => handleCounselorSelect(c)}
+              className={`cursor-pointer p-6 rounded-xl border shadow-md transition-all ${
+                selectedCounselor?._id === c._id
+                  ? "border-[#2e8b57] bg-[#ccf2d9]"
+                  : "border-gray-200 bg-[#d4f8d4] hover:border-gray-300"
+              }`}
+            >
+              {/* ✅ Profile Image OR Letter Avatar */}
+              <div className="flex justify-center mb-4">
+                {c.profilePicture ? (
+                  <img
+                    src={`http://localhost:5000${c.profilePicture}`}
+                    alt="Counselor"
+                    className="w-20 h-20 rounded-lg object-cover bg-gray-200"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold text-gray-700">
+                    {c.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
+
+              {/* ✅ Name + Specialization */}
+              <h2 className="text-lg font-semibold text-center text-gray-900">
+                {c.name}
+              </h2>
+              <p className="text-sm text-center text-gray-700 mb-4">
+                {c.specialization?.trim()
+                  ? c.specialization
+                  : "General Counselor"}
+              </p>
+
+              {/* ✅ Info Box */}
+              <div className="bg-white rounded-lg p-4 shadow-sm text-sm text-gray-800">
+                <p className="mb-1"><strong>Email:</strong> {c.email || "N/A"}</p>
+                <p className="mb-1"><strong>License Number:</strong> {c.license || "N/A"}</p>
+                <p className="mb-1">
+                  <strong>Specializations:</strong>{" "}
+                  {Array.isArray(c.specializations) && c.specializations.length > 0
+                    ? c.specializations.join(", ")
+                    : "CBT, ACT, Trauma"}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  },
+
+
+7: {
+  title: "Schedule Your Appointment",
+  content: (
+    <div className="space-y-8">
+      
+      {/* ✅ Selected Counselor Info */}
+      <div className="bg-[#d4f8d4] p-6 rounded-xl border border-gray-300">
+        <h2 className="text-2xl font-bold text-center mb-1">
+          Booking with {selectedCounselor?.name}
+        </h2>
+        {selectedCounselor?.specialization && (
+          <p className="text-center text-gray-600">
+            {selectedCounselor.specialization}
+          </p>
+        )}
+      </div>
+
+      {/* ✅ Calendar and Times */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        {/* ✅ Date Calendar */}
+        <div className="bg-white p-6 rounded-xl border border-gray-300">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Date</h3>
+
+          <div className="text-center mb-4">
+            <h4 className="text-lg font-bold text-gray-900">
+              {month}
+            </h4>
+            <p className="text-gray-600">{year}</p>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {weekDays.map(day => (
+              <div key={day} className="text-center text-sm text-gray-500">{day}</div>
             ))}
           </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {calendar.map((day, i) => {
+              const dateStr = day.date.toISOString().split("T")[0];
+              const isSelectable = day.isCurrentMonth && availableDates.has(dateStr);
+              const selected = dateStr === selectedDate;
+              
+              return (
+                <button
+                  key={i}
+                  disabled={!isSelectable}
+                  onClick={() => isSelectable && setSelectedDate(dateStr)}
+                  className={`p-2 rounded-lg text-sm transition ${
+                    selected
+                      ? "bg-[#2e8b57] text-white"
+                      : isSelectable
+                      ? "bg-[#d4f8d4] hover:bg-[#b6e6b6]"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  }`}>
+                  {day.date.getDate()}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )
-    },
-    7: {
-      title: "Schedule Your Appointment",
-      content: (
-        <div className="space-y-8">
-          {/* Selected Counselor Info */}
-          <div className="bg-[#d4f8d4] p-6 rounded-xl border border-gray-300">
-            <h2 className="text-2xl font-bold text-center mb-4">Booking with {selectedCounselor?.name}</h2>
-            <p className="text-center text-gray-600">{selectedCounselor?.specialty}</p>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Date Selection */}
-            <div className="bg-white p-6 rounded-xl border border-gray-300">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Date</h3>
-              
-              {/* Calendar Header */}
-              <div className="text-center mb-6">
-                <h4 className="text-lg font-bold text-gray-900">{month}</h4>
-                <p className="text-gray-600">{year}</p>
-              </div>
+        {/* ✅ Time Slot Section */}
+        <div className="bg-white p-6 rounded-xl border border-gray-300">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Time</h3>
 
-              {/* Week Days Header */}
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {weekDays.map(day => (
-                  <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1">
-                {calendar.map((day, index) => {
-                  const dateString = day.date.toISOString().split('T')[0];
-                  const isSelected = selectedDate === dateString;
-                  const isToday = day.date.toDateString() === new Date().toDateString();
-                  
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => day.isAvailable && setSelectedDate(dateString)}
-                      disabled={!day.isAvailable}
-                      className={`p-3 rounded-lg border transition-all text-center ${
-                        isSelected
-                          ? "border-[#2e8b57] bg-[#2e8b57] text-white"
-                          : day.isAvailable
-                          ? "border-gray-300 bg-[#d4f8d4] text-gray-900 hover:border-gray-400"
-                          : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                      } ${isToday ? "ring-2 ring-blue-500" : ""}`}
-                    >
-                      <div className={`text-sm font-medium ${isToday && !isSelected ? "text-blue-600" : ""}`}>
-                        {day.date.getDate()}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+          {!selectedDate ? (
+            <p className="text-center text-gray-500">
+              Please select a date first
+            </p>
+          ) : availableTimes.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {availableTimes.map((time) => (
+                <button
+                  key={time}
+                  onClick={() => setSelectedTime(time)}
+                  className={`p-3 rounded-lg border text-center transition ${
+                    selectedTime === time
+                      ? "bg-[#2e8b57] text-white"
+                      : "bg-[#d4f8d4] hover:bg-[#b6e6b6]"
+                  }`}>
+                  {time}
+                </button>
+              ))}
             </div>
-
-            {/* Time Selection */}
-            <div className="bg-white p-6 rounded-xl border border-gray-300">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Time</h3>
-              
-              {selectedDate ? (
-                <>
-                  <p className="text-center text-gray-600 mb-4">
-                    Available times for {new Date(selectedDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {timeSlots.map((time) => (
-                      <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        className={timeButtonStyles(selectedTime === time)}
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <p className="text-center text-gray-500 py-8">
-                  Please select a date first to see available times
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Selection Summary */}
-          {(selectedDate || selectedTime) && (
-            <div className="bg-[#d4f8d4] border border-gray-300 p-6 rounded-xl">
-              <h4 className="text-lg font-bold text-gray-900 mb-3 text-center">Appointment Summary</h4>
-              <div className="text-center space-y-2">
-                {selectedDate && (
-                  <p className="text-gray-700">
-                    <strong>Date:</strong> {new Date(selectedDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      month: 'long', 
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </p>
-                )}
-                {selectedTime && (
-                  <p className="text-gray-700">
-                    <strong>Time:</strong> {selectedTime}
-                  </p>
-                )}
-              </div>
-            </div>
+          ) : (
+            <p className="text-center text-gray-500">
+              No times available for this date
+            </p>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 justify-center">
-            <button onClick={() => setCurrentStep(6)} className="px-8 py-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all text-lg">
-              Back to Counselors
-            </button>
-            <button 
-              onClick={handleBooking} 
-              disabled={!selectedDate || !selectedTime}
-              className="px-8 py-4 bg-[#2e8b57] text-white rounded-lg font-semibold hover:bg-[#267349] transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Confirm Booking
-            </button>
-          </div>
         </div>
-      )
-    }
-  };
+
+      </div>
+
+      {/* ✅ Booking Summary */}
+      {(selectedDate || selectedTime) && (
+        <div className="bg-[#d4f8d4] p-6 rounded-xl border border-gray-300 text-center">
+          <h4 className="text-lg font-bold text-gray-900 mb-2">Appointment Summary</h4>
+          {selectedDate && <p><strong>Date:</strong> {selectedDate}</p>}
+          {selectedTime && <p><strong>Time:</strong> {selectedTime}</p>}
+        </div>
+      )}
+
+      {/* ✅ Confirm Button */}
+      <div className="flex justify-center">
+        <button
+          className="px-8 py-4 bg-[#2e8b57] text-white font-semibold rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!selectedDate || !selectedTime}
+          onClick={handleBooking}>
+          Confirm Booking
+        </button>
+      </div>
+
+    </div>
+  )
+},
+  }
 
   const currentStepData = steps[currentStep];
 
@@ -481,10 +618,18 @@ const BookingPage = () => {
           {currentStep !== 1 && currentStep !== 6 && <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">{currentStepData.title}</h1>}
           {currentStepData.content}
         </div>
-
         {message && (
-          <div className="mt-10 bg-[#d4f8d4] border border-gray-300 p-6 rounded-xl text-center text-gray-800 animate-fadeIn">
-            <span className="text-lg font-medium">{message}</span>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-gray-300">
+              <h2 className="text-xl font-bold text-[#2e8b57] mb-4">Booking Confirmed ✅</h2>
+              <p className="text-gray-800 mb-6">{message}</p>
+              <button
+              onClick={() => navigate("/student/dashboard")}
+              className="bg-[#2e8b57] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#267349] transition-all"
+            >
+              Go to Dashboard
+            </button>
+            </div>
           </div>
         )}
       </div>
