@@ -246,13 +246,14 @@ const handleBooking = async () => {
     });
 
     const data = await res.json();
-
-          if (data.success) {
-        navigate("/student/dashboard");
-        window.location.reload(); 
+      if (data.success) {
+        setMessage(`🎉 You have successfully booked with ${selectedCounselor.name} on ${selectedDate} at ${selectedTime}.`);
+        // Optional: auto redirect to dashboard after 3 seconds
+        setTimeout(() => navigate("/student/dashboard"), 3000);
       } else {
         setMessage("❌ Booking failed. Please try again.");
       }
+
   } catch (error) {
     console.error("Booking error:", error);
     setMessage("❌ Server error occurred. Try again later.");
