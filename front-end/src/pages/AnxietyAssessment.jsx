@@ -49,7 +49,7 @@ function Assessment({ title, questions, options, interpretScore, onComplete, pdf
             <p className="font-bold mb-3 text-gray-600 text-lg">
               {i + 1}. {q}
             </p>
-            <div className="flex gap-4 flex-wrap justify-center">
+            <div className="flex gap-18 flex-wrap justify-center">
               {options.map((opt, j) => (
                 <div key={j} className="flex flex-col items-center">
                   <button
@@ -120,10 +120,10 @@ const gad7Questions = [
   "Feeling afraid as if something awful might happen",
 ];
 const gad7Options = [
-  { text: "Not at all", value: 0, img: "/images/satisfy.png" },
-  { text: "Several days", value: 1, img: "/images/good.png" },
-  { text: "More than half the days", value: 2, img: "/images/neutral.png" },
-  { text: "Nearly every day", value: 3, img: "/images/bad.png" },
+  { value: 0, img: "/images/satisfy.png" },
+  { value: 1, img: "/images/good.png" },
+  { value: 2, img: "/images/neutral.png" },
+  { value: 3, img: "/images/bad.png" },
 ];
 const interpretGAD7 = (score) => {
   if (score <= 4) return "Minimal anxiety";
@@ -145,11 +145,11 @@ const k10Questions = [
   "Felt worthless",
 ];
 const k10Options = [
-  { text: "None of the time", value: 1, img: "/images/satisfy.png" },
-  { text: "A little of the time", value: 2, img: "/images/good.png" },
-  { text: "Some of the time", value: 3, img: "/images/neutral.png" },
-  { text: "Most of the time", value: 4, img: "/images/bad.png" },
-  { text: "All of the time", value: 5, img: "/images/unsatisfy.png" },
+  { value: 1, img: "/images/satisfy.png" },
+  { value: 2, img: "/images/good.png" },
+  { value: 3, img: "/images/neutral.png" },
+  { value: 4, img: "/images/bad.png" },
+  { value: 5, img: "/images/unsatisfy.png" },
 ];
 const interpretK10 = (score) => {
   if (score <= 20) return "Low distress";
@@ -169,10 +169,10 @@ const phq9Questions = [
   "Thoughts of being better off dead or hurting yourself",
 ];
 const phq9Options = [
-  { text: "Not at all", value: 0, img: "/images/satisfy.png" },
-  { text: "Several days", value: 1, img: "/images/good.png" },
-  { text: "More than half the days", value: 2, img: "/images/neutral.png" },
-  { text: "Nearly every day", value: 3, img: "/images/bad.png" },
+  { value: 0, img: "/images/satisfy.png" },
+  { value: 1, img: "/images/good.png" },
+  { value: 2, img: "/images/neutral.png" },
+  { value: 3, img: "/images/bad.png" },
 ];
 const interpretPHQ9 = (score) => {
   if (score <= 4) return "Minimal depression";
@@ -190,12 +190,12 @@ const who5Questions = [
   "My daily life has been filled with things that interest me",
 ];
 const who5Options = [
-  { text: "At no time", value: 0, img: "/images/unsatisfy.png" },
-  { text: "Some of the time", value: 1, img: "/images/unsatisfy.png" },
-  { text: "Less than half of the time", value: 2, img: "/images/bad.png" },
-  { text: "More than half of the time", value: 3, img: "/images/neutral.png" },
-  { text: "Most of the time", value: 4, img: "/images/good.png" },
-  { text: "All of the time", value: 5, img: "/images/satisfy.png" },
+  { value: 0, img: "/images/unsatisfy.png" },
+  { value: 1, img: "/images/unsatisfy.png" },
+  { value: 2, img: "/images/bad.png" },
+  { value: 3, img: "/images/neutral.png" },
+  { value: 4, img: "/images/good.png" },
+  { value: 5, img: "/images/satisfy.png" },
 ];
 const interpretWHO5 = (score) => {
   const total = score * 4;
