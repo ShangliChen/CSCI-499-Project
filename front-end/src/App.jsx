@@ -18,7 +18,7 @@ import AnxietyAssessment from "./pages/AnxietyAssessment";
 import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
-import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
+import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
@@ -125,15 +125,12 @@ function App() {
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
-<<<<<<< HEAD
+
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
-
-          
-=======
           <Route path="/counselor/notifications" element={<NotificationPage />} />
->>>>>>> dd8fb97c310d790bc3cae07f7a9b4fa25bc6a47b
+
         </Routes>
       </main>
     </div>
