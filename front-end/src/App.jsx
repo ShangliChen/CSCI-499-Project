@@ -22,11 +22,9 @@ import AssessmentDetailsView from './pages/AssessmentDetailsView';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
-<<<<<<< HEAD
 import ViewAllAppointments from "./pages/ViewAllAppointments";
-=======
 import NotificationPage from "./pages/NotificationPage";
->>>>>>> dd8fb97c310d790bc3cae07f7a9b4fa25bc6a47b
+
 
 function App() {
   const location = useLocation();
