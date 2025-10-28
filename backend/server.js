@@ -8,6 +8,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import User from './models/User.js';
 import assessmentRoutes from "./routes/assessmentRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.use(express.json());
 // Serve uploaded files statically from the correct path
 app.use('/uploads', express.static(uploadsDir));
 app.use("/api/assessments", assessmentRoutes);
+app.use("/api/assessments/notifications", notificationRoutes);
 
 
 app.get("/", (req, res) => {

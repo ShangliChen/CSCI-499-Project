@@ -2,6 +2,7 @@ import express from "express";
 import AssessmentResult from "../models/assessmentResult.js";
 // Fix case-sensitive import to match actual filename
 import User from "../models/User.js";
+import Notification from "../models/notification.js";
 
 const router = express.Router();
 
@@ -40,6 +41,16 @@ router.post("/save", async (req, res) => {
       assessment_score: overall_result.toString(),
       $push: { assessments: newAssessment._id },
     });
+      
+    // 🔔 Create notification if result is severe
+    const user = await User.findById(userId);
+    if (overall_status === "Severe" && user) {
+      await Notification.create({
+        student: userId,
+        message: `${user.name} received a Severe result on their latest assessment.`,
+        date: new Date(),
+      });
+    }
 
     res.status(201).json({
       message: "Assessment saved successfully!",
@@ -67,6 +78,38 @@ router.get("/user/:userId", async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+// 🔔 3️⃣ Counselor — Get all notifications
+//
+router.get("/notifications", async (req, res) => {
+  try {
+    const notifications = await Notification.find()
+      .populate("student", "name email school_id")
+      .sort({ date: -1 });
+
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+// ✅ Get only unread (recent) notifications
+router.get("/notifications/recent", async (req, res) => {
+  try {
+    const notifications = await Notification.find()
+      .sort({ date: -1 })
+      .limit(5)
+      .populate("student", "name email school_id");
+
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching recent notifications:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+
 
 
 

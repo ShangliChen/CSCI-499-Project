@@ -19,10 +19,11 @@ import AnxietyAssessment from "./pages/AnxietyAssessment";
 import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
-import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
+import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
+import NotificationPage from "./pages/NotificationPage";
 
 function App() {
   const location = useLocation();
@@ -123,6 +124,7 @@ function App() {
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
+          <Route path="/counselor/notifications" element={<NotificationPage />} />
         </Routes>
       </main>
     </div>
