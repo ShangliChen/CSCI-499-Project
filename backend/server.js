@@ -364,29 +364,45 @@ app.listen(PORT, () => {
 });
 
 
-// ✅ Create a booking
-  app.post("/api/bookings", async (req, res) => {
-    console.log("📌 Booking Request Received:", req.body);
-    try {
-        const { studentId, counselorId, date, time, status, meetingType } = req.body;
+// ✅ Create a booking (prevent double booking)
+app.post("/api/bookings", async (req, res) => {
+  console.log("📌 Booking Request Received:", req.body);
+  try {
+    const { studentId, counselorId, date, time, status, meetingType, note  } = req.body;
 
-        const booking = new Booking({
-          student: studentId,
-          counselor: counselorId,
-          date,
-          time,
-          meetingType, // ✅ added
-          status: status || "confirmed",
-        });
+    // 🔍 Check for existing booking at same date/time
+    const existingBooking = await Booking.findOne({
+      counselor: counselorId,
+      date,
+      time,
+      status: { $ne: "canceled" },
+    });
+
+    if (existingBooking) {
+      return res.status(400).json({
+        success: false,
+        message: "This time slot is already booked. Please choose another.",
+      });
+    }
+
+    const booking = new Booking({
+      student: studentId,
+      counselor: counselorId,
+      date,
+      time,
+      meetingType,
+      note,
+      status: status || "confirmed",
+    });
 
     await booking.save();
-
     res.json({ success: true, message: "Booking saved", data: booking });
   } catch (error) {
     console.error("❌ Booking creation error:", error);
     res.status(500).json({ success: false, message: "Error creating booking" });
   }
 });
+
 // ✅ Get all bookings for a student (history)
 app.get("/api/bookings/student/:studentId", async (req, res) => {
   try {
@@ -419,3 +435,36 @@ app.put("/api/bookings/:id/cancel", async (req, res) => {
   }
 });
 
+// ✅ Get booked time slots for a counselor on a specific date
+app.get("/api/bookings/booked/:counselorId/:date", async (req, res) => {
+  try {
+    const { counselorId, date } = req.params;
+    const bookings = await Booking.find({
+      counselor: counselorId,
+      date,
+      status: { $ne: "canceled" }, // exclude canceled
+    }).select("time");
+
+    const bookedTimes = bookings.map(b => b.time);
+    res.json({ success: true, bookedTimes });
+  } catch (error) {
+    console.error("❌ Error fetching booked slots:", error);
+    res.status(500).json({ success: false, message: "Error fetching booked slots" });
+  }
+});
+
+// ✅ Get all bookings for a counselor
+app.get("/api/bookings/counselor/:counselorId", async (req, res) => {
+  try {
+    const bookings = await Booking.find({ counselor: req.params.counselorId })
+    .populate("student", "name email dob") // ✅ add dob for age
+    .sort({ date: 1, time: 1 })
+    .select("date time meetingType status note student"); // ✅ include note explicitly
+
+
+    res.json({ success: true, data: bookings });
+  } catch (error) {
+    console.error("❌ Fetch counselor bookings error:", error);
+    res.status(500).json({ success: false, message: "Error fetching counselor bookings" });
+  }
+});
