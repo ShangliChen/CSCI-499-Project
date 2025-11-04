@@ -19,8 +19,6 @@ import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';
 import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
-import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
-import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
