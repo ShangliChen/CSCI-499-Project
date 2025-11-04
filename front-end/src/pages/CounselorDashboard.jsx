@@ -5,6 +5,8 @@ import axios from "axios";
 const CounselorDashboard = () => {
   const [userName, setUserName] = useState("");
   const [notifications, setNotifications] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const baseURL = "http://localhost:5000";
   const navigate = useNavigate();
 
   // Fetch user and notifications
@@ -16,15 +18,32 @@ const CounselorDashboard = () => {
     } else {
       setUserName(userData.name || "Counselor");
 
-      // Fetch notifications
+      // ✅ Fetch notifications
       axios
         .get("http://localhost:5000/api/assessments/notifications/recent")
         .then((res) => {
-          console.log("Notifications from backend:", res.data); // <--- add this
+          console.log("Notifications from backend:", res.data);
           const data = res.data.map((n) => ({ ...n, read: n.read || false }));
           setNotifications(data);
         })
         .catch((err) => console.error("Error fetching notifications:", err));
+
+      // ✅ Fetch counselor's appointments
+      axios
+        .get(`http://localhost:5000/api/bookings/counselor/${userData.userId}`)
+        .then((res) => {
+          if (res.data.success) {
+            // 🔥 Filter out canceled appointments
+            const activeAppointments = res.data.data.filter(
+              (a) => a.status !== "canceled"
+            );
+            setAppointments(activeAppointments);
+          }
+        })
+
+        .catch((err) =>
+          console.error("Error fetching counselor appointments:", err)
+        );
     }
   }, [navigate]);
 
@@ -158,19 +177,52 @@ const CounselorDashboard = () => {
 
       {/* Main Dashboard Grid */}
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upcoming Sessions */}
-        <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
-          <h3 className="text-lg font-semibold mb-2">Upcoming Sessions</h3>
-          <p className="text-gray-600 mb-4">Alex – Today, Tomorrow, 10 AM</p>
-          <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-[#BDFCC9] text-white rounded hover:bg-green-700">
-              Start Session
-            </button>
-            <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100">
-              Login
-            </button>
-          </div>
+        {/* ✅ Upcoming Appointments */}
+    <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
+      <h3 className="text-lg font-semibold mb-4">Upcoming Appointments</h3>
+
+      {appointments.length === 0 ? (
+        <p className="text-gray-600">No upcoming appointments.</p>
+      ) : (
+        <>
+      {appointments.slice(0, 3).map((a) => (
+        <div key={a._id} className="border-b border-gray-200 py-2">
+          <p className="font-medium text-gray-800">
+            {a.student?.name || "Student"}
+          </p>
+          <p className="text-sm text-gray-600">
+            Date: {new Date(a.date).toLocaleDateString()} – {a.time}
+          </p>
+          <p className="text-sm text-gray-700">
+            Email: {a.student?.email || "N/A"}
+          </p>
+          <p className="text-sm text-gray-700">
+            Note: {a.note || "No note provided"}
+          </p>
+          {a.student?.dob && (
+            <p className="text-sm text-gray-700">
+              Age: {new Date().getFullYear() - new Date(a.student.dob).getFullYear()} yrs
+            </p>
+          )}
+          <p className="text-sm text-gray-500 capitalize">
+            Type: {a.meetingType}
+          </p>
         </div>
+      ))}
+
+
+        {appointments.length > 0 && (
+          <button
+            onClick={() => navigate("/counselor/view-all-appointments")}
+            className="mt-4 w-full bg-[#2e8b57] text-white py-2 rounded hover:bg-[#267349]"
+          >
+            View All Appointments
+          </button>
+        )}
+        </>
+      )}
+    </div>
+
 
         {/* Student Progress */}
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1">

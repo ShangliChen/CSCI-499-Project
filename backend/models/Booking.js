@@ -19,11 +19,13 @@ const BookingSchema = new mongoose.Schema(
       enum: ["video", "in-person", "phone", "flexible"],
       required: true
     },
+    note: { type: String },
     status: {
       type: String,
       enum: ["confirmed", "canceled", "completed"],
       default: "confirmed",
     },
+    
   },
   { timestamps: true }
 );

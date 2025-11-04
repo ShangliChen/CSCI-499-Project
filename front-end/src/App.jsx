@@ -19,11 +19,14 @@ import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';
 import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
+import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
+import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
 import ViewAllAppointments from "./pages/ViewAllAppointments";
 import NotificationPage from "./pages/NotificationPage";
+import CounselorViewAllAppointments from "./pages/CounselorViewAllAppointments";
 
 function App() {
   const location = useLocation();
@@ -112,6 +115,14 @@ function App() {
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/counselor/notifications" element={<NotificationPage />} />
+
+          <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/counselor/notifications" element={<NotificationPage />} />
+          <Route path="/counselor/view-all-appointments"element={<CounselorViewAllAppointments />}/>
+          
+
         </Routes>
       </main>
     </div>

@@ -27,31 +27,33 @@ const CounselorProfile = () => {
 
   // ✅ Save availability
   const saveAvailability = async () => {
-    if (!selectedDate || timeSlots.length === 0) {
-      alert("Please select a date and at least one time slot.");
-      return;
-    }
+  if (!selectedDate || timeSlots.length === 0) {
+    alert("Please select a date and at least one time slot.");
+    return;
+  }
 
-    try {
-      const res = await axios.post(`${baseURL}/api/counselors/availability/${id}`, {
-        date: selectedDate,
-        timeSlots: timeSlots.map((t) => ({ time: t })),
-      });
+  try {
+    const res = await axios.post(`${baseURL}/api/counselor/availability`, {
+      counselorId: id,
+      date: selectedDate,
+      timeSlots, // ✅ send plain array of strings
+    });
 
-      if (res.data.success) {
-        setMessage("✅ Availability saved successfully!");
-        setIsEditing(false);
-        setSelectedDate("");
-        setTimeSlots([]);
-        setNewTime("");
-      } else {
-        setMessage("❌ Failed to save availability.");
-      }
-    } catch (error) {
-      console.error("Error saving availability:", error);
-      setMessage("❌ Error saving schedule. Please try again.");
+    if (res.data.success) {
+      setMessage("✅ Availability saved successfully!");
+      setIsEditing(false);
+      setSelectedDate("");
+      setTimeSlots([]);
+      setNewTime("");
+    } else {
+      setMessage("❌ Failed to save availability.");
     }
-  };
+  } catch (error) {
+    console.error("Error saving availability:", error);
+    setMessage("❌ Error saving schedule. Please try again.");
+  }
+};
+
 
   // ✅ Add or remove time slots
   const addTimeSlot = () => {
@@ -137,9 +139,12 @@ const CounselorProfile = () => {
           <h2 className="text-lg font-semibold mb-4">Set Your Availability</h2>
 
           <div className="grid grid-cols-7 gap-1 mb-4">
-            {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
-              <div key={d} className="text-center text-xs text-gray-500">{d}</div>
-            ))}
+           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <div key={`${d}-${i}`} className="text-center text-xs text-gray-500">
+              {d}
+            </div>
+          ))}
+
             {Array.from({ length: 14 }).map((_, i) => (
               <div
                 key={i}
