@@ -69,6 +69,23 @@ const ViewAllAppointments = () => {
                 Type: {b.meetingType?.toUpperCase()}
               </p>
 
+              {(b.meetingLink || b.meetingLocation || b.meetingDetails) && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                  <p className="text-sm font-semibold text-gray-800 mb-1">Meeting Details</p>
+                  {b.meetingLink && (
+                    <p className="text-sm">
+                      Link: <a href={b.meetingLink} className="text-[#2e8b57] underline" target="_blank" rel="noreferrer">Join Session</a>
+                    </p>
+                  )}
+                  {b.meetingLocation && (
+                    <p className="text-sm">Location: {b.meetingLocation}</p>
+                  )}
+                  {b.meetingDetails && (
+                    <p className="text-sm">Notes: {b.meetingDetails}</p>
+                  )}
+                </div>
+              )}
+
               {/* ✅ Cancel Button for confirmed appointments */}
               {b.status === "confirmed" && (
                 <button

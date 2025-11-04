@@ -122,6 +122,32 @@ const StudentDashboard = () => {
                   Preferred Type: {upcomingBooking.meetingType?.toUpperCase()}
                 </p>
 
+                {/* Meeting info shown if counselor provided */}
+                {(upcomingBooking.meetingLink || upcomingBooking.meetingLocation || upcomingBooking.meetingDetails) && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
+                    <p className="text-sm font-semibold text-gray-800 mb-1">Meeting Details</p>
+                    {upcomingBooking.meetingLink && (
+                      <p className="text-sm">
+                        Link: {" "}
+                        <a
+                          href={upcomingBooking.meetingLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#2e8b57] underline"
+                        >
+                          Join Session
+                        </a>
+                      </p>
+                    )}
+                    {upcomingBooking.meetingLocation && (
+                      <p className="text-sm">Location: {upcomingBooking.meetingLocation}</p>
+                    )}
+                    {upcomingBooking.meetingDetails && (
+                      <p className="text-sm">Notes: {upcomingBooking.meetingDetails}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Status */}
                 <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 
                   rounded-full text-sm font-medium">

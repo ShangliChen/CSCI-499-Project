@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 
 const CounselorViewAllAppointments = () => {
   const [bookings, setBookings] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [meetingLink, setMeetingLink] = useState("");
+  const [meetingLocation, setMeetingLocation] = useState("");
+  const [meetingDetails, setMeetingDetails] = useState("");
+  const [endTime, setEndTime] = useState("");
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const baseURL = "http://localhost:5000";
@@ -49,6 +54,42 @@ const CounselorViewAllAppointments = () => {
     fetchBookings();
   }, [user, navigate]);
 
+  const openEditor = (b) => {
+    setEditingId(b._id);
+    setMeetingLink(b.meetingLink || "");
+    setMeetingLocation(b.meetingLocation || "");
+    setMeetingDetails(b.meetingDetails || "");
+    setEndTime(b.endTime || "");
+  };
+
+  const cancelEditor = () => {
+    setEditingId(null);
+    setMeetingLink("");
+    setMeetingLocation("");
+    setMeetingDetails("");
+    setEndTime("");
+  };
+
+  const saveMeetingInfo = async (bookingId) => {
+    try {
+      const res = await fetch(`${baseURL}/api/bookings/${bookingId}/meeting-info`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetingLink, meetingLocation, meetingDetails, endTime })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBookings((prev) => prev.map((b) => (b._id === bookingId ? data.data : b)));
+        cancelEditor();
+      } else {
+        alert(data.message || "Failed to save meeting info");
+      }
+    } catch (err) {
+      console.error("❌ Error saving meeting info:", err);
+      alert("Server error while saving meeting info");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f0] px-8 py-10 font-sans">
       <h1 className="text-3xl font-bold mb-8 text-gray-900 text-center">
@@ -89,6 +130,23 @@ const CounselorViewAllAppointments = () => {
               <p className="text-gray-800 text-sm">
                  Note: {b.note || "No note provided"}
               </p>
+              {/* Meeting info (if any) */}
+              {(b.meetingLink || b.meetingLocation || b.meetingDetails) && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                  <p className="text-sm text-gray-800 font-semibold mb-1">Meeting Details</p>
+                  {b.meetingLink && (
+                    <p className="text-sm">
+                      Link: <a className="text-[#2e8b57] underline" href={b.meetingLink} target="_blank" rel="noreferrer">{b.meetingLink}</a>
+                    </p>
+                  )}
+                  {b.meetingLocation && (
+                    <p className="text-sm">Location: {b.meetingLocation}</p>
+                  )}
+                  {b.meetingDetails && (
+                    <p className="text-sm">Notes: {b.meetingDetails}</p>
+                  )}
+                </div>
+              )}
               <p
               className={`text-sm font-semibold ${
                     b.status === "confirmed"
@@ -101,16 +159,78 @@ const CounselorViewAllAppointments = () => {
                 Status: {b.status}
                 </p>
             </div>
-
-            <button
-                onClick={() => navigate(`/counselor/user/${b.student?._id}`)}
-                className="mt-4 sm:mt-0 text-[#2e8b57] font-semibold hover:underline self-end sm:self-auto"
-            >
-                View Assessment →
-            </button>
+            <div className="self-stretch sm:self-auto mt-4 sm:mt-0 flex flex-col gap-2 items-end">
+              <button
+                  onClick={() => navigate(`/counselor/user/${b.student?._id}`)}
+                  className="text-[#2e8b57] font-semibold hover:underline"
+              >
+                  View Assessment →
+              </button>
+              <button
+                onClick={() => openEditor(b)}
+                className="px-3 py-1 rounded bg-[#2e8b57] text-white hover:bg-[#267349]"
+              >
+                {b.meetingLink || b.meetingLocation || b.meetingDetails ? 'Update Meeting Info' : 'Send Meeting Info'}
+              </button>
+            </div>
             </div>
 
           ))}
+        </div>
+      )}
+
+      {/* Editor Modal */}
+      {editingId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+            <h2 className="text-xl font-bold mb-4">Send Meeting Info</h2>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Link (Zoom/Google Meet)</label>
+                <input
+                  type="url"
+                  value={meetingLink}
+                  onChange={(e) => setMeetingLink(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location (for In-Person)</label>
+                <input
+                  type="text"
+                  value={meetingLocation}
+                  onChange={(e) => setMeetingLocation(e.target.value)}
+                  placeholder="Counseling Center, Room 204"
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes/Instructions</label>
+                <textarea
+                  value={meetingDetails}
+                  onChange={(e) => setMeetingDetails(e.target.value)}
+                  placeholder="Any prep, documents, or check-in steps"
+                  className="w-full border rounded px-3 py-2 h-24"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Time (optional)</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button onClick={cancelEditor} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+              <button onClick={() => saveMeetingInfo(editingId)} className="px-4 py-2 rounded bg-[#2e8b57] text-white hover:bg-[#267349]">Save</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

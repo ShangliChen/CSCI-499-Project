@@ -502,3 +502,64 @@ app.put("/api/bookings/:id/cancel", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error while canceling booking" });
   }
 });
+
+// ✅ Get bookings for a counselor (used by counselor dashboard/views)
+app.get("/api/bookings/counselor/:counselorId", async (req, res) => {
+  try {
+    const { counselorId } = req.params;
+    const bookings = await Booking.find({ counselor: counselorId })
+      .populate("student", "name email dob")
+      .sort({ date: 1, time: 1 });
+
+    res.json({ success: true, data: bookings });
+  } catch (error) {
+    console.error("❌ Fetch counselor bookings error:", error);
+    res.status(500).json({ success: false, message: "Error fetching counselor bookings" });
+  }
+});
+
+// ✅ Get booked times for a counselor on a specific date (prevents double booking)
+app.get("/api/bookings/booked/:counselorId/:date", async (req, res) => {
+  try {
+    const { counselorId, date } = req.params;
+    const bookings = await Booking.find({
+      counselor: counselorId,
+      date,
+      status: { $ne: "canceled" },
+    }).select("time");
+
+    const bookedTimes = bookings.map((b) => ({ time: b.time }));
+    res.json({ success: true, bookedTimes });
+  } catch (error) {
+    console.error("❌ Fetch booked times error:", error);
+    res.status(500).json({ success: false, message: "Error fetching booked times" });
+  }
+});
+
+// ✅ Counselor updates meeting info for a booking
+app.put("/api/bookings/:id/meeting-info", async (req, res) => {
+  try {
+    const { meetingLink, meetingLocation, meetingDetails, endTime } = req.body;
+
+    const updates = {};
+    if (typeof meetingLink === 'string') updates.meetingLink = meetingLink;
+    if (typeof meetingLocation === 'string') updates.meetingLocation = meetingLocation;
+    if (typeof meetingDetails === 'string') updates.meetingDetails = meetingDetails;
+    if (typeof endTime === 'string') updates.endTime = endTime;
+
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    res.json({ success: true, data: booking });
+  } catch (error) {
+    console.error("❌ Update meeting info error:", error);
+    res.status(500).json({ success: false, message: "Server error while updating meeting info" });
+  }
+});
