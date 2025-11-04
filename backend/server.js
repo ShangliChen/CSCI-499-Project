@@ -5,10 +5,12 @@ import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import User from './models/User.js';
 import assessmentRoutes from "./routes/assessmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import forumRoutes from "./routes/forumRoutes.js";
 import CounselorAvailability from "./models/CounselorAvailability.js";// new added
 import Booking from "./models/Booking.js";
 
@@ -17,6 +19,18 @@ dotenv.config();
 
 const app = express();
 const PORT = 5000;
+
+// Security questions (served to clients)
+const SECURITY_QUESTIONS = [
+  "What was the name of your first pet?",
+  "What is your mother’s maiden name?",
+  "What was the name of your elementary school?",
+  "In what city were you born?",
+  "What is your favorite teacher’s name?",
+  "What is the title of your favorite book?"
+];
+
+const normalizeAnswer = (s = "") => s.trim().toLowerCase();
 
 // Ensure uploads directory exists at runtime (resolved relative to this file)
 const __filename = fileURLToPath(import.meta.url);
@@ -39,6 +53,7 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/assessments/notifications", notificationRoutes);
+app.use("/api/forum", forumRoutes);
 
 
 app.get("/", (req, res) => {
@@ -59,9 +74,17 @@ const upload = multer({ storage: storage });
 
 // --- AUTH ROUTES ---
 
+// --- Public API ---
+
+// Provide available security questions
+app.get("/security-questions", (req, res) => {
+  res.json({ questions: SECURITY_QUESTIONS });
+});
+
+// Signup with security question + answer
 app.post("/signup/:userType", async (req, res) => {
   const { userType } = req.params;
-  const { name, school_id, email, password, dob, phoneNumber, license } = req.body;
+  const { name, school_id, email, password, dob, phoneNumber, license, securityQuestion, securityAnswer } = req.body;
 
   if (!['student', 'counselor'].includes(userType)) {
     return res.status(400).json({ success: false, message: "Invalid user type" });
@@ -73,6 +96,17 @@ app.post("/signup/:userType", async (req, res) => {
       return res.status(400).json({ success: false, message: "User with this email or school ID already exists" });
     }
 
+    if (!securityQuestion || !securityAnswer) {
+      return res.status(400).json({ success: false, message: "Security question and answer are required" });
+    }
+
+    // Optional: enforce question is selected from provided list
+    if (!SECURITY_QUESTIONS.includes(securityQuestion)) {
+      return res.status(400).json({ success: false, message: "Invalid security question" });
+    }
+
+    const answerHash = await bcrypt.hash(normalizeAnswer(securityAnswer), 10);
+
     const newUser = new User({
       name,
       school_id,
@@ -83,6 +117,8 @@ app.post("/signup/:userType", async (req, res) => {
       phoneNumber: userType === 'student' ? phoneNumber : null,
       license: userType === 'counselor' ? license : null,
       verificationStatus: userType === 'counselor' ? 'pending' : 'approved',
+      securityQuestion,
+      securityAnswerHash: answerHash,
     });
 
     await newUser.save();
@@ -160,6 +196,49 @@ app.post("/login/:userType", async (req, res) => {
   } catch (error) {
     console.error(`❌ ${userType} login error:`, error);
     res.status(500).json({ success: false, message: "Server error during login" });
+  }
+});
+
+// Forgot-password: step 1 — get question
+app.post("/forgot-password/init", async (req, res) => {
+  try {
+    const { school_id } = req.body;
+    if (!school_id) return res.status(400).json({ success: false, message: "School ID is required" });
+    const user = await User.findOne({ school_id });
+    if (!user || !user.securityQuestion) {
+      return res.status(404).json({ success: false, message: "User not found or no recovery question set" });
+    }
+    res.json({ success: true, securityQuestion: user.securityQuestion });
+  } catch (error) {
+    console.error("❌ Forgot password init error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Forgot-password: step 2 — verify answer and reset password
+app.post("/forgot-password/reset", async (req, res) => {
+  try {
+    const { school_id, answer, newPassword } = req.body;
+    if (!school_id || !answer || !newPassword) {
+      return res.status(400).json({ success: false, message: "School ID, answer, and new password are required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters" });
+    }
+    const user = await User.findOne({ school_id });
+    if (!user || !user.securityAnswerHash) {
+      return res.status(404).json({ success: false, message: "User not found or recovery not set" });
+    }
+    const ok = await bcrypt.compare(normalizeAnswer(answer), user.securityAnswerHash);
+    if (!ok) {
+      return res.status(401).json({ success: false, message: "Incorrect security answer" });
+    }
+    user.password = newPassword; // will be hashed by pre-save hook
+    await user.save();
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    console.error("❌ Forgot password reset error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -418,4 +497,3 @@ app.put("/api/bookings/:id/cancel", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error while canceling booking" });
   }
 });
-

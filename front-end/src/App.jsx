@@ -3,6 +3,7 @@ import { Brain } from 'lucide-react';
 import Home from './pages/Home';
 import About from './pages/About';
 import Resource from './pages/Resource';
+import Forum from './pages/Forum';
 import UserType from './UserType';
 import Login from './login';
 import Signup from './Signup';
@@ -75,6 +76,12 @@ function App() {
             >
               Resource
             </Link>
+            <Link
+              to="/forum"
+              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/forum' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
+            >
+              Forum
+            </Link>
             <button
               onClick={handleDashboardClick}
               className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath.startsWith('/dashboard') ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
@@ -106,6 +113,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/resource" element={<Resource />} />
+          <Route path="/forum" element={<Forum />} />
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
