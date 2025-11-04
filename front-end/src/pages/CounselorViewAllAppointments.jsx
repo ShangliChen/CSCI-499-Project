@@ -7,6 +7,19 @@ const CounselorViewAllAppointments = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const baseURL = "http://localhost:5000";
 
+  // Format date & time nicely (e.g., Wednesday, Feb 12 at 2:30 PM)
+  const formatDateTime = (date, time) => {
+    const dateObj = new Date(`${date}T${time}`);
+    return dateObj.toLocaleString("en-US", {
+      weekday: "long",   // Monday, Tuesday, ...
+      month: "short",    // Jan, Feb, Mar
+      day: "numeric",    // 1, 2, 3...
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true       // AM/PM
+    });
+  };
+
   useEffect(() => {
     if (!user || user.role !== "counselor") {
       navigate("/login/counselor");
@@ -55,27 +68,29 @@ const CounselorViewAllAppointments = () => {
             >
             <div className="space-y-1">
                 <p className="font-semibold text-gray-900 text-lg">
-                🧑‍🎓 {b.student?.name || "Unknown Student"}
+                 {b.student?.name || "Unknown Student"}
                 </p>
-                <p className="text-gray-700 text-sm">
-                📧 <span className="font-medium">{b.student?.email || "No email"}</span>
+                <p className="text-gray-800 text-sm">
+                 <span className="font-medium">{b.student?.email || "No email"}</span>
                 </p>
                 {b.student?.dob && (
-                <p className="text-gray-700 text-sm">
-                    🎂 Age: {new Date().getFullYear() - new Date(b.student.dob).getFullYear()} years
+                <p className="text-gray-800 text-sm">
+                     Age: {new Date().getFullYear() - new Date(b.student.dob).getFullYear()} years
                 </p>
                 )}
-                <p className="text-gray-700 text-sm">
-                🗓️ Date: {new Date(b.date).toLocaleDateString()} &nbsp; | &nbsp; ⏰ Time: {b.time}
-                </p>
-                <p className="text-gray-700 text-sm capitalize">
-                💬 Type: {b.meetingType}
-                </p>
-                <p className="text-gray-700 text-sm">
-                📝 Note: {b.note || "No note provided"}
-                </p>
-                <p
-                className={`text-sm font-semibold ${
+              <p className="text-gray-800 text-sm">
+                {formatDateTime(b.date, b.time)} – {b.endTime || "1 hour"}
+              </p>
+
+              
+              <p className="text-gray-800 text-sm capitalize">
+                 Type: {b.meetingType}
+              </p>
+              <p className="text-gray-800 text-sm">
+                 Note: {b.note || "No note provided"}
+              </p>
+              <p
+              className={`text-sm font-semibold ${
                     b.status === "confirmed"
                     ? "text-green-600"
                     : b.status === "canceled"

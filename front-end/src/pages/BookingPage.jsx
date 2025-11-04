@@ -210,7 +210,11 @@ const handleNextMonth = () => {
             `${baseURL}/api/bookings/booked/${selectedCounselor._id}/${selectedDate}`
           );
           const data = await res.json();
-          if (data.success) setBookedTimes(data.bookedTimes);
+          if (data.success && Array.isArray(data.bookedTimes)) {
+          setBookedTimes(data.bookedTimes);
+        } else {
+          setBookedTimes([]); // ✅ Always fallback to empty array
+        }
         } catch (err) {
           console.error("Error fetching booked times:", err);
         }
@@ -218,60 +222,66 @@ const handleNextMonth = () => {
       fetchBookedTimes();
     }, [selectedCounselor, selectedDate]);
 
-    const availableTimes = useMemo(() => {
-      if (!selectedCounselor || !selectedDate) return [];
-      const found = selectedCounselor.availability?.find(a => a.date === selectedDate);
-      if (!found) return [];
-      // ✅ Filter out booked slots
-      return found.timeSlots.filter(t => !bookedTimes.includes(t));
-    }, [selectedCounselor, selectedDate, bookedTimes]);
-  // *******************************
-  // 4) Original filters — keep behavior (tags not present on real data, so we keep all)
-  // *******************************
-  const filteredCounselors = useMemo(() => {
-    return Array.isArray(counselors) ? counselors : [];
-  }, [counselors]);
+  const availableTimes = useMemo(() => {
+    if (!selectedCounselor || !selectedDate) return [];
 
-  // *******************************
-  // 5) Handlers — kept your original logic
-  // *******************************
-  const handleAnswer = (question, value) => {
-    setAnswers(prev => ({ ...prev, [question]: value }));
-  };
+    const daySlots =
+      selectedCounselor.availability?.find(a => a.date === selectedDate)?.timeSlots || [];
 
-  const nextStep = () => setCurrentStep(prev => prev + 1);
-  const prevStep = () => setCurrentStep(prev => prev - 1);
-  const skipToResults = () => setCurrentStep(6);
-
-  const handleCounselorSelect = (counselor) => {
-    setSelectedCounselor(counselor);
-    setSelectedDate("");
-    setSelectedTime("");
-    setCurrentStep(7);
-  };
-
-const handleBooking = async () => {
-  if (!selectedCounselor || !selectedDate || !selectedTime) {
-    return setMessage("⚠️ Please select counselor, date, and time.");
-  }
-
-  if (!answers.appointmentType) {
-    return setMessage("⚠️ Please choose a session type (Video, In-Person, Phone...)");
-  }
-
-  try {
-    const res = await fetch(`${baseURL}/api/bookings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId: user.userId,
-        counselorId: selectedCounselor._id,
-        date: selectedDate,
-        time: selectedTime,
-        meetingType: answers.appointmentType,
-        status: "confirmed",
-      }),
+    return daySlots.filter(slot => {
+      return !bookedTimes.some(book => book.time === slot); // ✅ Prevent double booking
     });
+  }, [selectedCounselor, selectedDate, bookedTimes]);
+
+
+    // *******************************
+    // 4) Original filters — keep behavior (tags not present on real data, so we keep all)
+    // *******************************
+    const filteredCounselors = useMemo(() => {
+      return Array.isArray(counselors) ? counselors : [];
+    }, [counselors]);
+
+    // *******************************
+    // 5) Handlers — kept your original logic
+    // *******************************
+    const handleAnswer = (question, value) => {
+      setAnswers(prev => ({ ...prev, [question]: value }));
+    };
+
+    const nextStep = () => setCurrentStep(prev => prev + 1);
+    const prevStep = () => setCurrentStep(prev => prev - 1);
+    const skipToResults = () => setCurrentStep(6);
+
+    const handleCounselorSelect = (counselor) => {
+      setSelectedCounselor(counselor);
+      setSelectedDate("");
+      setSelectedTime("");
+      setCurrentStep(7);
+    };
+
+  const handleBooking = async () => {
+    if (!selectedCounselor || !selectedDate || !selectedTime) {
+      return setMessage("⚠️ Please select counselor, date, and time.");
+    }
+
+    if (!answers.appointmentType) {
+      return setMessage("⚠️ Please choose a session type (Video, In-Person, Phone...)");
+    }
+
+    try {
+      const res = await fetch(`${baseURL}/api/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: user.userId,
+          counselorId: selectedCounselor._id,
+          date: selectedDate,
+          time: selectedTime,
+          meetingType: answers.appointmentType,
+          status: "confirmed",
+          note: answers.note,
+        }),
+      });
 
     const data = await res.json();
       if (data.success) {
