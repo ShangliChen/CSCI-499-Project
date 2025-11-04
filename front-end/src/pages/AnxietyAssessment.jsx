@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 // === Reusable Assessment Component ===
-function Assessment({ title, questions, options, interpretScore, onComplete, pdfLink }) {
+function Assessment({ title, questions, options, interpretScore, onComplete, pdfLink, reverseColors = false }) {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
 
@@ -13,22 +13,30 @@ function Assessment({ title, questions, options, interpretScore, onComplete, pdf
   };
 
   const getButtonColor = (value) => {
-    switch (value) {
-      case 0:
-      case 1:
-        return "bg-green-400 border-green-500";
-      case 2:
-        return "bg-lime-300 border-lime-400";
-      case 3:
-        return "bg-yellow-300 border-yellow-400";
-      case 4:
-        return "bg-orange-400 border-orange-500";
-      case 5:
-        return "bg-red-500 border-red-600";
-      default:
-        return "bg-white border-gray-300";
-    }
-  };
+      // Normal mapping (low = good, high = bad)
+      const normalColors = {
+        0: "bg-green-400 border-green-500",
+        1: "bg-green-400 border-green-500",
+        2: "bg-lime-300 border-lime-400",
+        3: "bg-yellow-300 border-yellow-400",
+        4: "bg-orange-400 border-orange-500",
+        5: "bg-red-500 border-red-600",
+      };
+
+      // Reversed mapping (low = bad, high = good)
+      const reversedColors = {
+        0: "bg-red-500 border-red-600",
+        1: "bg-orange-400 border-orange-500",
+        2: "bg-yellow-300 border-yellow-400",
+        3: "bg-lime-300 border-lime-400",
+        4: "bg-green-400 border-green-500",
+        5: "bg-green-500 border-green-600",
+      };
+
+      return reverseColors ? reversedColors[value] || "bg-white border-gray-300"
+                           : normalColors[value] || "bg-white border-gray-300";
+};
+
 
   const calculateScore = (e) => {
     e.preventDefault();
@@ -152,7 +160,7 @@ const k10Options = [
   { value: 5, img: "/images/unsatisfy.png" },
 ];
 const interpretK10 = (score) => {
-  if (score <= 20) return "Low distress";
+  if (score <= 20) return "Likely to be well";
   if (score <= 29) return "Moderate distress";
   return "Severe distress";
 };
@@ -206,6 +214,7 @@ const interpretWHO5 = (score) => {
 
 // === Summary Component ===
 function Summary({ severityList, combinedIndex }) {
+  const [showResults, setShowResults] = useState(false);
   const moderateConditions = severityList.filter(
     (s) => s.severity.includes("moderate") && !s.severity.includes("severe")
   );
@@ -218,62 +227,55 @@ function Summary({ severityList, combinedIndex }) {
     severeConditions.length === 0 &&
     severityList.length === 4;
 
-  // === 🔥 Save to Database once all assessments are complete ===
-  const user = JSON.parse(localStorage.getItem("user"));
-
   const handleFinalSubmit = async () => {
-  // Get user data from localStorage
-  const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.userId) {
+      alert("User not logged in. Please log in first.");
+      return;
+    }
+    if (severityList.length !== 4 || combinedIndex === null) {
+      alert("Please complete all assessments before submitting.");
+      return;
+    }
 
-  // Check if user data exists and has an _id
-  if (!user || !user.userId) {
-    alert("User not logged in. Please log in first.");
-    return;
-  }
+    const anxiety = severityList.find((r) => r.test.includes("anxiety"));
+    const depression = severityList.find((r) => r.test.includes("depression"));
+    const stress = severityList.find((r) => r.test.includes("stress"));
+    const wellbeing = severityList.find((r) => r.test.includes("well-being"));
 
-  if (severityList.length !== 4 || combinedIndex === null) {
-    alert("Please complete all assessments before submitting.");
-    return;
-  }
+    const payload = {
+      userId: user.userId,
+      anxiety_assessment: anxiety?.score || 0,
+      depression_assessment: depression?.score || 0,
+      stress_assessment: stress?.score || 0,
+      wellbeing_assessment: wellbeing?.score || 0,
+      overall_result: combinedIndex,
+      overall_status: severeConditions.length
+        ? "Severe"
+        : moderateConditions.length
+        ? "Moderate"
+        : "Good",
+    };
 
-  const anxiety = severityList.find((r) => r.test.includes("anxiety"));
-  const depression = severityList.find((r) => r.test.includes("depression"));
-  const stress = severityList.find((r) => r.test.includes("stress"));
-  const wellbeing = severityList.find((r) => r.test.includes("well-being"));
-
-  const payload = {
-    userId: user.userId,
-    anxiety_assessment: anxiety?.score || 0,
-    depression_assessment: depression?.score || 0,
-    stress_assessment: stress?.score || 0,
-    wellbeing_assessment: wellbeing?.score || 0,
-    overall_result: combinedIndex,
-    overall_status: severeConditions.length
-      ? "Severe"
-      : moderateConditions.length
-      ? "Moderate"
-      : "Good",
+    try {
+      const res = await axios.post("http://localhost:5000/api/assessments/save", payload);
+      alert("✅ Assessment submitted successfully!");
+      console.log("✅ Saved:", res.data);
+      setShowResults(true);
+    } catch (err) {
+      console.error("❌ Error submitting assessment:", err);
+      alert("Failed to submit assessment.");
+    }
   };
 
-  try {
-    const res = await axios.post("http://localhost:5000/api/assessments/save", payload);
-    alert("✅ Assessment submitted successfully!");
-    console.log("✅ Saved:", res.data);
-  } catch (err) {
-    console.error("❌ Error submitting assessment:", err);
-    alert("Failed to submit assessment.");
-  }
-};
-
-
   return (
-    <div className="max-w-3xl mx-auto p-6 mt-12 mb-24 rounded-lg shadow-lg bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="max-w-3xl mx-auto p-6 mt-12 mb-24 rounded-lg shadow-lg bg-gradient-to-b from-gray-50 to-gray-100 relative">
       <h2 className="text-2xl font-bold mb-4 text-center text-black">Summary</h2>
 
       {combinedIndex !== null && (
         <div className="text-center mb-8">
-          <h3 className="text-xl font-semibold text-black">
-            🧠 Overall Mental Health Index (MHI): {combinedIndex.toFixed(1)} / 100
+          <h3 className="font-semibold text-black">
+            Overall Mental Health Index (MHI): {combinedIndex.toFixed(1)} / 100
           </h3>
           <p className="text-sm text-gray-600 mt-2">
             *This is an approximate wellness indicator combining all four
@@ -290,75 +292,17 @@ function Summary({ severityList, combinedIndex }) {
         </div>
       )}
 
-      {/* 🔘 NEW SUBMIT BUTTON */}
+      {/* 🔘 NEW STYLED FINAL SUBMIT BUTTON */}
       <div className="text-center mt-6">
         <button
           onClick={handleFinalSubmit}
-          className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300"
+          className="px-8 py-3 bg-white text-[#009689] border-2 border-[#009689] font-semibold rounded-full shadow-md hover:bg-[#009689] hover:text-white transition-all duration-300"
         >
           Submit Final Assessment
         </button>
       </div>
-
-      {/* Rest of Summary remains the same */}
-      {severeConditions.length > 0 && (
-        <div className="mb-6 text-red-700 font-semibold text-center">
-          <p className="mb-4">
-            🔴 Your results suggest you may be experiencing severe levels of distress.
-          </p>
-          <p className="mb-4">
-            This may include symptoms like overwhelming sadness, persistent anxiety, loss of interest, or thoughts of hopelessness.
-            You are not alone — and help is available.
-          </p>
-          <p className="mb-4">
-            💬 It’s strongly recommended that you speak with a licensed mental health professional as soon as possible.
-          </p>
-          <div className="text-center">
-            <Link
-              to="/resources/booking"
-              className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition inline-block text-center"
-            >
-              Booking Counselor Appointment
-            </Link>
-          </div>
-          <div className="mt-8 text-sm text-red-800 text-center">
-            <p className="font-semibold mb-2">
-              🚨 If you're in crisis or thinking about harming yourself:
-            </p>
-            <p>
-              Please reach out immediately to a local emergency service or mental health crisis line in your country.
-              <br />
-              <strong>United States:</strong> 988 Suicide & Crisis Lifeline – Call or text <strong>988</strong>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {moderateConditions.length > 0 && severeConditions.length === 0 && (
-        <div className="mb-6 text-center text-black">
-          <p className="mb-4">
-            Your results suggest you may be experiencing moderate levels of{" "}
-            {moderateConditions.map((c) => c.test).join(", ")}.
-          </p>
-          <p className="mb-4">
-            You're not alone. Below are trusted resources that can support you.
-          </p>
-          <Link
-            to="/resource"
-            className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition inline-block text-center"
-          >
-            Resources
-          </Link>
-        </div>
-      )}
-      {showPositiveMessage && (
-        <div className="text-center text-green-700 font-semibold">
-          <p className="mb-4 text-lg">
-            🟢 You're Doing Well. Keep Taking Care of Yourself!
-          </p>
-        </div>
-      )}
-
+          
+          
       <div className="max-w-3xl mx-auto bg-gray-100 p-6 mt-12 mb-20 rounded-lg shadow">
         <h2 className="text-xl font-bold mb-4 text-black text-center">📚 Official Assessment Tools Used</h2>
         <p className="text-sm text-gray-800 mb-4">
@@ -395,6 +339,81 @@ function Summary({ severityList, combinedIndex }) {
         <p className="text-xs text-gray-600 mt-6">
           ⚠️ These tools are screening instruments and not intended to provide a clinical diagnosis. For personalized support, consult a licensed mental health professional.
         </p>
+      </div>
+
+      {/* 🔹 SIDE DRAWER RESULT PANEL */}
+      <div
+        className={`fixed top-0 right-0 h-full w-96 bg-white shadow-2xl transform transition-transform duration-500 ${
+          showResults ? "translate-x-0" : "translate-x-full"
+        } z-50 overflow-y-auto`}
+      >
+        <div className="flex justify-between items-center p-4 border-b border-gray-200">
+          <h3 className="text-xl font-semibold text-[#009689]">Your Assessment Summary</h3>
+          <button
+            onClick={() => setShowResults(false)}
+            className="text-gray-500 hover:text-gray-800 text-2xl font-bold"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6 text-sm">
+          {severeConditions.length > 0 && (
+            <div className="mb-6 text-red-700 font-semibold text-center">
+              <p className="mb-4">
+                🔴 Your results suggest you may be experiencing severe levels of distress.
+              </p>
+              <p className="mb-4">
+                It’s strongly recommended that you speak with a licensed mental health
+                professional as soon as possible.
+              </p>
+              <div className="text-center">
+                <Link
+                  to="/resources/booking"
+                  className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition inline-block text-center"
+                >
+                  Booking Counselor Appointment
+                </Link>
+              </div>
+              <div className="mt-8 text-sm text-red-800 text-center">
+                <p className="font-semibold mb-2">
+                  🚨 If you're in crisis or thinking about harming yourself:
+                </p>
+                <p>
+                  Please reach out immediately to a local emergency service or mental health crisis
+                  line in your country.
+                  <br />
+                  <strong>United States:</strong> 988 Suicide & Crisis Lifeline – Call or text{" "}
+                  <strong>988</strong>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {moderateConditions.length > 0 && severeConditions.length === 0 && (
+            <div className="mb-6 text-center text-black">
+              <p className="mb-4">
+                Your results suggest you may be experiencing moderate levels of{" "}
+                {moderateConditions.map((c) => c.test).join(", ")}.
+              </p>
+              <p className="mb-4">
+                You're not alone. Below are trusted resources that can support you.
+              </p>
+              <Link
+                to="/resource"
+                className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition inline-block text-center"
+              >
+                Resources
+              </Link>
+            </div>
+          )}
+
+          {showPositiveMessage && (
+            <div className="text-center text-green-700 font-semibold">
+              <p className="mb-4 text-lg">🟢 You're Doing Well. Keep Taking Care of Yourself!</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -464,6 +483,7 @@ export default function CombinedAssessments() {
         interpretScore={interpretWHO5}
         onComplete={handleAssessmentComplete}
         pdfLink="/docs/who5.pdf"
+        reverseColors={true}   // ✅ Add this line
       />
 
       <Summary severityList={severityList} combinedIndex={combinedIndex} />

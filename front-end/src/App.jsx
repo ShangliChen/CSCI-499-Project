@@ -18,14 +18,14 @@ import StressAssessment from "./pages/StressAssessment";
 import AnxietyAssessment from "./pages/AnxietyAssessment";
 import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
-import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
-import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
+import SelfHelpGuide from './pages/SelfHelpGuide';
+import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCounselorDetail from './pages/AdminCounselorDetail';
 import ViewAllAppointments from "./pages/ViewAllAppointments";
 import NotificationPage from "./pages/NotificationPage";
-
+import CounselorViewAllAppointments from "./pages/CounselorViewAllAppointments";
 
 function App() {
   const location = useLocation();
@@ -44,6 +44,12 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/');
+  };
+
+  const getNavClass = (path) => {
+    return currentPath === path
+      ? 'bg-[#98FF98] text-black border-[#98FF98]'
+      : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100';
   };
 
   return (
@@ -96,12 +102,7 @@ function App() {
                 Logout
               </button>
             ) : (
-              <Link
-                to="/user-type"
-                className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/user-type' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-              >
-                Login
-              </Link>
+              <Link to="/user-type" className={`px-4 py-2 rounded-lg font-medium transition border ${getNavClass('/user-type')}`}>Login</Link>
             )}
           </div>
         </div>
@@ -133,11 +134,15 @@ function App() {
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
+          <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
+          <Route path="/counselor/notifications" element={<NotificationPage />} />
 
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/counselor/notifications" element={<NotificationPage />} />
+          <Route path="/counselor/view-all-appointments"element={<CounselorViewAllAppointments />}/>
+          
 
         </Routes>
       </main>

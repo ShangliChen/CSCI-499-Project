@@ -443,29 +443,34 @@ app.listen(PORT, () => {
 });
 
 
-// ✅ Create a booking
+  ///  Create a booking 
   app.post("/api/bookings", async (req, res) => {
     console.log("📌 Booking Request Received:", req.body);
+
     try {
-        const { studentId, counselorId, date, time, status, meetingType } = req.body;
+      const { studentId, counselorId, date, time, meetingType, note } = req.body;
 
-        const booking = new Booking({
-          student: studentId,
-          counselor: counselorId,
-          date,
-          time,
-          meetingType, // ✅ added
-          status: status || "confirmed",
-        });
+      const booking = new Booking({
+        student: studentId,
+        counselor: counselorId,
+        date,
+        time,
+        meetingType,
+        note,
+        status: "confirmed",
+      });
 
-    await booking.save();
+      await booking.save();
 
-    res.json({ success: true, message: "Booking saved", data: booking });
-  } catch (error) {
-    console.error("❌ Booking creation error:", error);
-    res.status(500).json({ success: false, message: "Error creating booking" });
-  }
-});
+      res.json({ success: true, message: "Booking saved!", data: booking });
+
+    } catch (error) {
+      console.error("❌ Booking creation error:", error);
+      res.status(500).json({ success: false, message: "Server error while booking." });
+    }
+  });
+
+
 // ✅ Get all bookings for a student (history)
 app.get("/api/bookings/student/:studentId", async (req, res) => {
   try {

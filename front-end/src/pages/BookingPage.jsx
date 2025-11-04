@@ -119,10 +119,12 @@ const BookingPage = () => {
   // *******************************
   // 2) Original calendar generator — kept as-is but we’ll gate clickable days by real availability
   // *******************************
-  const generateCalendar = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  const generateCalendar = (monthDate = calendarMonth) => {
+  const currentMonth = monthDate.getMonth();
+  const currentYear = monthDate.getFullYear();
+  const today = new Date();
 
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
@@ -164,10 +166,10 @@ const BookingPage = () => {
       });
     }
 
-    return {
+   return {
       calendar,
-      month: new Date(currentYear, currentMonth, 1).toLocaleDateString("en-US", { month: "long" }),
-      year: currentYear
+      month: monthDate.toLocaleDateString("en-US", { month: "long" }),
+      year: currentYear,
     };
   };
     // ✅ Determine month/year to show on calendar dynamically
@@ -179,71 +181,107 @@ const BookingPage = () => {
       );
 
 
-  const { calendar, month, year } = generateCalendar();
+  const { calendar, month, year } = generateCalendar(calendarMonth);
+  const handlePrevMonth = () => {
+  setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+};
+
+const handleNextMonth = () => {
+  setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+};
   const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
   // *******************************
   // 3) Availability helpers (real data)
   // *******************************
-  const availableDates = useMemo(() => {
-    if (!selectedCounselor || !Array.isArray(selectedCounselor.availability)) return new Set();
-    // Only dates in YYYY-MM-DD; store in a Set for quick lookup
-    return new Set(selectedCounselor.availability.map(a => a.date));
-  }, [selectedCounselor]);
+      const availableDates = useMemo(() => {
+        if (!selectedCounselor || !Array.isArray(selectedCounselor.availability)) return new Set();
+        // Only dates in YYYY-MM-DD; store in a Set for quick lookup
+        return new Set(selectedCounselor.availability.map(a => a.date));
+      }, [selectedCounselor]);
+
+      const [bookedTimes, setBookedTimes] = useState([]);
+
+    useEffect(() => {
+      const fetchBookedTimes = async () => {
+        if (!selectedCounselor || !selectedDate) return;
+        try {
+          const res = await fetch(
+            `${baseURL}/api/bookings/booked/${selectedCounselor._id}/${selectedDate}`
+          );
+          const data = await res.json();
+          if (data.success && Array.isArray(data.bookedTimes)) {
+          setBookedTimes(data.bookedTimes);
+        } else {
+          setBookedTimes([]); // ✅ Always fallback to empty array
+        }
+        } catch (err) {
+          console.error("Error fetching booked times:", err);
+        }
+      };
+      fetchBookedTimes();
+    }, [selectedCounselor, selectedDate]);
 
   const availableTimes = useMemo(() => {
     if (!selectedCounselor || !selectedDate) return [];
-    const found = selectedCounselor.availability?.find(a => a.date === selectedDate);
-    return found?.timeSlots || [];
-  }, [selectedCounselor, selectedDate]);
 
-  // *******************************
-  // 4) Original filters — keep behavior (tags not present on real data, so we keep all)
-  // *******************************
-  const filteredCounselors = useMemo(() => {
-    return Array.isArray(counselors) ? counselors : [];
-  }, [counselors]);
+    const daySlots =
+      selectedCounselor.availability?.find(a => a.date === selectedDate)?.timeSlots || [];
 
-  // *******************************
-  // 5) Handlers — kept your original logic
-  // *******************************
-  const handleAnswer = (question, value) => {
-    setAnswers(prev => ({ ...prev, [question]: value }));
-  };
-
-  const nextStep = () => setCurrentStep(prev => prev + 1);
-  const prevStep = () => setCurrentStep(prev => prev - 1);
-  const skipToResults = () => setCurrentStep(6);
-
-  const handleCounselorSelect = (counselor) => {
-    setSelectedCounselor(counselor);
-    setSelectedDate("");
-    setSelectedTime("");
-    setCurrentStep(7);
-  };
-
-const handleBooking = async () => {
-  if (!selectedCounselor || !selectedDate || !selectedTime) {
-    return setMessage("⚠️ Please select counselor, date, and time.");
-  }
-
-  if (!answers.appointmentType) {
-    return setMessage("⚠️ Please choose a session type (Video, In-Person, Phone...)");
-  }
-
-  try {
-    const res = await fetch(`${baseURL}/api/bookings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId: user.userId,
-        counselorId: selectedCounselor._id,
-        date: selectedDate,
-        time: selectedTime,
-        meetingType: answers.appointmentType,
-        status: "confirmed",
-      }),
+    return daySlots.filter(slot => {
+      return !bookedTimes.some(book => book.time === slot); // ✅ Prevent double booking
     });
+  }, [selectedCounselor, selectedDate, bookedTimes]);
+
+
+    // *******************************
+    // 4) Original filters — keep behavior (tags not present on real data, so we keep all)
+    // *******************************
+    const filteredCounselors = useMemo(() => {
+      return Array.isArray(counselors) ? counselors : [];
+    }, [counselors]);
+
+    // *******************************
+    // 5) Handlers — kept your original logic
+    // *******************************
+    const handleAnswer = (question, value) => {
+      setAnswers(prev => ({ ...prev, [question]: value }));
+    };
+
+    const nextStep = () => setCurrentStep(prev => prev + 1);
+    const prevStep = () => setCurrentStep(prev => prev - 1);
+    const skipToResults = () => setCurrentStep(6);
+
+    const handleCounselorSelect = (counselor) => {
+      setSelectedCounselor(counselor);
+      setSelectedDate("");
+      setSelectedTime("");
+      setCurrentStep(7);
+    };
+
+  const handleBooking = async () => {
+    if (!selectedCounselor || !selectedDate || !selectedTime) {
+      return setMessage("⚠️ Please select counselor, date, and time.");
+    }
+
+    if (!answers.appointmentType) {
+      return setMessage("⚠️ Please choose a session type (Video, In-Person, Phone...)");
+    }
+
+    try {
+      const res = await fetch(`${baseURL}/api/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: user.userId,
+          counselorId: selectedCounselor._id,
+          date: selectedDate,
+          time: selectedTime,
+          meetingType: answers.appointmentType,
+          status: "confirmed",
+          note: answers.note,
+        }),
+      });
 
     const data = await res.json();
       if (data.success) {
@@ -251,7 +289,7 @@ const handleBooking = async () => {
         // Optional: auto redirect to dashboard after 3 seconds
         setTimeout(() => navigate("/student/dashboard"), 3000);
       } else {
-        setMessage("❌ Booking failed. Please try again.");
+        setMessage("⚠️ This slot is no longer available. Please choose another.");
       }
 
   } catch (error) {
@@ -491,12 +529,27 @@ const handleBooking = async () => {
         <div className="bg-white p-6 rounded-xl border border-gray-300">
           <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Date</h3>
 
-          <div className="text-center mb-4">
-            <h4 className="text-lg font-bold text-gray-900">
-              {month}
-            </h4>
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={handlePrevMonth}
+            className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+
+          <div className="text-center">
+            <h4 className="text-lg font-bold text-gray-900">{month}</h4>
             <p className="text-gray-600">{year}</p>
           </div>
+
+          <button
+            onClick={handleNextMonth}
+            className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+        </div>
+
 
           <div className="grid grid-cols-7 gap-1 mb-2">
             {weekDays.map(day => (
@@ -560,6 +613,19 @@ const handleBooking = async () => {
         </div>
 
       </div>
+      {/* ✅ Student Note Prompt */}
+      <div className="bg-white p-6 rounded-xl border border-gray-300">
+        <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+          Add a Note (Optional)
+        </h3>
+        <textarea
+          value={answers.note || ""}
+          onChange={(e) => setAnswers((prev) => ({ ...prev, note: e.target.value }))}
+          placeholder="Leave a short note to help your counselor understand your goals or concerns"
+          className="w-full h-28 border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2e8b57] resize-none"
+        />
+      </div>
+
 
       {/* ✅ Booking Summary */}
       {(selectedDate || selectedTime) && (

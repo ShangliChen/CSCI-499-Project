@@ -128,29 +128,29 @@ const StudentDashboard = () => {
                   Status: {upcomingBooking.status}
                 </span>
 
-                {/* ✅ Cancel */}
-                <button
-                  onClick={async () => {
-                    if (window.confirm("Cancel this appointment?")) {
-                      await fetch(`${baseURL}/api/bookings/${upcomingBooking._id}/cancel`, {
+              {/* ✅ Buttons on same line */}
+              <div className="mt-4 flex gap-3 flex-wrap">
+              <button
+                onClick={async () => {
+                  if (window.confirm("Cancel this appointment?")) {
+                    await fetch(`${baseURL}/api/bookings/${upcomingBooking._id}/cancel`, {
                       method: "PUT",
-                      });
-                      window.location.reload(); // ✅ Refresh to update UI immediately
-                    }
-                  }}
-                  className="mt-3 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700"
-                >
-                  Cancel Appointment
-                </button>
+                    });
+                    window.location.reload();
+                  }
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-md font-normal hover:bg-red-600 transition"
+              >
+                Cancel
+              </button>
 
-                {/* ✅ View All */}
-                <button
-                  onClick={() => navigate("/student/view-all-appointments")}
-                  className="mt-3 ml-2 px-3 py-1 bg-[#98FF98] text-black rounded-md 
-                    font-normal hover:bg-[#7EE794]"
-                >
-                  View All
-                </button>
+              <button
+                onClick={() => navigate("/student/view-all-appointments")}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-normal hover:bg-gray-300 transition"
+              >
+                View All
+              </button>
+            </div>
               </div>
             ) : (
               <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
