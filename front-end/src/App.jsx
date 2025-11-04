@@ -17,6 +17,8 @@ import StressAssessment from "./pages/StressAssessment";
 import AnxietyAssessment from "./pages/AnxietyAssessment";
 import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
+import SelfHelpGuide from './pages/SelfHelpGuide';
+import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
 import SelfHelpGuide from './pages/SelfHelpGuide';  // Import the new page component
 import AssessmentDetailsView from './pages/AssessmentDetailsView'; // Import the new page component
 import AdminLogin from './pages/AdminLogin';
@@ -25,7 +27,6 @@ import AdminCounselorDetail from './pages/AdminCounselorDetail';
 import ViewAllAppointments from "./pages/ViewAllAppointments";
 import NotificationPage from "./pages/NotificationPage";
 import CounselorViewAllAppointments from "./pages/CounselorViewAllAppointments";
-
 
 function App() {
   const location = useLocation();
@@ -46,6 +47,12 @@ function App() {
     navigate('/');
   };
 
+  const getNavClass = (path) => {
+    return currentPath === path
+      ? 'bg-[#98FF98] text-black border-[#98FF98]'
+      : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100';
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f0fff0]">
       {/* Header */}
@@ -58,24 +65,9 @@ function App() {
 
           {/* Navigation */}
           <div className="flex items-center space-x-3">
-            <Link
-              to="/"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              Home
-            </Link>
-            <Link
-              to="/about"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/about' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              About
-            </Link>
-            <Link
-              to="/resource"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/resource' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              Resource
-            </Link>
+            <Link to="/" className={`px-4 py-2 rounded-lg font-medium transition border ${getNavClass('/')}`}>Home</Link>
+            <Link to="/about" className={`px-4 py-2 rounded-lg font-medium transition border ${getNavClass('/about')}`}>About</Link>
+            <Link to="/resource" className={`px-4 py-2 rounded-lg font-medium transition border ${getNavClass('/resource')}`}>Resource</Link>
             <button
               onClick={handleDashboardClick}
               className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath.startsWith('/dashboard') ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
@@ -90,12 +82,7 @@ function App() {
                 Logout
               </button>
             ) : (
-              <Link
-                to="/user-type"
-                className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/user-type' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-              >
-                Login
-              </Link>
+              <Link to="/user-type" className={`px-4 py-2 rounded-lg font-medium transition border ${getNavClass('/user-type')}`}>Login</Link>
             )}
           </div>
         </div>
@@ -126,6 +113,8 @@ function App() {
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
+          <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
+          <Route path="/counselor/notifications" element={<NotificationPage />} />
 
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
