@@ -9,6 +9,19 @@ const CounselorDashboard = () => {
   const baseURL = "http://localhost:5000";
   const navigate = useNavigate();
 
+  // Format date & time nicely (e.g., Tuesday, Feb 12 at 2:30 PM)
+  const formatDateTime = (date, time) => {
+    const dateObj = new Date(`${date}T${time}`);
+    return dateObj.toLocaleString("en-US", {
+      weekday: "long",   // Monday, Tuesday...
+      month: "short",    // Jan, Feb, Mar...
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,      // AM/PM
+    });
+  };
+
   // Fetch user and notifications
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -191,7 +204,7 @@ const CounselorDashboard = () => {
             {a.student?.name || "Student"}
           </p>
           <p className="text-sm text-gray-600">
-            Date: {new Date(a.date).toLocaleDateString()} – {a.time}
+            🗓️ {formatDateTime(a.date, a.time)} – {a.endTime || "1 hour session"}
           </p>
           <p className="text-sm text-gray-700">
             Email: {a.student?.email || "N/A"}

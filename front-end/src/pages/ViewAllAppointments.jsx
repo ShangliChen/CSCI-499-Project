@@ -7,6 +7,19 @@ const ViewAllAppointments = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const baseURL = "http://localhost:5000";
 
+    // Format date & time nicely (e.g., Wednesday, Feb 12 at 2:30 PM)
+  const formatDateTime = (date, time) => {
+    const dateObj = new Date(`${date}T${time}`);
+    return dateObj.toLocaleString("en-US", {
+      weekday: "long",   // Monday, Tuesday, ...
+      month: "short",    // Jan, Feb, Mar
+      day: "numeric",    // 1, 2, 3...
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true       // AM/PM
+    });
+  };
+
   useEffect(() => {
     const fetchBookings = async () => {
       try {
@@ -49,10 +62,8 @@ const ViewAllAppointments = () => {
                 Counselor: {b.counselor?.name}
               </p>
 
-              <p className="text-gray-600">
-                Date: {new Date(b.date).toLocaleDateString()} &nbsp;
-                Time: {b.time}
-              </p>
+        🗓️ {formatDateTime(b.date, b.time)} – {b.endTime || "1 hour"}
+
 
               <p className="text-gray-700">
                 Type: {b.meetingType?.toUpperCase()}
