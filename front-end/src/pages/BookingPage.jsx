@@ -250,13 +250,13 @@ const handleNextMonth = () => {
 
     const nextStep = () => setCurrentStep(prev => prev + 1);
     const prevStep = () => setCurrentStep(prev => prev - 1);
-    const skipToResults = () => setCurrentStep(6);
+    const skipToResults = () => setCurrentStep(5);
 
     const handleCounselorSelect = (counselor) => {
       setSelectedCounselor(counselor);
       setSelectedDate("");
       setSelectedTime("");
-      setCurrentStep(7);
+      setCurrentStep(6);
     };
 
   const handleBooking = async () => {
@@ -420,32 +420,8 @@ const handleNextMonth = () => {
         </div>
       )
     },
-    5: {
-      title: "Mental Health Assessment",
-      content: (
-        <div className="space-y-6">
-          <p className="text-gray-600 text-lg text-center">Have you taken any anxiety, depression, or stress assessments recently?</p>
-          <div className="flex gap-4 justify-center mb-8">
-            {["yes", "no"].map(answer => (
-              <button key={answer} onClick={() => answer === "no" ? (handleAnswer("takenTest", answer), nextStep()) : handleAnswer("takenTest", answer)} className={`px-12 py-4 rounded-lg border font-semibold text-lg ${answers.takenTest === answer ? "border-[#2e8b57] bg-[#2e8b57] text-white" : "border-gray-300 bg-[#d4f8d4] text-gray-700"}`}>
-                {answer.charAt(0).toUpperCase() + answer.slice(1)}
-              </button>
-            ))}
-          </div>
-          {answers.takenTest === "yes" && (
-            <div className="bg-[#d4f8d4] p-6 rounded-xl animate-fadeIn">
-              <label className="block text-gray-700 font-medium mb-4 text-center text-lg">What was your assessment score? (if known)</label>
-              <input type="number" min="0" max="100" value={answers.testScore} onChange={(e) => handleAnswer("testScore", e.target.value)} placeholder="Enter score 0-100" className="w-full p-4 border border-gray-300 rounded-lg text-center text-lg focus:outline-none focus:border-gray-900 mb-4" />
-              <button onClick={nextStep} className="w-full bg-[#2e8b57] text-white py-4 rounded-lg font-semibold hover:bg-[#267349] transition-all text-lg">
-                Continue to Results
-                <ArrowRight className="ml-2 h-5 w-5 inline" />
-              </button>
-            </div>
-          )}
-        </div>
-      )
-    },
-  6: {
+
+  5: {
     title: "Recommended Counselors",
     content: (
       <div className="space-y-8">
@@ -505,7 +481,7 @@ const handleNextMonth = () => {
   },
 
 
-7: {
+6: {
   title: "Schedule Your Appointment",
   content: (
     <div className="space-y-8">
@@ -657,6 +633,7 @@ const handleNextMonth = () => {
     <div className="min-h-screen bg-[#f0fff0] py-12 px-4">
       <div className="max-w-6xl mx-auto bg-[#f0fff0] p-8">
         {currentStep > 1 && currentStep < 6 && (
+
           <>
             <div className="mb-10">
               <div className="flex items-center justify-between mb-3">
@@ -674,8 +651,8 @@ const handleNextMonth = () => {
           </>
         )}
 
-        {currentStep === 7 && (
-          <button onClick={() => setCurrentStep(6)} className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-all group text-lg font-medium">
+        {currentStep === 6 && (
+          <button onClick={() => setCurrentStep(5)} className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-all group text-lg font-medium">
             <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Counselors
           </button>
