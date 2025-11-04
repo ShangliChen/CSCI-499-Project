@@ -1,5 +1,5 @@
 import express from "express";
-import Notification from "../models/Notification.js"; // your existing model
+import Notification from "../models/notification.js"; // match actual filename (lowercase)
 
 const router = express.Router();
 

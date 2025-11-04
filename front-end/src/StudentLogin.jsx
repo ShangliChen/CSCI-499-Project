@@ -5,6 +5,11 @@ function StudentLogin() {
   const [schoolId, setSchoolId] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
+  const [recoveryQuestion, setRecoveryQuestion] = useState("");
+  const [recoveryAnswer, setRecoveryAnswer] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -30,6 +35,58 @@ function StudentLogin() {
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong!");
+    }
+  };
+
+  const handleForgotInit = async () => {
+    setMessage("");
+    setRecoveryQuestion("");
+    if (!schoolId) {
+      setMessage("Please enter your School ID first.");
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/forgot-password/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ school_id: schoolId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRecoveryQuestion(data.securityQuestion);
+      } else {
+        setMessage(data.message || "Failed to retrieve security question.");
+      }
+    } catch (err) {
+      setMessage("Failed to retrieve security question.");
+    }
+  };
+
+  const handleForgotReset = async () => {
+    setMessage("");
+    if (newPassword !== confirmPassword) {
+      setMessage("Passwords do not match.");
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/forgot-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ school_id: schoolId, answer: recoveryAnswer, newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage("Password reset successful. You can now log in.");
+        setShowForgot(false);
+        setRecoveryQuestion("");
+        setRecoveryAnswer("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        setMessage(data.message || "Password reset failed.");
+      }
+    } catch (err) {
+      setMessage("Password reset failed.");
     }
   };
 
@@ -63,6 +120,49 @@ return (
       >
         Login
       </button>
+
+      <button
+        type="button"
+        onClick={() => setShowForgot((s) => !s)}
+        className="w-full text-sm text-[#098] mt-3 underline"
+      >
+        {showForgot ? "Close Forgot Password" : "Forgot password?"}
+      </button>
+
+      {showForgot && (
+        <div className="mt-4 border-t pt-4">
+          <p className="text-sm mb-2">Enter your School ID to retrieve your security question.</p>
+          {!recoveryQuestion ? (
+            <button type="button" onClick={handleForgotInit} className="w-full bg-gray-100 py-2 rounded hover:bg-gray-200">Get Security Question</button>
+          ) : (
+            <div>
+              <p className="text-sm font-medium mb-2">Question: {recoveryQuestion}</p>
+              <input
+                type="text"
+                placeholder="Your Answer"
+                value={recoveryAnswer}
+                onChange={(e) => setRecoveryAnswer(e.target.value)}
+                className="w-full mb-3 p-2 border rounded"
+              />
+              <input
+                type="password"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full mb-3 p-2 border rounded"
+              />
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full mb-3 p-2 border rounded"
+              />
+              <button type="button" onClick={handleForgotReset} className="w-full bg-[#98D7C2] text-white py-2 rounded">Reset Password</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {message && <p className="mt-4 text-center text-gray-700">{message}</p>}
     </form>

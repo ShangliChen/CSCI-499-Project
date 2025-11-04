@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function CounselorSignup() {
@@ -8,6 +8,29 @@ function CounselorSignup() {
   const [password, setPassword] = useState("");
   const [license, setLicense] = useState("");
   const [message, setMessage] = useState("");
+  const [securityQuestion, setSecurityQuestion] = useState("");
+  const [securityAnswer, setSecurityAnswer] = useState("");
+  const [questions, setQuestions] = useState([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/security-questions");
+        const data = await res.json();
+        if (Array.isArray(data.questions)) setQuestions(data.questions);
+      } catch (e) {
+        setQuestions([
+          "What was the name of your first pet?",
+          "What is your mother’s maiden name?",
+          "What was the name of your elementary school?",
+          "In what city were you born?",
+          "What is your favorite teacher’s name?",
+          "What is the title of your favorite book?",
+        ]);
+      }
+    };
+    load();
+  }, []);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -16,7 +39,7 @@ function CounselorSignup() {
       const res = await fetch("http://localhost:5000/signup/counselor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, school_id: schoolId, email, password, license }),
+        body: JSON.stringify({ name, school_id: schoolId, email, password, license, securityQuestion, securityAnswer }),
       });
       const data = await res.json();
       if (data.success) {
@@ -76,6 +99,28 @@ function CounselorSignup() {
           value={license}
           onChange={(e) => setLicense(e.target.value)}
           className="w-full mb-4 p-2 border rounded"
+        />
+
+        <label className="block text-sm font-medium mb-1">Security Question</label>
+        <select
+          value={securityQuestion}
+          onChange={(e) => setSecurityQuestion(e.target.value)}
+          className="w-full mb-4 p-2 border rounded bg-white"
+          required
+        >
+          <option value="" disabled>Select a question</option>
+          {questions.map((q) => (
+            <option key={q} value={q}>{q}</option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          placeholder="Security Answer"
+          value={securityAnswer}
+          onChange={(e) => setSecurityAnswer(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+          required
         />
 
         <button type="submit" className="bg-[#98FF98] text-black w-full py-2 rounded-lg hover:bg-[#87e687] transition">
