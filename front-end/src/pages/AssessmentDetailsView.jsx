@@ -19,6 +19,9 @@ export default function AssessmentDetailsView() {
   const { userId } = useParams(); // Expecting /counselor/user/:userId
   const [assessments, setAssessments] = useState([]);
   const [student, setStudent] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [newNote, setNewNote] = useState("");
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     const fetchAssessments = async () => {
@@ -39,6 +42,20 @@ export default function AssessmentDetailsView() {
 
     fetchAssessments();
   }, [userId]);
+
+  // Load counselor notes for this student if counselor
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (!user || user.role !== 'counselor') return;
+      try {
+        const res = await axios.get(`http://localhost:5000/api/counselor/notes/${userId}?counselorId=${user.userId}`);
+        if (res.data?.success) setNotes(res.data.data);
+      } catch (err) {
+        // no-op
+      }
+    };
+    loadNotes();
+  }, [user, userId]);
 
   if (!assessments.length) {
     return <p className="text-center mt-12 text-gray-500">Loading or no assessments found...</p>;
@@ -77,7 +94,7 @@ export default function AssessmentDetailsView() {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mb-10">
         <table className="min-w-full bg-white rounded shadow">
           <thead>
             <tr className="bg-gray-100 text-left">
@@ -109,6 +126,54 @@ export default function AssessmentDetailsView() {
           </tbody>
         </table>
       </div>
+
+      {/* Counselor notes visible to counselors only */}
+      {user?.role === 'counselor' && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Counselor Notes (visible to counselors)</h2>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const content = newNote.trim();
+              if (!content) return;
+              try {
+                const res = await axios.post("http://localhost:5000/api/counselor/notes", {
+                  counselorId: user.userId,
+                  studentId: userId,
+                  content,
+                });
+                if (res.data?.success) {
+                  setNewNote("");
+                  setNotes((prev) => [res.data.data, ...prev]);
+                }
+              } catch (err) {
+                // no-op
+              }
+            }}
+            className="mb-4"
+          >
+            <textarea
+              className="w-full border rounded p-3 min-h-[90px]"
+              placeholder="Add a private note for counselors..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            />
+            <button type="submit" className="mt-2 px-4 py-2 bg-gray-800 text-white rounded">Add Note</button>
+          </form>
+          {notes.length === 0 ? (
+            <p className="text-sm text-gray-500">No notes yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {notes.map((n) => (
+                <li key={n._id} className="border rounded p-3">
+                  <div className="text-sm text-gray-700 whitespace-pre-line">{n.content}</div>
+                  <div className="text-xs text-gray-400 mt-1">by {n.counselor?.name || 'Counselor'} • {new Date(n.createdAt).toLocaleString()}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

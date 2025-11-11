@@ -11,6 +11,7 @@ import User from './models/User.js';
 import assessmentRoutes from "./routes/assessmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import forumRoutes from "./routes/forumRoutes.js";
+import counselorNotesRoutes from "./routes/counselorNotesRoutes.js";
 import CounselorAvailability from "./models/CounselorAvailability.js";// new added
 import Booking from "./models/Booking.js";
 
@@ -54,6 +55,7 @@ app.use('/uploads', express.static(uploadsDir));
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/assessments/notifications", notificationRoutes);
 app.use("/api/forum", forumRoutes);
+app.use("/api/counselor/notes", counselorNotesRoutes);
 
 
 app.get("/", (req, res) => {

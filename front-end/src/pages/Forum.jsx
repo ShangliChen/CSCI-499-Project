@@ -11,6 +11,7 @@ const Forum = () => {
   const [error, setError] = useState("");
 
   const canPost = user && user.role === "student";
+  const isCounselor = user && user.role === "counselor";
 
   const loadPosts = async () => {
     try {
@@ -73,6 +74,32 @@ const Forum = () => {
     } catch {}
   };
 
+  const handleDeletePost = async (postId) => {
+    if (!isCounselor) return;
+    try {
+      const res = await fetch(`${baseURL}/api/forum/posts/${postId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", 'x-user-id': user.userId },
+        body: JSON.stringify({ actorId: user.userId })
+      });
+      const data = await res.json();
+      if (data.success) loadPosts();
+    } catch {}
+  };
+
+  const handleToggleRestriction = async (studentId, currentCanPost) => {
+    if (!isCounselor) return;
+    try {
+      const res = await fetch(`${baseURL}/api/forum/restrict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ counselorId: user.userId, studentId, canPost: !currentCanPost })
+      });
+      const data = await res.json();
+      if (data.success) loadPosts();
+    } catch {}
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-6">
       <div className="max-w-4xl mx-auto">
@@ -113,9 +140,38 @@ const Forum = () => {
         <div className="space-y-4">
           {posts.map((p) => (
             <article key={p._id} className="bg-white rounded-xl shadow p-5">
-              <header className="mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{p.title}</h3>
-                <p className="text-sm text-gray-500">by {p.author?.name || "Student"} • {new Date(p.createdAt).toLocaleString()}</p>
+              <header className="mb-2 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{p.title}</h3>
+                  <p className="text-sm text-gray-500">by {p.author?.name || "Student"} • {new Date(p.createdAt).toLocaleString()}</p>
+                  {isCounselor && p.author?.role === 'student' && (
+                    <div className="mt-1 text-xs">
+                      <span className={p.author?.canPost === false ? 'text-red-600' : 'text-green-600'}>
+                        {p.author?.canPost === false ? 'Posting restricted' : 'Posting allowed'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {isCounselor && (
+                  <div className="flex items-center gap-2">
+                    {p.author?._id && p.author?.role === 'student' && (
+                      <button
+                        onClick={() => handleToggleRestriction(p.author._id, p.author?.canPost !== false)}
+                        className="px-3 py-1 text-xs rounded border border-gray-300 hover:bg-gray-50"
+                        title={p.author?.canPost === false ? 'Allow this student to post' : 'Restrict this student from posting'}
+                      >
+                        {p.author?.canPost === false ? 'Unrestrict' : 'Restrict'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeletePost(p._id)}
+                      className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+                      title="Delete post"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </header>
               <p className="text-gray-800 whitespace-pre-line mb-4">{p.content}</p>
 
@@ -166,4 +222,3 @@ const CommentComposer = ({ onSubmit }) => {
 };
 
 export default Forum;
-

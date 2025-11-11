@@ -9,7 +9,7 @@ router.get("/posts", async (req, res) => {
   try {
     const posts = await ForumPost.find()
       .sort({ createdAt: -1 })
-      .populate("author", "name role")
+      .populate("author", "name role canPost")
       .select("title content tags createdAt author comments likes");
     res.json({ success: true, data: posts });
   } catch (err) {
@@ -28,6 +28,9 @@ router.post("/posts", async (req, res) => {
     const author = await User.findById(authorId);
     if (!author || author.role !== 'student') {
       return res.status(403).json({ success: false, message: "Only students can post" });
+    }
+    if (author.canPost === false) {
+      return res.status(403).json({ success: false, message: author.postRestrictionReason || "Posting is currently restricted for this student." });
     }
     const post = await ForumPost.create({ author: authorId, title, content, tags: Array.isArray(tags) ? tags : [] });
     res.status(201).json({ success: true, data: post });
@@ -57,6 +60,9 @@ router.post("/posts/:id/comments", async (req, res) => {
     if (!authorId || !content) return res.status(400).json({ success: false, message: "authorId and content required" });
     const user = await User.findById(authorId);
     if (!user || user.role !== 'student') return res.status(403).json({ success: false, message: "Only students can comment" });
+    if (user.canPost === false) {
+      return res.status(403).json({ success: false, message: user.postRestrictionReason || "Posting is currently restricted for this student." });
+    }
     const post = await ForumPost.findById(req.params.id);
     if (!post) return res.status(404).json({ success: false, message: "Post not found" });
     post.comments.push({ author: authorId, content });
@@ -68,5 +74,50 @@ router.post("/posts/:id/comments", async (req, res) => {
   }
 });
 
-export default router;
+// Delete a post (counselor only)
+router.delete("/posts/:id", async (req, res) => {
+  try {
+    const actorId = req.header('x-user-id') || (req.body && req.body.actorId);
+    if (!actorId) {
+      return res.status(400).json({ success: false, message: "actorId is required" });
+    }
+    const actor = await User.findById(actorId);
+    if (!actor || actor.role !== 'counselor') {
+      return res.status(403).json({ success: false, message: "Only counselors can delete posts" });
+    }
+    const deleted = await ForumPost.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: "Post not found" });
+    res.json({ success: true, message: "Post deleted" });
+  } catch (err) {
+    console.error("Forum delete error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
+// Restrict or allow a student to post (counselor only)
+router.post("/restrict", async (req, res) => {
+  try {
+    const { counselorId, studentId, canPost, reason } = req.body || {};
+    if (typeof canPost !== 'boolean' || !counselorId || !studentId) {
+      return res.status(400).json({ success: false, message: "counselorId, studentId and boolean canPost are required" });
+    }
+    const counselor = await User.findById(counselorId);
+    if (!counselor || counselor.role !== 'counselor') {
+      return res.status(403).json({ success: false, message: "Only counselors can update posting permissions" });
+    }
+    const student = await User.findByIdAndUpdate(
+      studentId,
+      { canPost, postRestrictionReason: canPost ? "" : (reason || "Posting is restricted by counselor.") },
+      { new: true }
+    ).select('name role canPost postRestrictionReason');
+    if (!student || student.role !== 'student') {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+    res.json({ success: true, data: student });
+  } catch (err) {
+    console.error("Forum restrict error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+export default router;
