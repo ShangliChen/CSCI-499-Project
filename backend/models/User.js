@@ -54,11 +54,14 @@ const UserSchema = new mongoose.Schema(
     enum: ["pending", "approved", "rejected"],
     default: "approved", // Students are approved by default; counselors set to pending at signup
   },
-    rejectionReason: { type: String, default: "" },
-    // Account recovery
-    securityQuestion: { type: String, default: null },
-    securityAnswerHash: { type: String, default: null },
-  },
+  rejectionReason: { type: String, default: "" },
+  // Forum controls
+  canPost: { type: Boolean, default: true },
+  postRestrictionReason: { type: String, default: "" },
+  // Account recovery
+  securityQuestion: { type: String, default: null },
+  securityAnswerHash: { type: String, default: null },
+},
   { timestamps: true }
 );
 

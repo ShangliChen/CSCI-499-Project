@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Brain } from 'lucide-react';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -114,7 +114,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/resource" element={<Resource />} />
-          <Route path="/forum" element={<Forum />} />
+          <Route path="/forum" element={<RequireAuth roles={["student", "counselor"]}><Forum /></RequireAuth>} />
           <Route path="/user-type" element={<UserType />} />
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
@@ -151,3 +151,15 @@ function App() {
 }
 
 export default App;
+
+// Simple in-app auth guard using localStorage user
+function RequireAuth({ roles = [], children }) {
+  const location = useLocation();
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  // If not logged in or role not allowed, redirect to user-type (login chooser)
+  if (!user || (roles.length && !roles.includes(user.role))) {
+    return <Navigate to="/user-type" state={{ from: location.pathname }} replace />;
+  }
+  return children;
+}
