@@ -95,19 +95,44 @@ const CounselorProfile = () => {
         {/* Account Details */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Account Details</h2>
+
           <p><strong>Email:</strong> {counselor.email}</p>
-          <p><strong>Password:</strong> ••••••••</p>
-          <p><strong>License Number:</strong> {counselor.license}</p>
-          <p><strong>Specializations:</strong> CBT, ACT, Trauma</p>
+          <p>
+            <strong>Specializations:</strong>{" "}
+            {counselor.specialization?.length
+              ? counselor.specialization.join(", ")
+              : "Not set"}
+          </p>
+          <p>
+            <strong>Preferred Session Types:</strong>{" "}
+            {counselor.sessionType?.length
+              ? counselor.sessionType.join(", ")
+              : "Not set"}
+          </p>
+          <p>
+            <strong>Target Student Groups:</strong>{" "}
+            {counselor.targetStudent?.length
+              ? counselor.targetStudent.join(", ")
+              : "Not set"}
+          </p>
+
           <div className="mt-4 flex gap-2">
-            <button className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">
+            <button
+              className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
+              onClick={() => {
+                const editSection = document.getElementById("edit-info-section");
+                editSection?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
               Update Info
             </button>
+
             <button className="bg-white border border-blue-500 text-blue-500 text-sm px-3 py-1 rounded hover:bg-blue-100">
               Change Password
             </button>
           </div>
         </div>
+
 
         {/* Upcoming Sessions */}
         <div className="bg-white rounded-xl shadow p-6">
@@ -247,6 +272,153 @@ const CounselorProfile = () => {
           </ul>
         </div>
       </div>
+          
+      {/* Edit Info Section */}
+        <div
+          id="edit-info-section"
+          className="mt-12 bg-white rounded-xl shadow p-8 w-full mx-auto"
+        >
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
+            Update Counselor Information
+          </h2>
+
+          {/* Multi-select dropdowns */}
+          <div className="flex flex-col md:flex-row justify-between gap-8">
+            {/* Specializations */}
+            <div className="flex-1 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all">
+              <label className="block text-sm font-medium text-gray-700 mb-6">
+                Specializations
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "CBT",
+                  "ACT",
+                  "Trauma-Informed Care",
+                  "Mindfulness Therapy",
+                  "Couples Counseling",
+                  "Family Therapy",
+                  "Career Counseling",
+                ].map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      const selected = counselor.specialization || [];
+                      setCounselor({
+                        ...counselor,
+                        specialization: selected.includes(option)
+                          ? selected.filter((x) => x !== option)
+                          : [...selected, option],
+                      });
+                    }}
+                    className={`px-3 py-1 rounded-full border text-sm transition-all ${
+                      counselor.specialization?.includes(option)
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Session Type */}
+            <div className="flex-1 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all">
+              <label className="block text-sm font-medium text-gray-700 mb-6">
+                Preferred Session Type
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {["Online", "In-person", "Hybrid", "Group Sessions"].map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      const selected = counselor.sessionType || [];
+                      setCounselor({
+                        ...counselor,
+                        sessionType: selected.includes(option)
+                          ? selected.filter((x) => x !== option)
+                          : [...selected, option],
+                      });
+                    }}
+                    className={`px-3 py-1 rounded-full border text-sm transition-all ${
+                      counselor.sessionType?.includes(option)
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Student */}
+            <div className="flex-1 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all">
+              <label className="block text-sm font-medium text-gray-700 mb-6">
+                Target Student Group
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Teenagers",
+                  "College Students",
+                  "Working Professionals",
+                  "Parents",
+                  "All",
+                ].map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      const selected = counselor.targetStudent || [];
+                      setCounselor({
+                        ...counselor,
+                        targetStudent: selected.includes(option)
+                          ? selected.filter((x) => x !== option)
+                          : [...selected, option],
+                      });
+                    }}
+                    className={`px-3 py-1 rounded-full border text-sm transition-all ${
+                      counselor.targetStudent?.includes(option)
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="mt-10 text-center">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await axios.put(`${baseURL}/api/counselor/profile/${id}`, {
+                    specialization: counselor.specialization,
+                    sessionType: counselor.sessionType,
+                    targetStudent: counselor.targetStudent,
+                  });
+
+                  if (res.data.success) {
+                    setCounselor(res.data.data);
+                    setMessage("✅ Information updated successfully!");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    setMessage("❌ Failed to update information.");
+                  }
+                } catch (error) {
+                  console.error("Error updating info:", error);
+                  setMessage("❌ Server error while updating info.");
+                }
+              }}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+
 
       {message && (
         <div className="text-center mt-6 text-green-700 font-medium">{message}</div>

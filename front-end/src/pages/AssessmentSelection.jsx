@@ -1,19 +1,35 @@
 // src/pages/AssessmentSelection.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AssessmentSelection = () => {
   const navigate = useNavigate();
 
-  // Get user info from localStorage (adjust if you use context or redux)
+  const [isLocked, setIsLocked] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
-  const userRole = user?.role; // e.g., "student" or "counselor"
+  const userRole = user?.role;
+  const userId = user?.userId;
 
   const tests = [
     { title: "Stress Assessment", img: "/images/stress.png" },
     { title: "Anxiety Assessment", img: "/images/anxiety.png" },
     { title: "Depression Assessment", img: "/images/depression.png" },
   ];
+
+  // ✅ Check if this month's assessment is already completed
+  useEffect(() => {
+    if (!userId) return;
+
+    const currentMonthKey = `${userId}-${new Date().getFullYear()}-${new Date().getMonth()}`;
+    const storedMonth = localStorage.getItem("checkInCompletedMonth");
+
+    if (storedMonth === currentMonthKey) {
+      setIsLocked(true); // already done for this month
+    } else {
+      setIsLocked(false);
+    }
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex flex-col items-center justify-center p-8">
@@ -48,10 +64,17 @@ const AssessmentSelection = () => {
         {/* Show button only if user role is "student" */}
         {userRole === "student" ? (
           <button
-            onClick={() => navigate("/resources/anxiety-assessment")}
-            className="px-10 py-4 bg-teal-600 text-white font-semibold text-xl rounded-full shadow-lg hover:bg-teal-700 transform hover:scale-105 transition-all duration-300"
+            onClick={() => {
+              if (!isLocked) navigate("/resources/anxiety-assessment");
+            }}
+            disabled={isLocked}
+            className={`px-10 py-4 text-white font-semibold text-xl rounded-full shadow-lg transform transition-all duration-300 ${
+              isLocked
+                ? "bg-teal-600 cursor-not-allowed"
+                : "bg-teal-600 hover:bg-teal-700 hover:scale-105"
+            }`}
           >
-            Start Assessment →
+            {isLocked ? "✅ Assessment Completed for this Month" : "Start Assessment →"}
           </button>
         ) : (
           <p className="text-center text-gray-600 italic">

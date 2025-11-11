@@ -422,63 +422,67 @@ const handleNextMonth = () => {
     },
 
   5: {
-    title: "Recommended Counselors",
-    content: (
-      <div className="space-y-8">
-        {/* ✅ Always 2 per row on desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {filteredCounselors.map((c) => (
-            <div
-              key={c._id}
-              onClick={() => handleCounselorSelect(c)}
-              className={`cursor-pointer p-6 rounded-xl border shadow-md transition-all ${
-                selectedCounselor?._id === c._id
-                  ? "border-[#2e8b57] bg-[#ccf2d9]"
-                  : "border-gray-200 bg-[#d4f8d4] hover:border-gray-300"
-              }`}
-            >
-              {/* ✅ Profile Image OR Letter Avatar */}
-              <div className="flex justify-center mb-4">
-                {c.profilePicture ? (
-                  <img
-                    src={`http://localhost:5000${c.profilePicture}`}
-                    alt="Counselor"
-                    className="w-20 h-20 rounded-lg object-cover bg-gray-200"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold text-gray-700">
-                    {c.name?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
+      title: "Recommended Counselors",
+      content: (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {filteredCounselors.map((c) => (
+              <div
+                key={c._id}
+                onClick={() => handleCounselorSelect(c)}
+                className={`cursor-pointer p-6 rounded-xl border shadow-md transition-all ${
+                  selectedCounselor?._id === c._id
+                    ? "border-[#2e8b57] bg-[#ccf2d9]"
+                    : "border-gray-200 bg-[#d4f8d4] hover:border-gray-300"
+                }`}
+              >
+                {/* Profile Image or Letter Avatar */}
+                <div className="flex justify-center mb-4">
+                  {c.profilePicture ? (
+                    <img
+                      src={`http://localhost:5000${c.profilePicture}`}
+                      alt="Counselor"
+                      className="w-20 h-20 rounded-lg object-cover bg-gray-200"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold text-gray-700">
+                      {c.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
 
-              {/* ✅ Name + Specialization */}
-              <h2 className="text-lg font-semibold text-center text-gray-900">
-                {c.name}
-              </h2>
-              <p className="text-sm text-center text-gray-700 mb-4">
-                {c.specialization?.trim()
-                  ? c.specialization
-                  : "General Counselor"}
-              </p>
+                {/* Name */}
+                <h2 className="text-lg font-semibold text-center text-gray-900">
+                  {c.name || "Unnamed Counselor"}
+                </h2>
 
-              {/* ✅ Info Box */}
-              <div className="bg-white rounded-lg p-4 shadow-sm text-sm text-gray-800">
-                <p className="mb-1"><strong>Email:</strong> {c.email || "N/A"}</p>
-                <p className="mb-1"><strong>License Number:</strong> {c.license || "N/A"}</p>
-                <p className="mb-1">
-                  <strong>Specializations:</strong>{" "}
+                {/* Specialization */}
+                <p className="text-sm text-center text-gray-700 mb-4">
                   {Array.isArray(c.specializations) && c.specializations.length > 0
                     ? c.specializations.join(", ")
-                    : "CBT, ACT, Trauma"}
+                    : typeof c.specialization === "string" && c.specialization.trim()
+                    ? c.specialization
+                    : "General Counselor"}
                 </p>
+
+                {/* Info Box */}
+                <div className="bg-white rounded-lg p-4 shadow-sm text-sm text-gray-800">
+                  <p className="mb-1"><strong>Email:</strong> {c.email || "N/A"}</p>
+                  <p className="mb-1"><strong>License Number:</strong> {c.license || "N/A"}</p>
+                  <p className="mb-1">
+                    <strong>Specializations:</strong>{" "}
+                    {Array.isArray(c.specializations) && c.specializations.length > 0
+                      ? c.specializations.join(", ")
+                      : "CBT, ACT, Trauma"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    )
-  },
+      )
+    },
+
 
 
 6: {

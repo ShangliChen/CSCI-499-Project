@@ -227,46 +227,55 @@ function Summary({ severityList, combinedIndex }) {
     severeConditions.length === 0 &&
     severityList.length === 4;
 
-  const handleFinalSubmit = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !user.userId) {
-      alert("User not logged in. Please log in first.");
-      return;
-    }
-    if (severityList.length !== 4 || combinedIndex === null) {
-      alert("Please complete all assessments before submitting.");
-      return;
-    }
+    const handleFinalSubmit = async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || !user.userId) {
+        alert("User not logged in. Please log in first.");
+        return;
+      }
+      if (severityList.length !== 4 || combinedIndex === null) {
+        alert("Please complete all assessments before submitting.");
+        return;
+      }
 
-    const anxiety = severityList.find((r) => r.test.includes("anxiety"));
-    const depression = severityList.find((r) => r.test.includes("depression"));
-    const stress = severityList.find((r) => r.test.includes("stress"));
-    const wellbeing = severityList.find((r) => r.test.includes("well-being"));
+      const anxiety = severityList.find((r) => r.test.includes("anxiety"));
+      const depression = severityList.find((r) => r.test.includes("depression"));
+      const stress = severityList.find((r) => r.test.includes("stress"));
+      const wellbeing = severityList.find((r) => r.test.includes("well-being"));
 
-    const payload = {
-      userId: user.userId,
-      anxiety_assessment: anxiety?.score || 0,
-      depression_assessment: depression?.score || 0,
-      stress_assessment: stress?.score || 0,
-      wellbeing_assessment: wellbeing?.score || 0,
-      overall_result: combinedIndex,
-      overall_status: severeConditions.length
-        ? "Severe"
-        : moderateConditions.length
-        ? "Moderate"
-        : "Good",
+      const payload = {
+        userId: user.userId,
+        anxiety_assessment: anxiety?.score || 0,
+        depression_assessment: depression?.score || 0,
+        stress_assessment: stress?.score || 0,
+        wellbeing_assessment: wellbeing?.score || 0,
+        overall_result: combinedIndex,
+        overall_status:
+          severeConditions.length
+            ? "Severe"
+            : moderateConditions.length
+            ? "Moderate"
+            : "Good",
+      };
+
+      try {
+        const res = await axios.post("http://localhost:5000/api/assessments/save", payload);
+        alert("✅ Assessment submitted successfully!");
+        console.log("✅ Saved:", res.data);
+
+        // ✅ Store monthly completion info
+        const user = JSON.parse(localStorage.getItem("user"));
+        const currentMonthKey = `${user?.userId || "guest"}-${new Date().getFullYear()}-${new Date().getMonth()}`;
+        localStorage.setItem("checkInCompletedMonth", currentMonthKey);
+
+
+        setShowResults(true);
+      } catch (err) {
+        console.error("❌ Error submitting assessment:", err);
+        alert("Failed to submit assessment.");
+      }
     };
 
-    try {
-      const res = await axios.post("http://localhost:5000/api/assessments/save", payload);
-      alert("✅ Assessment submitted successfully!");
-      console.log("✅ Saved:", res.data);
-      setShowResults(true);
-    } catch (err) {
-      console.error("❌ Error submitting assessment:", err);
-      alert("Failed to submit assessment.");
-    }
-  };
 
   return (
     <div className="max-w-3xl mx-auto p-6 mt-12 mb-24 rounded-lg shadow-lg bg-gradient-to-b from-gray-50 to-gray-100 relative">
