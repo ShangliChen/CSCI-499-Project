@@ -48,6 +48,11 @@ const UserSchema = new mongoose.Schema(
   license: { type: String, default: null },
   idPicture: { type: String, default: null },
   licensePicture: { type: String, default: null },
+  // 🔹 New counselor profile details
+  specialization: { type: [String], default: [] },
+  sessionType: { type: [String], default: [] },
+  targetStudent: { type: [String], default: [] },
+
   // Counselor verification status
   verificationStatus: {
     type: String,

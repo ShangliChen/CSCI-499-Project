@@ -316,6 +316,43 @@ app.get("/api/counselor/profile/:id", async (req, res) => {
 });
 
 
+// ✅ Update counselor info (specialization, sessionType, targetStudent)
+app.put("/api/counselor/profile/:id", async (req, res) => {
+  try {
+    const { specialization, sessionType, targetStudent } = req.body;
+
+    // Find counselor and update only the new fields
+    const updatedCounselor = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        specialization: specialization || [],
+        sessionType: sessionType || [],
+        targetStudent: targetStudent || [],
+      },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedCounselor || updatedCounselor.role !== "counselor") {
+      return res
+        .status(404)
+        .json({ success: false, message: "Counselor not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Counselor info updated successfully",
+      data: updatedCounselor,
+    });
+  } catch (error) {
+    console.error("❌ Error updating counselor info:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error while updating counselor info" });
+  }
+});
+
+
+
 // 2️⃣ Update student profile
 app.put("/api/student/profile/:id", async (req, res) => {
   try {
