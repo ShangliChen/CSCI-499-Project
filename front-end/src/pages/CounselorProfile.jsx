@@ -292,12 +292,14 @@ const CounselorProfile = () => {
               <div className="flex flex-wrap gap-2">
                 {[
                   "CBT",
-                  "ACT",
-                  "Trauma-Informed Care",
-                  "Mindfulness Therapy",
-                  "Couples Counseling",
-                  "Family Therapy",
+                  "Substance Abuse Counseling",
+                  "Mental Health Counseling",
+                  "School counseling",
                   "Career Counseling",
+                  "Family Therapy",
+                  "Child Counseling",
+                  "Educational counseling",
+                  "Depression counseling",
                 ].map((option) => (
                   <button
                     key={option}
@@ -359,11 +361,11 @@ const CounselorProfile = () => {
               </label>
               <div className="flex flex-wrap gap-2">
                 {[
+                  "Child",
                   "Teenagers",
                   "College Students",
                   "Working Professionals",
                   "Parents",
-                  "All",
                 ].map((option) => (
                   <button
                     key={option}

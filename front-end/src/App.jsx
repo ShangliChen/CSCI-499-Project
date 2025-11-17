@@ -26,6 +26,7 @@ import AdminCounselorDetail from './pages/AdminCounselorDetail';
 import ViewAllAppointments from "./pages/ViewAllAppointments";
 import NotificationPage from "./pages/NotificationPage";
 import CounselorViewAllAppointments from "./pages/CounselorViewAllAppointments";
+import CounselorList from "./pages/CounselorList";
 
 function App() {
   const location = useLocation();
@@ -142,7 +143,7 @@ function App() {
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/counselor/notifications" element={<NotificationPage />} />
           <Route path="/counselor/view-all-appointments"element={<CounselorViewAllAppointments />}/>
-          
+          <Route path="/counselors" element={<CounselorList />} />
 
         </Routes>
       </main>
