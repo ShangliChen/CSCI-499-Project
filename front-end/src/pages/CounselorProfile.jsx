@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -6,24 +6,116 @@ const CounselorProfile = () => {
   const { id } = useParams();
   const [counselor, setCounselor] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    license: "",
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [selectedDate, setSelectedDate] = useState("");
   const [timeSlots, setTimeSlots] = useState([]);
   const [newTime, setNewTime] = useState("");
   const [message, setMessage] = useState("");
+  const [bookings, setBookings] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [sessionForm, setSessionForm] = useState({
+    meetingLink: "",
+    meetingLocation: "",
+    meetingDetails: "",
+    endTime: "",
+  });
   const baseURL = "http://localhost:5000";
+
+  // Preset half‑hour time slots from 9:00–17:00
+  const presetSlots = [
+    "09:00", "09:30",
+    "10:00", "10:30",
+    "11:00", "11:30",
+    "12:00", "12:30",
+    "13:00", "13:30",
+    "14:00", "14:30",
+    "15:00", "15:30",
+    "16:00", "16:30",
+    "17:00",
+  ];
 
   // ✅ Fetch counselor profile
   useEffect(() => {
     const fetchCounselorProfile = async () => {
       try {
         const res = await axios.get(`${baseURL}/api/counselor/profile/${id}`);
-        setCounselor(res.data.data);
+        const data = res.data.data;
+        setCounselor(data);
+        setProfileForm({
+          name: data.name || "",
+          email: data.email || "",
+          license: data.license || "",
+        });
       } catch (error) {
         console.error("Failed to fetch counselor profile:", error);
       }
     };
+    const fetchBookings = async () => {
+      try {
+        const res = await axios.get(`${baseURL}/api/bookings/counselor/${id}`);
+        if (res.data.success) {
+          // filter out canceled sessions
+          setBookings(
+            Array.isArray(res.data.data)
+              ? res.data.data.filter((b) => b.status !== "canceled")
+              : []
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch counselor bookings:", error);
+      }
+    };
+
     fetchCounselorProfile();
+    fetchBookings();
   }, [id]);
+
+  const upcomingSessions = useMemo(() => {
+    if (!Array.isArray(bookings) || bookings.length === 0) return [];
+    const now = new Date();
+    const parseDateTime = (booking) => {
+      if (!booking?.date || !booking?.time) return null;
+      const dt = new Date(`${booking.date}T${booking.time}`);
+      return isNaN(dt.getTime()) ? null : dt;
+    };
+
+    return bookings
+      .map((b) => ({ booking: b, dateTime: parseDateTime(b) }))
+      .filter(
+        (item) =>
+          item.dateTime &&
+          item.booking.status !== "canceled" &&
+          item.dateTime >= now
+      )
+      .sort((a, b) => a.dateTime - b.dateTime)
+      .map((item) => item.booking)
+      .slice(0, 3);
+  }, [bookings]);
+
+  const formatSessionDateTime = (date, time) => {
+    if (!date || !time) return "Date/time not set";
+    const dt = new Date(`${date}T${time}`);
+    if (isNaN(dt.getTime())) return `${date} ${time}`;
+    return dt.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   // ✅ Save availability
   const saveAvailability = async () => {
@@ -66,6 +158,129 @@ const CounselorProfile = () => {
     setTimeSlots(timeSlots.filter((t) => t !== time));
   };
 
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put(`${baseURL}/api/counselor/profile/${id}`, {
+        name: profileForm.name,
+        email: profileForm.email,
+        license: profileForm.license,
+      });
+
+      if (res.data.success) {
+        setCounselor(res.data.data);
+        setMessage("✅ Profile updated successfully!");
+        setIsEditingProfile(false);
+      } else {
+        setMessage(res.data.message || "❌ Failed to update profile.");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setMessage("❌ Server error while updating profile.");
+    }
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setMessage("❌ New password and confirmation do not match.");
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setMessage("❌ New password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${baseURL}/api/users/${id}/change-password`,
+        {
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }
+      );
+
+      if (res.data.success) {
+        setMessage("✅ Password updated successfully.");
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setShowPasswordForm(false);
+      } else {
+        setMessage(res.data.message || "❌ Failed to update password.");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      const serverMessage =
+        error.response?.data?.message ||
+        "❌ Server error while changing password.";
+      setMessage(serverMessage);
+    }
+  };
+
+  const handleViewSession = (session) => {
+    setSelectedSession(session);
+    setSessionForm({
+      meetingLink: session.meetingLink || "",
+      meetingLocation: session.meetingLocation || "",
+      meetingDetails: session.meetingDetails || "",
+      endTime: session.endTime || "",
+    });
+    const section = document.getElementById("session-detail-section");
+    section?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleJoinSession = (session) => {
+    if (session.meetingLink) {
+      window.open(session.meetingLink, "_blank", "noopener,noreferrer");
+    } else {
+      alert("No meeting link set yet for this session.");
+    }
+  };
+
+  const handleSessionFormChange = (e) => {
+    const { name, value } = e.target;
+    setSessionForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveSessionDetails = async (e) => {
+    e.preventDefault();
+    if (!selectedSession?._id) return;
+    try {
+      const res = await axios.put(
+        `${baseURL}/api/bookings/${selectedSession._id}/meeting-info`,
+        sessionForm
+      );
+
+      if (res.data.success) {
+        const updated = res.data.data;
+        setBookings((prev) =>
+          prev.map((b) => (b._id === updated._id ? updated : b))
+        );
+        setSelectedSession(updated);
+        setMessage("✅ Session details updated.");
+      } else {
+        setMessage("❌ Failed to update session details.");
+      }
+    } catch (error) {
+      console.error("Error updating session details:", error);
+      setMessage("❌ Server error while updating session details.");
+    }
+  };
+
   if (!counselor) {
     return <div className="text-center mt-20 text-gray-500 text-lg">Loading...</div>;
   }
@@ -84,12 +299,85 @@ const CounselorProfile = () => {
               <p className="text-sm text-gray-500">Counselor</p>
             </div>
           </div>
-          <div className="mt-4">
-            <p className="text-sm font-medium text-gray-700">License: {counselor.license}</p>
-          </div>
-          <button className="mt-4 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
-            Edit Profile
-          </button>
+          {!isEditingProfile ? (
+            <>
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700">
+                  License: {counselor.license || "Not set"}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Email: {counselor.email}
+                </p>
+              </div>
+              <button
+                className="mt-4 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                onClick={() => setIsEditingProfile(true)}
+              >
+                Edit Profile
+              </button>
+            </>
+          ) : (
+            <form onSubmit={handleSaveProfile} className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={profileForm.name}
+                  onChange={handleProfileInputChange}
+                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profileForm.email}
+                  onChange={handleProfileInputChange}
+                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">
+                  License Number
+                </label>
+                <input
+                  type="text"
+                  name="license"
+                  value={profileForm.license}
+                  onChange={handleProfileInputChange}
+                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                >
+                  Save Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingProfile(false);
+                    setProfileForm({
+                      name: counselor.name || "",
+                      email: counselor.email || "",
+                      license: counselor.license || "",
+                    });
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Account Details */}
@@ -127,36 +415,119 @@ const CounselorProfile = () => {
               Update Info
             </button>
 
-            <button className="bg-white border border-blue-500 text-blue-500 text-sm px-3 py-1 rounded hover:bg-blue-100">
+            <button
+              className="bg-white border border-blue-500 text-blue-500 text-sm px-3 py-1 rounded hover:bg-blue-100"
+              onClick={() => setShowPasswordForm((prev) => !prev)}
+            >
               Change Password
             </button>
           </div>
+
+          {showPasswordForm && (
+            <form
+              onSubmit={handleChangePassword}
+              className="mt-4 border-t pt-4 space-y-3"
+            >
+              <div>
+                <label className="block text-xs font-medium text-gray-600">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordInputChange}
+                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordInputChange}
+                    className="mt-1 w-full border rounded px-2 py-1 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordInputChange}
+                    className="mt-1 w-full border rounded px-2 py-1 text-sm"
+                    required
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="mt-2 bg-green-500 text-white text-sm px-4 py-2 rounded hover:bg-green-600"
+              >
+                Save New Password
+              </button>
+            </form>
+          )}
         </div>
 
 
         {/* Upcoming Sessions */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Upcoming Sessions</h2>
-          <div className="space-y-3 text-sm text-gray-700">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">Dec 15, 2024 - 10:00 AM</p>
-                <p>Jamie Chen</p>
-              </div>
-              <button className="bg-blue-100 text-blue-600 px-3 py-1 rounded hover:bg-blue-200">
-                View Session
-              </button>
+          {upcomingSessions.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              You have no upcoming confirmed sessions.
+            </p>
+          ) : (
+            <div className="space-y-3 text-sm text-gray-700">
+              {upcomingSessions.map((session) => (
+                <div
+                  key={session._id}
+                  className="flex justify-between items-center border-b last:border-b-0 pb-2"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {formatSessionDateTime(session.date, session.time)}
+                    </p>
+                    <p>{session.student?.name || "Student"}</p>
+                    <p className="text-xs text-gray-500">
+                      {session.meetingType
+                        ? `Type: ${session.meetingType}`
+                        : null}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      className="bg-blue-100 text-blue-600 px-3 py-1 rounded hover:bg-blue-200"
+                      onClick={() => handleViewSession(session)}
+                    >
+                      View Session
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded ${
+                        session.meetingLink
+                          ? "bg-blue-500 text-white hover:bg-blue-600"
+                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      }`}
+                      onClick={() => handleJoinSession(session)}
+                      disabled={!session.meetingLink}
+                    >
+                      Join Session
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">Dec 15, 2024 - 11:30 AM</p>
-                <p>Jamie Davis</p>
-              </div>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                Join Session
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Availability */}
@@ -196,25 +567,87 @@ const CounselorProfile = () => {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  // Reset slots when switching to a new date for clarity
+                  setTimeSlots([]);
+                }}
                 className="w-full border rounded-lg p-2 mb-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all"
               />
 
-              {/* Time Slot Picker */}
-              <label className="text-sm text-gray-700">Add Time Slot:</label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  className="border rounded-lg p-2 flex-1 focus:ring-2 focus:ring-blue-400 outline-none transition-all"
-                />
+              {/* Easier time slot picker */}
+              <label className="text-sm text-gray-700">Choose Available Times:</label>
+
+              <div className="flex flex-wrap items-center gap-2 my-2 text-xs">
+                <span className="text-gray-500 mr-2">Quick select:</span>
                 <button
-                  onClick={addTimeSlot}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all text-sm"
+                  type="button"
+                  onClick={() => {
+                    // Morning: 9:00–12:00
+                    const morning = presetSlots.filter((t) => {
+                      const hour = parseInt(t.split(":")[0], 10);
+                      return hour >= 9 && hour < 12;
+                    });
+                    setTimeSlots(morning);
+                  }}
+                  className="px-3 py-1 rounded-full border border-blue-500 text-blue-600 hover:bg-blue-50"
+                  disabled={!selectedDate}
                 >
-                  Add
+                  Morning (9–12)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Afternoon: 13:00–17:00
+                    const afternoon = presetSlots.filter((t) => {
+                      const hour = parseInt(t.split(":")[0], 10);
+                      return hour >= 13 && hour <= 17;
+                    });
+                    setTimeSlots(afternoon);
+                  }}
+                  className="px-3 py-1 rounded-full border border-blue-500 text-blue-600 hover:bg-blue-50"
+                  disabled={!selectedDate}
+                >
+                  Afternoon (1–5)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTimeSlots([])}
+                  className="px-3 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  disabled={!selectedDate}
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                {presetSlots.map((slot) => {
+                  const isSelected = timeSlots.includes(slot);
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => {
+                        if (!selectedDate) return;
+                        if (isSelected) {
+                          setTimeSlots((prev) => prev.filter((t) => t !== slot));
+                        } else {
+                          setTimeSlots((prev) => [...prev, slot]);
+                        }
+                      }}
+                      disabled={!selectedDate}
+                      className={`text-xs px-2 py-2 rounded border transition-all ${
+                        !selectedDate
+                          ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
+                          : isSelected
+                          ? "bg-green-100 text-green-700 border-green-500"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Time Slot List with Smooth Scroll */}
@@ -292,12 +725,14 @@ const CounselorProfile = () => {
               <div className="flex flex-wrap gap-2">
                 {[
                   "CBT",
-                  "ACT",
-                  "Trauma-Informed Care",
-                  "Mindfulness Therapy",
-                  "Couples Counseling",
-                  "Family Therapy",
+                  "Substance Abuse Counseling",
+                  "Mental Health Counseling",
+                  "School counseling",
                   "Career Counseling",
+                  "Family Therapy",
+                  "Child Counseling",
+                  "Educational counseling",
+                  "Depression counseling",
                 ].map((option) => (
                   <button
                     key={option}
@@ -328,27 +763,29 @@ const CounselorProfile = () => {
                 Preferred Session Type
               </label>
               <div className="flex flex-wrap gap-2">
-                {["Online", "In-person", "Hybrid", "Group Sessions"].map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      const selected = counselor.sessionType || [];
-                      setCounselor({
-                        ...counselor,
-                        sessionType: selected.includes(option)
-                          ? selected.filter((x) => x !== option)
-                          : [...selected, option],
-                      });
-                    }}
-                    className={`px-3 py-1 rounded-full border text-sm transition-all ${
-                      counselor.sessionType?.includes(option)
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
+                {["Online", "In-person", "Hybrid", "Group Sessions"].map(
+                  (option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        const selected = counselor.sessionType || [];
+                        setCounselor({
+                          ...counselor,
+                          sessionType: selected.includes(option)
+                            ? selected.filter((x) => x !== option)
+                            : [...selected, option],
+                        });
+                      }}
+                      className={`px-3 py-1 rounded-full border text-sm transition-all ${
+                        counselor.sessionType?.includes(option)
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
@@ -359,11 +796,11 @@ const CounselorProfile = () => {
               </label>
               <div className="flex flex-wrap gap-2">
                 {[
+                  "Child",
                   "Teenagers",
                   "College Students",
                   "Working Professionals",
                   "Parents",
-                  "All",
                 ].map((option) => (
                   <button
                     key={option}
@@ -394,11 +831,14 @@ const CounselorProfile = () => {
             <button
               onClick={async () => {
                 try {
-                  const res = await axios.put(`${baseURL}/api/counselor/profile/${id}`, {
-                    specialization: counselor.specialization,
-                    sessionType: counselor.sessionType,
-                    targetStudent: counselor.targetStudent,
-                  });
+                  const res = await axios.put(
+                    `${baseURL}/api/counselor/profile/${id}`,
+                    {
+                      specialization: counselor.specialization,
+                      sessionType: counselor.sessionType,
+                      targetStudent: counselor.targetStudent,
+                    }
+                  );
 
                   if (res.data.success) {
                     setCounselor(res.data.data);
@@ -418,6 +858,104 @@ const CounselorProfile = () => {
             </button>
           </div>
         </div>
+
+
+      {/* Session detail editor */}
+      {selectedSession && (
+        <div
+          id="session-detail-section"
+          className="mt-12 bg-white rounded-xl shadow p-8 w-full mx-auto"
+        >
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+            Session Details
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            <span className="font-medium">
+              {selectedSession.student?.name || "Student"}
+            </span>{" "}
+            •{" "}
+            {formatSessionDateTime(
+              selectedSession.date,
+              selectedSession.time
+            )}
+            {selectedSession.meetingType && (
+              <> • {selectedSession.meetingType}</>
+            )}
+          </p>
+
+          <form
+            onSubmit={handleSaveSessionDetails}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
+          >
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-600">
+                Video Meeting Link
+              </label>
+              <input
+                type="url"
+                name="meetingLink"
+                value={sessionForm.meetingLink}
+                onChange={handleSessionFormChange}
+                placeholder="https://..."
+                className="mt-1 w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">
+                Location (for in-person)
+              </label>
+              <input
+                type="text"
+                name="meetingLocation"
+                value={sessionForm.meetingLocation}
+                onChange={handleSessionFormChange}
+                placeholder="Office location / room"
+                className="mt-1 w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">
+                End Time
+              </label>
+              <input
+                type="time"
+                name="endTime"
+                value={sessionForm.endTime}
+                onChange={handleSessionFormChange}
+                className="mt-1 w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-600">
+                Additional Details for Student
+              </label>
+              <textarea
+                name="meetingDetails"
+                value={sessionForm.meetingDetails}
+                onChange={handleSessionFormChange}
+                rows="3"
+                className="mt-1 w-full border rounded px-3 py-2"
+                placeholder="Any preparation instructions or notes for the student..."
+              />
+            </div>
+            <div className="md:col-span-2 flex justify-end gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSession(null)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                Close
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-[#2e8b57] text-white rounded hover:bg-[#267349] font-semibold"
+              >
+                Save Session Details
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
 
       {message && (

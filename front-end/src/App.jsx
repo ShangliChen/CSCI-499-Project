@@ -28,6 +28,7 @@ import NotificationPage from "./pages/NotificationPage";
 import CounselorViewAllAppointments from "./pages/CounselorViewAllAppointments";
 import RelaxingGames from "./pages/RelaxingGames";
 
+import CounselorList from "./pages/CounselorList";
 
 function App() {
   const location = useLocation();
@@ -147,6 +148,7 @@ function App() {
           <Route path="/resources/relaxing-games" element={<RelaxingGames />} />
 
           
+          <Route path="/counselors" element={<CounselorList />} />
 
         </Routes>
       </main>

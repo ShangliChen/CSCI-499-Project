@@ -356,7 +356,12 @@ const StudentDashboard = () => {
             <div className="w-full">
               <h2 className="text-lg font-semibold mb-4">Quick Resources</h2>
               <ul className="space-y-2 text-gray-700">
-                <li>✅ Find a Counselor</li>
+                <li
+                  className="cursor-pointer hover:text-gray-900"
+                  onClick={() => navigate("/counselors")}
+                >
+                  ✅ Find a Counselor
+                </li>
                 <li>✅ Coping Techniques</li>
                 <li>✅ Read Articles</li>
               </ul>
