@@ -1,23 +1,47 @@
 import express from "express";
-import User from "../models/User.js"; 
+import User from "../models/User.js";
+import CounselorAvailability from "../models/CounselorAvailability.js";
 
 const router = express.Router();
 
 // GET /api/counselors
+// Returns all counselors with merged availability records
 router.get("/", async (req, res) => {
   try {
-    const counselors = await User.find({ role: "counselor" });
+    // Base counselor info
+    const counselors = await User.find({ role: "counselor" }).select(
+      "name email license specialization sessionType targetStudent"
+    );
 
-    const data = counselors.map(c => ({
-      _id: c._id,
-      name: c.name,
-      email: c.email,
-      license: c.license,
-      specialization: c.specialization,
-      sessionType: c.sessionType,
-      targetStudent: c.targetStudent,
-      availability: c.availability || [], // optional if you want availability too
-    }));
+    // All availability records
+    const availability = await CounselorAvailability.find().populate(
+      "counselor",
+      "_id"
+    );
+
+    const data = counselors.map((c) => {
+      const slotsForCounselor = availability
+        .filter(
+          (a) =>
+            a.counselor &&
+            String(a.counselor._id) === String(c._id)
+        )
+        .map((a) => ({
+          date: a.date, // "YYYY-MM-DD"
+          timeSlots: Array.isArray(a.timeSlots) ? a.timeSlots : [],
+        }));
+
+      return {
+        _id: c._id,
+        name: c.name,
+        email: c.email,
+        license: c.license,
+        specialization: c.specialization,
+        sessionType: c.sessionType,
+        targetStudent: c.targetStudent,
+        availability: slotsForCounselor,
+      };
+    });
 
     res.json({ success: true, counselors: data });
   } catch (err) {
