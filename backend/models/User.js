@@ -38,12 +38,14 @@ const UserSchema = new mongoose.Schema(
     assessment_date: { type: Date, default: null },
     assessment_score: { type: String, default: null },
     // 🔗 Link to multiple detailed assessments
-  assessments: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "AssessmentResult",
-      },
-  ],
+    assessments: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "AssessmentResult",
+        },
+    ],
+    
+
   // Counselor-specific fields
   license: { type: String, default: null },
   idPicture: { type: String, default: null },
@@ -52,6 +54,8 @@ const UserSchema = new mongoose.Schema(
   specialization: { type: [String], default: [] },
   sessionType: { type: [String], default: [] },
   targetStudent: { type: [String], default: [] },
+  
+
 
   // Counselor verification status
   verificationStatus: {

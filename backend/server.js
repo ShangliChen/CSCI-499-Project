@@ -14,6 +14,8 @@ import forumRoutes from "./routes/forumRoutes.js";
 import counselorNotesRoutes from "./routes/counselorNotesRoutes.js";
 import CounselorAvailability from "./models/CounselorAvailability.js";// new added
 import Booking from "./models/Booking.js";
+import counselorsRoute from "./routes/counselors.js";
+import counselorRequestRoutes from "./routes/counselorRequestRoutes.js";
 
 
 dotenv.config();
@@ -56,6 +58,11 @@ app.use("/api/assessments", assessmentRoutes);
 app.use("/api/assessments/notifications", notificationRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/counselor/notes", counselorNotesRoutes);
+app.use("/api/counselors", counselorsRoute);
+app.use('/api/requests', counselorRequestRoutes); // Use the new route for counselor requests
+app.use("/api/counselor-requests", counselorRequestRoutes);
+
+
 
 
 app.get("/", (req, res) => {
@@ -402,6 +409,7 @@ app.get("/api/users/students", async (req, res) => {
     res.status(500).json({ message: "Error fetching students" });
   }
 });
+
 
 // --- Admin Middleware and Routes ---
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'CSCI-499-Admin';
