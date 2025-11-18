@@ -87,7 +87,7 @@ const AssessmentList = () => {
         ) : (
           <table className="min-w-full text-sm text-gray-700">
             <thead>
-              <tr className="bg-green-600 text-left text-white">
+              <tr className="bg-[#00786f] text-left text-white">
                 <th className="py-3 px-4 rounded-tl-lg">Name</th>
                 <th className="py-3 px-4">School ID</th>
                 <th className="py-3 px-4">Assessment Date</th>
@@ -116,7 +116,7 @@ const AssessmentList = () => {
                   <td className="py-3 px-4">
                     <Link
                       to={`/counselor/user/${student._id}`}
-                      className="inline-block bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium hover:bg-blue-700 transition"
+                      className="inline-block bg-[#b3e6b3] text-white px-4 py-1.5 rounded-full text-xs font-medium hover:bg-blue-700 transition"
                     >
                       See More
                     </Link>
@@ -170,7 +170,7 @@ const AssessmentList = () => {
                   <td className="py-3 px-4">
                     <Link
                       to={`/counselor/user/${student._id}`}
-                      className="inline-block bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium hover:bg-blue-700 transition"
+                      className="inline-block bg-[#98D7C2] text-white px-4 py-1.5 rounded-full text-xs font-medium hover:bg-blue-700 transition"
                     >
                       See More
                     </Link>

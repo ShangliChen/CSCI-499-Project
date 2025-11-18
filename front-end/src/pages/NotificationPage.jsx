@@ -90,7 +90,7 @@ const NotificationPage = () => {
                         e.stopPropagation(); // prevents navigation
                         handleRequestAction(req._id, "accepted");
                       }}
-                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                      className="px-3 py-1 bg-[#b3e6b3] text-white rounded hover:bg-green-600"
                     >
                       Accept
                     </button>
@@ -100,7 +100,7 @@ const NotificationPage = () => {
                         e.stopPropagation(); // prevents navigation
                         handleRequestAction(req._id, "rejected");
                       }}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="px-3 py-1 bg-[#ff7f7f] text-white rounded hover:bg-red-600"
                     >
                       Reject
                     </button>

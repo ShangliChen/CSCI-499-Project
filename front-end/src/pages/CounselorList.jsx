@@ -141,132 +141,136 @@ const CounselorList = () => {
   // Pending request: show note + cancel button
   if (request?.status === "pending") {
     return (
-      <div>
-        <p>
-          Your request to <strong>{request.counselor?.name}</strong> is pending.
-        </p>
-        <button
-          onClick={handleCancelRequest}
-          style={{
-            backgroundColor: "#f44336",
-            color: "white",
-            border: "none",
-            padding: "8px 12px",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Cancel Request
-        </button>
+      <div className="min-h-screen bg-green-50 px-6 py-10">
+        <div className="bg-white p-6 rounded-2xl shadow-md max-w-xl">
+          <p className="text-lg">
+            Your request to{" "}
+            <strong className="text-green-700">{request.counselor?.name}</strong>{" "}
+            is pending.
+          </p>
+
+          <button
+            onClick={handleCancelRequest}
+            className="mt-4 bg-[#ff7f7f] hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow"
+          >
+            Cancel Request
+          </button>
+        </div>
       </div>
     );
+
   }
 
   // Accepted request: show only assigned counselor
   if (request?.status === "accepted") {
     const c = request.counselor;
     return (
-      <div>
-        <h2>Your Counselor</h2>
-        <div
-          style={{
-            border: "1px solid #ccc",
-            margin: "10px",
-            padding: "10px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <h3>{c.name}</h3>
-            <p><strong>Email:</strong> {c.email}</p>
-            <p><strong>Specialization:</strong> {c.specialization?.join(", ") || "N/A"}</p>
-            <p><strong>Session Type:</strong> {c.sessionType?.join(", ") || "N/A"}</p>
-            <p><strong>Target Student:</strong> {c.targetStudent?.join(", ") || "N/A"}</p>
-          </div>
+      <div className="min-h-screen bg-green-50 px-6 py-10">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">Your Counselor</h2>
+
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200 w-full max-w-2xl">
+          <h3 className="text-2xl font-semibold text-gray-900">{c.name}</h3>
+          <p className="mt-2"><strong>Email:</strong> {c.email}</p>
+          <p className="mt-1"><strong>Specialization:</strong> {c.specialization?.join(", ")}</p>
+          <p className="mt-1"><strong>Session Type:</strong> {c.sessionType?.join(", ")}</p>
+          <p className="mt-1"><strong>Target Student:</strong> {c.targetStudent?.join(", ")}</p>
         </div>
       </div>
     );
+
   }
 
   // No request: show full list
-  return (
-    <div>
-      <h1>Counselor List</h1>
-      <input
-        type="text"
-        placeholder="Search by name or email"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ padding: "5px", marginBottom: "15px", width: "250px" }}
-      />
+    return (
+      <div className="min-h-screen bg-green-50 px-6 py-10">
 
-      <br />
+        {/* Title */}
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">Counselor List</h1>
 
-      <select value={specFilter} onChange={(e) => setSpecFilter(e.target.value)}>
-        <option value="">All Specializations</option>
-        {SPECIALIZATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
+        {/* Search + Filters */}
+        <div className="flex flex-wrap items-center gap-4 mb-8">
+          <input
+            type="text"
+            placeholder="Search by name or email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64 px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-400 focus:outline-none"
+          />
 
-      <select
-        value={targetFilter}
-        onChange={(e) => setTargetFilter(e.target.value)}
-        style={{ marginLeft: "10px" }}
-      >
-        <option value="">All Target Students</option>
-        {TARGET_STUDENTS.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
-
-      <select
-        value={sessionFilter}
-        onChange={(e) => setSessionFilter(e.target.value)}
-        style={{ marginLeft: "10px" }}
-      >
-        <option value="">All Session Types</option>
-        {SESSION_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
-
-      {filtered.length === 0 && <p>No counselors found.</p>}
-
-      {filtered.map((c) => (
-        <div
-          key={c._id}
-          style={{
-            border: "1px solid #ccc",
-            margin: "10px",
-            padding: "10px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <h3>{c.name}</h3>
-            <p><strong>Email:</strong> {c.email}</p>
-            <p><strong>Specialization:</strong> {c.specialization?.join(", ") || "N/A"}</p>
-            <p><strong>Session Type:</strong> {c.sessionType?.join(", ") || "N/A"}</p>
-            <p><strong>Target Student:</strong> {c.targetStudent?.join(", ") || "N/A"}</p>
-          </div>
-
-          <button
-            style={{
-              backgroundColor: "#4CAF50",
-              color: "white",
-              border: "none",
-              padding: "10px 16px",
-              borderRadius: "5px",
-              cursor: "pointer",
-              height: "40px",
-            }}
-            onClick={() => handleSendRequest(c._id)}
+          <select
+            value={specFilter}
+            onChange={(e) => setSpecFilter(e.target.value)}
+            className="px-4 py-2 border rounded-lg shadow-sm bg-white"
           >
-            Send Request
-          </button>
+            <option value="">All Specializations</option>
+            {SPECIALIZATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+
+          <select
+            value={targetFilter}
+            onChange={(e) => setTargetFilter(e.target.value)}
+            className="px-4 py-2 border rounded-lg shadow-sm bg-white"
+          >
+            <option value="">All Target Students</option>
+            {TARGET_STUDENTS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+
+          <select
+            value={sessionFilter}
+            onChange={(e) => setSessionFilter(e.target.value)}
+            className="px-4 py-2 border rounded-lg shadow-sm bg-white"
+          >
+            <option value="">All Session Types</option>
+            {SESSION_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
-      ))}
-    </div>
-  );
+
+        {/* No results */}
+        {filtered.length === 0 && (
+          <p className="text-gray-600 mt-6">No counselors found.</p>
+        )}
+
+        {/* Counselor Cards */}
+        <div className="space-y-6">
+          {filtered.map((c) => (
+            <div
+              key={c._id}
+              className="bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex justify-between items-start"
+            >
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900">{c.name}</h3>
+                <p className="text-gray-700 mt-1">
+                  <strong>Email:</strong> {c.email}
+                </p>
+
+                <p className="text-gray-700 mt-1">
+                  <strong>Specialization:</strong>{" "}
+                  {c.specialization?.join(", ") || "N/A"}
+                </p>
+
+                <p className="text-gray-700 mt-1">
+                  <strong>Session Type:</strong>{" "}
+                  {c.sessionType?.join(", ") || "N/A"}
+                </p>
+
+                <p className="text-gray-700 mt-1">
+                  <strong>Target Student:</strong>{" "}
+                  {c.targetStudent?.join(", ") || "N/A"}
+                </p>
+              </div>
+
+              <button
+                className="bg-[#b3e6b3] hover:bg-green-700 text-white px-6 py-2 rounded-xl shadow-md transition"
+                onClick={() => handleSendRequest(c._id)}
+              >
+                Send Request
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
 };
 
 export default CounselorList;
