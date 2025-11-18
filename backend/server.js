@@ -251,6 +251,52 @@ app.post("/forgot-password/reset", async (req, res) => {
   }
 });
 
+// Logged-in change password (student or counselor)
+app.post("/api/users/:id/change-password", async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const { id } = req.params;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters",
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect" });
+    }
+
+    user.password = newPassword; // will be hashed by pre-save hook
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("❌ Change password error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error while changing password" });
+  }
+});
+
 
 // --- STUDENT PROFILE ROUTES ---
 
@@ -325,19 +371,34 @@ app.get("/api/counselor/profile/:id", async (req, res) => {
 });
 
 
-// ✅ Update counselor info (specialization, sessionType, targetStudent)
+// ✅ Update counselor info (specialization, sessionType, targetStudent, basic profile)
 app.put("/api/counselor/profile/:id", async (req, res) => {
   try {
-    const { specialization, sessionType, targetStudent } = req.body;
+    const {
+      specialization,
+      sessionType,
+      targetStudent,
+      name,
+      email,
+      license,
+    } = req.body;
 
-    // Find counselor and update only the new fields
+    const updates = {};
+
+    // Arrays: allow clearing by sending an empty array, skip if not provided
+    if (Array.isArray(specialization)) updates.specialization = specialization;
+    if (Array.isArray(sessionType)) updates.sessionType = sessionType;
+    if (Array.isArray(targetStudent)) updates.targetStudent = targetStudent;
+
+    // Basic profile fields: update only if provided
+    if (typeof name === "string") updates.name = name;
+    if (typeof email === "string") updates.email = email.toLowerCase();
+    if (typeof license === "string") updates.license = license;
+
+    // Find counselor and update only provided fields
     const updatedCounselor = await User.findByIdAndUpdate(
       req.params.id,
-      {
-        specialization: specialization || [],
-        sessionType: sessionType || [],
-        targetStudent: targetStudent || [],
-      },
+      updates,
       { new: true }
     ).select("-password");
 
