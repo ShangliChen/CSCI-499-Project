@@ -69,9 +69,13 @@ function Resource() {
                     Explore →
                   </Link>
                 ) : (
-                  <button className="ml-14 mt-4 text-[#98FF98] font-medium hover:text-[#87e687] transition">
-                    Explore →
-                  </button>
+                <Link
+                  to="/resources/relaxing-games"
+                  className="ml-14 mt-4 inline-block text-[#98FF98] font-medium hover:text-[#87e687] transition"
+                >
+                  Explore →
+                </Link>
+
                 )}
 
             </div>
