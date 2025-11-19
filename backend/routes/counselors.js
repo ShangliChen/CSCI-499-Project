@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
   try {
     // Base counselor info
     const counselors = await User.find({ role: "counselor" }).select(
-      "name email license specialization sessionType targetStudent"
+      "name email license specialization sessionType targetStudent profilePicture"
     );
 
     // All availability records
@@ -36,6 +36,7 @@ router.get("/", async (req, res) => {
         name: c.name,
         email: c.email,
         license: c.license,
+        profilePicture: c.profilePicture,
         specialization: c.specialization,
         sessionType: c.sessionType,
         targetStudent: c.targetStudent,

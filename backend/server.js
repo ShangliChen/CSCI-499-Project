@@ -314,46 +314,56 @@ app.get("/api/student/profile/:id", async (req, res) => {
   }
 });
 
-  // ✅ Counselor adds availability（new added）
-  app.post("/api/counselor/availability", async (req, res) => {
-    try {
-      const { counselorId, date, timeSlots } = req.body;
-      const availability = new CounselorAvailability({ counselor: counselorId, date, timeSlots });
-      await availability.save();
-      res.json({ success: true, message: "Availability saved" });
-    } catch (err) {
-      res.status(500).json({ success: false, message: "Error saving availability" });
+// ✅ Counselor adds availability
+app.post("/api/counselor/availability", async (req, res) => {
+  try {
+    const { counselorId, date, timeSlots } = req.body;
+    const availability = new CounselorAvailability({
+      counselor: counselorId,
+      date,
+      timeSlots,
+    });
+    await availability.save();
+    res.json({ success: true, message: "Availability saved" });
+  } catch (err) {
+    console.error("❌ Error saving availability:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Error saving availability" });
+  }
+});
+
+// ✅ Counselor fetches their own availability (grouped by date)
+app.get("/api/counselor/availability/:counselorId", async (req, res) => {
+  try {
+    const { counselorId } = req.params;
+    const records = await CounselorAvailability.find({
+      counselor: counselorId,
+    }).sort({ date: 1 });
+
+    const byDate = new Map();
+    for (const record of records) {
+      const key = record.date;
+      if (!byDate.has(key)) {
+        byDate.set(key, new Set());
+      }
+      const set = byDate.get(key);
+      (record.timeSlots || []).forEach((t) => set.add(t));
     }
-  });
 
-// ✅ Student fetches counselors + availability (final version)
-  app.get("/api/counselors", async (req, res) => {
-    try {
-      const counselors = await User.find({ role: "counselor" })
+    const availability = Array.from(byDate.entries()).map(([date, set]) => ({
+      date,
+      timeSlots: Array.from(set).sort(),
+    }));
 
-        .select("name email license specialization");
-
-      const availability = await CounselorAvailability.find()
-        .populate("counselor", "name email license specialization");
-
-      // ✅ Merge by counselor ID
-      const mapped = counselors.map(c => ({
-        ...c.toObject(),
-        availability: availability
-          .filter(a => a.counselor._id.toString() === c._id.toString())
-          .map(a => ({
-            date: a.date,
-            timeSlots: a.timeSlots
-          }))
-      }));
-
-      res.json({ success: true, counselors: mapped });
-
-    } catch (err) {
-      console.error("Error fetching counselors:", err);
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
+    res.json({ success: true, availability });
+  } catch (err) {
+    console.error("❌ Error fetching counselor availability:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching availability" });
+  }
+});
 
 
 // ✅ Get counselor profile
@@ -455,6 +465,34 @@ app.post("/api/student/upload-profile-pic/:id", upload.single("profilePicture"),
   } catch (error) {
     console.error("❌ Error uploading profile picture:", error);
     res.status(500).json({ success: false, message: "Server error while uploading profile picture" });
+  }
+});
+
+// 3️⃣b Upload counselor profile picture
+app.post("/api/counselor/upload-profile-pic/:id", upload.single("profilePicture"), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || user.role !== "counselor") {
+      return res
+        .status(404)
+        .json({ success: false, message: "Counselor not found" });
+    }
+
+    const filename = path.basename(req.file.path);
+    user.profilePicture = `/uploads/${filename}`;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile picture uploaded successfully",
+      imagePath: user.profilePicture,
+    });
+  } catch (error) {
+    console.error("❌ Error uploading counselor profile picture:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while uploading profile picture",
+    });
   }
 });
 
