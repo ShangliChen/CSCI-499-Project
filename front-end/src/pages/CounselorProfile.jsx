@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -6,6 +6,7 @@ const CounselorProfile = () => {
   const { id } = useParams();
   const [counselor, setCounselor] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [profilePic, setProfilePic] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: "",
@@ -22,14 +23,9 @@ const CounselorProfile = () => {
   const [timeSlots, setTimeSlots] = useState([]);
   const [newTime, setNewTime] = useState("");
   const [message, setMessage] = useState("");
-  const [bookings, setBookings] = useState([]);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [sessionForm, setSessionForm] = useState({
-    meetingLink: "",
-    meetingLocation: "",
-    meetingDetails: "",
-    endTime: "",
-  });
+  const [availability, setAvailability] = useState([]);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedAvailDate, setSelectedAvailDate] = useState("");
   const baseURL = "http://localhost:5000";
 
   // Preset half‑hour time slots from 9:00–17:00
@@ -45,7 +41,63 @@ const CounselorProfile = () => {
     "17:00",
   ];
 
-  // ✅ Fetch counselor profile
+  // Generate calendar grid for a given month
+  const generateCalendar = (monthDate) => {
+    const currentMonth = monthDate.getMonth();
+    const currentYear = monthDate.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+
+    const cells = [];
+
+    const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+    for (let i = startDay - 1; i >= 0; i--) {
+      cells.push({
+        date: new Date(currentYear, currentMonth - 1, prevMonthLastDay - i),
+        isCurrentMonth: false,
+      });
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      cells.push({
+        date: new Date(currentYear, currentMonth, i),
+        isCurrentMonth: true,
+      });
+    }
+
+    const totalCells = 42;
+    const nextMonthDays = totalCells - cells.length;
+    for (let i = 1; i <= nextMonthDays; i++) {
+      cells.push({
+        date: new Date(currentYear, currentMonth + 1, i),
+        isCurrentMonth: false,
+      });
+    }
+
+    return cells;
+  };
+
+  const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+
+  const fetchAvailability = async () => {
+    try {
+      const res = await axios.get(
+        `${baseURL}/api/counselor/availability/${id}`
+      );
+      if (res.data?.success && Array.isArray(res.data.availability)) {
+        setAvailability(res.data.availability);
+      } else {
+        setAvailability([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch counselor availability:", error);
+      setAvailability([]);
+    }
+  };
+
+  // ✅ Fetch counselor profile + availability
   useEffect(() => {
     const fetchCounselorProfile = async () => {
       try {
@@ -61,61 +113,10 @@ const CounselorProfile = () => {
         console.error("Failed to fetch counselor profile:", error);
       }
     };
-    const fetchBookings = async () => {
-      try {
-        const res = await axios.get(`${baseURL}/api/bookings/counselor/${id}`);
-        if (res.data.success) {
-          // filter out canceled sessions
-          setBookings(
-            Array.isArray(res.data.data)
-              ? res.data.data.filter((b) => b.status !== "canceled")
-              : []
-          );
-        }
-      } catch (error) {
-        console.error("Failed to fetch counselor bookings:", error);
-      }
-    };
 
     fetchCounselorProfile();
-    fetchBookings();
+    fetchAvailability();
   }, [id]);
-
-  const upcomingSessions = useMemo(() => {
-    if (!Array.isArray(bookings) || bookings.length === 0) return [];
-    const now = new Date();
-    const parseDateTime = (booking) => {
-      if (!booking?.date || !booking?.time) return null;
-      const dt = new Date(`${booking.date}T${booking.time}`);
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-
-    return bookings
-      .map((b) => ({ booking: b, dateTime: parseDateTime(b) }))
-      .filter(
-        (item) =>
-          item.dateTime &&
-          item.booking.status !== "canceled" &&
-          item.dateTime >= now
-      )
-      .sort((a, b) => a.dateTime - b.dateTime)
-      .map((item) => item.booking)
-      .slice(0, 3);
-  }, [bookings]);
-
-  const formatSessionDateTime = (date, time) => {
-    if (!date || !time) return "Date/time not set";
-    const dt = new Date(`${date}T${time}`);
-    if (isNaN(dt.getTime())) return `${date} ${time}`;
-    return dt.toLocaleString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
 
   // ✅ Save availability
   const saveAvailability = async () => {
@@ -137,6 +138,8 @@ const CounselorProfile = () => {
       setSelectedDate("");
       setTimeSlots([]);
       setNewTime("");
+      // Refresh calendar availability
+      fetchAvailability();
     } else {
       setMessage("❌ Failed to save availability.");
     }
@@ -161,6 +164,34 @@ const CounselorProfile = () => {
   const handleProfileInputChange = (e) => {
     const { name, value } = e.target;
     setProfileForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleUploadProfilePic = async (e) => {
+    e.preventDefault();
+    if (!profilePic) return;
+
+    const data = new FormData();
+    data.append("profilePicture", profilePic);
+
+    try {
+      const res = await axios.post(
+        `${baseURL}/api/counselor/upload-profile-pic/${id}`,
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      setMessage(res.data.message);
+      if (res.data.imagePath) {
+        setCounselor((prev) => ({
+          ...prev,
+          profilePicture: res.data.imagePath,
+        }));
+      }
+    } catch (error) {
+      console.error("Error uploading counselor profile picture:", error);
+      setMessage("❌ Error uploading profile picture.");
+    }
   };
 
   const handleSaveProfile = async (e) => {
@@ -231,56 +262,6 @@ const CounselorProfile = () => {
     }
   };
 
-  const handleViewSession = (session) => {
-    setSelectedSession(session);
-    setSessionForm({
-      meetingLink: session.meetingLink || "",
-      meetingLocation: session.meetingLocation || "",
-      meetingDetails: session.meetingDetails || "",
-      endTime: session.endTime || "",
-    });
-    const section = document.getElementById("session-detail-section");
-    section?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleJoinSession = (session) => {
-    if (session.meetingLink) {
-      window.open(session.meetingLink, "_blank", "noopener,noreferrer");
-    } else {
-      alert("No meeting link set yet for this session.");
-    }
-  };
-
-  const handleSessionFormChange = (e) => {
-    const { name, value } = e.target;
-    setSessionForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSaveSessionDetails = async (e) => {
-    e.preventDefault();
-    if (!selectedSession?._id) return;
-    try {
-      const res = await axios.put(
-        `${baseURL}/api/bookings/${selectedSession._id}/meeting-info`,
-        sessionForm
-      );
-
-      if (res.data.success) {
-        const updated = res.data.data;
-        setBookings((prev) =>
-          prev.map((b) => (b._id === updated._id ? updated : b))
-        );
-        setSelectedSession(updated);
-        setMessage("✅ Session details updated.");
-      } else {
-        setMessage("❌ Failed to update session details.");
-      }
-    } catch (error) {
-      console.error("Error updating session details:", error);
-      setMessage("❌ Server error while updating session details.");
-    }
-  };
-
   if (!counselor) {
     return <div className="text-center mt-20 text-gray-500 text-lg">Loading...</div>;
   }
@@ -293,10 +274,39 @@ const CounselorProfile = () => {
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Your Profile</h2>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gray-300 rounded-full" />
-            <div>
+            <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+              {counselor.profilePicture ? (
+                <img
+                  src={`${baseURL}${counselor.profilePicture}`}
+                  alt="Profile"
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
+                  No Image
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
               <h3 className="text-base font-medium">{counselor.name}</h3>
               <p className="text-sm text-gray-500">Counselor</p>
+              <form
+                onSubmit={handleUploadProfilePic}
+                className="mt-3 flex flex-col gap-2"
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setProfilePic(e.target.files?.[0] || null)}
+                  className="block w-full text-xs text-gray-700"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center px-3 py-1.5 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
+                >
+                  Upload Photo
+                </button>
+              </form>
             </div>
           </div>
           {!isEditingProfile ? (
@@ -480,82 +490,146 @@ const CounselorProfile = () => {
         </div>
 
 
-        {/* Upcoming Sessions */}
+        {/* Availability */}
         <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Upcoming Sessions</h2>
-          {upcomingSessions.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              You have no upcoming confirmed sessions.
-            </p>
-          ) : (
-            <div className="space-y-3 text-sm text-gray-700">
-              {upcomingSessions.map((session) => (
-                <div
-                  key={session._id}
-                  className="flex justify-between items-center border-b last:border-b-0 pb-2"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {formatSessionDateTime(session.date, session.time)}
-                    </p>
-                    <p>{session.student?.name || "Student"}</p>
-                    <p className="text-xs text-gray-500">
-                      {session.meetingType
-                        ? `Type: ${session.meetingType}`
-                        : null}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      className="bg-blue-100 text-blue-600 px-3 py-1 rounded hover:bg-blue-200"
-                      onClick={() => handleViewSession(session)}
-                    >
-                      View Session
-                    </button>
-                    <button
-                      className={`px-3 py-1 rounded ${
-                        session.meetingLink
-                          ? "bg-blue-500 text-white hover:bg-blue-600"
-                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                      onClick={() => handleJoinSession(session)}
-                      disabled={!session.meetingLink}
-                    >
-                      Join Session
-                    </button>
-                  </div>
+          <h2 className="text-lg font-semibold mb-4">Your Availability</h2>
+
+          {/* Calendar overview */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setCalendarMonth(
+                    (prev) =>
+                      new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+                  )
+                }
+                className="px-2 py-1 text-xs rounded border bg-white hover:bg-gray-50"
+              >
+                Prev
+              </button>
+              <div className="text-sm font-medium text-gray-800">
+                {calendarMonth.toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setCalendarMonth(
+                    (prev) =>
+                      new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+                  )
+                }
+                className="px-2 py-1 text-xs rounded border bg-white hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-1">
+              {weekDays.map((d) => (
+                <div key={d} className="text-center">
+                  {d}
                 </div>
               ))}
             </div>
-          )}
-        </div>
 
-        {/* Availability */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Set Your Availability</h2>
+            {(() => {
+              const calendar = generateCalendar(calendarMonth);
+              const availabilitySet = new Set(
+                availability.map((a) => a.date)
+              );
+              return (
+                <div className="grid grid-cols-7 gap-1 text-xs">
+                  {calendar.map((day, idx) => {
+                    const dateStr = day.date.toISOString().split("T")[0];
+                    const hasAvailability = availabilitySet.has(dateStr);
+                    const isSelected = selectedAvailDate === dateStr;
+                    const baseClasses = "h-7 flex items-center justify-center rounded";
 
-          <div className="grid grid-cols-7 gap-1 mb-4">
-           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-            <div key={`${d}-${i}`} className="text-center text-xs text-gray-500">
-              {d}
-            </div>
-          ))}
+                    let classes = "bg-white text-gray-400";
+                    if (!day.isCurrentMonth) {
+                      classes = "bg-gray-50 text-gray-300";
+                    }
+                    if (day.isCurrentMonth && hasAvailability) {
+                      classes = "bg-green-100 text-green-800 border border-green-400";
+                    }
+                    if (isSelected) {
+                      classes =
+                        "bg-green-600 text-white border border-green-700";
+                    }
 
-            {Array.from({ length: 14 }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-6 rounded ${
-                  i === 5 || i === 6 ? "bg-blue-200" : i === 12 ? "bg-orange-300" : "bg-gray-100"
-                }`}
-              ></div>
-            ))}
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedAvailDate(dateStr)}
+                        className={`${baseClasses} ${classes}`}
+                      >
+                        {day.date.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Selected date slots */}
+          <div className="mb-4 text-xs text-gray-700">
+            {selectedAvailDate ? (
+              (() => {
+                const entry = availability.find(
+                  (a) => a.date === selectedAvailDate
+                );
+                if (!entry || !entry.timeSlots.length) {
+                  return (
+                    <p>
+                      No time slots saved for{" "}
+                      <span className="font-semibold">
+                        {selectedAvailDate}
+                      </span>
+                      .
+                    </p>
+                  );
+                }
+                return (
+                  <div>
+                    <p className="mb-1">
+                      Availability on{" "}
+                      <span className="font-semibold">
+                        {selectedAvailDate}
+                      </span>
+                      :
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {entry.timeSlots.map((t) => (
+                        <span
+                          key={t}
+                          className="px-2 py-1 rounded-full bg-green-100 text-green-800 border border-green-400"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="text-gray-500">
+                Select a highlighted day to see saved time slots.
+              </p>
+            )}
           </div>
 
           <button
             onClick={() => setIsEditing(!isEditing)}
             className="text-sm text-blue-600 hover:underline"
           >
-            {isEditing ? "Cancel" : "Edit Schedule"}
+            {isEditing ? "Cancel" : "Add / Edit Availability"}
           </button>
 
           {isEditing && (
@@ -683,27 +757,6 @@ const CounselorProfile = () => {
           )}
         </div>
 
-        {/* Client Load */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Client Load</h2>
-          <div className="flex items-end gap-4 h-32">
-            <div className="w-6 bg-blue-600 h-24 rounded"></div>
-            <div className="w-6 bg-blue-300 h-20 rounded"></div>
-            <div className="text-sm text-gray-500">
-              Active Clients: 18<br />Waiting List: 3
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li>✔️ Add New Client</li>
-            <li>✔️ Review Session Notes</li>
-            <li>✔️ Access Billing</li>
-          </ul>
-        </div>
       </div>
           
       {/* Edit Info Section */}
@@ -858,104 +911,6 @@ const CounselorProfile = () => {
             </button>
           </div>
         </div>
-
-
-      {/* Session detail editor */}
-      {selectedSession && (
-        <div
-          id="session-detail-section"
-          className="mt-12 bg-white rounded-xl shadow p-8 w-full mx-auto"
-        >
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-            Session Details
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            <span className="font-medium">
-              {selectedSession.student?.name || "Student"}
-            </span>{" "}
-            •{" "}
-            {formatSessionDateTime(
-              selectedSession.date,
-              selectedSession.time
-            )}
-            {selectedSession.meetingType && (
-              <> • {selectedSession.meetingType}</>
-            )}
-          </p>
-
-          <form
-            onSubmit={handleSaveSessionDetails}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
-          >
-            <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-600">
-                Video Meeting Link
-              </label>
-              <input
-                type="url"
-                name="meetingLink"
-                value={sessionForm.meetingLink}
-                onChange={handleSessionFormChange}
-                placeholder="https://..."
-                className="mt-1 w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600">
-                Location (for in-person)
-              </label>
-              <input
-                type="text"
-                name="meetingLocation"
-                value={sessionForm.meetingLocation}
-                onChange={handleSessionFormChange}
-                placeholder="Office location / room"
-                className="mt-1 w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600">
-                End Time
-              </label>
-              <input
-                type="time"
-                name="endTime"
-                value={sessionForm.endTime}
-                onChange={handleSessionFormChange}
-                className="mt-1 w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-600">
-                Additional Details for Student
-              </label>
-              <textarea
-                name="meetingDetails"
-                value={sessionForm.meetingDetails}
-                onChange={handleSessionFormChange}
-                rows="3"
-                className="mt-1 w-full border rounded px-3 py-2"
-                placeholder="Any preparation instructions or notes for the student..."
-              />
-            </div>
-            <div className="md:col-span-2 flex justify-end gap-3 mt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedSession(null)}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
-              >
-                Close
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2 bg-[#2e8b57] text-white rounded hover:bg-[#267349] font-semibold"
-              >
-                Save Session Details
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
 
       {message && (

@@ -5,6 +5,7 @@ import axios from "axios";
 const CounselorDashboard = () => {
   const [userName, setUserName] = useState("");
   const [notifications, setNotifications] = useState([]);
+  const [profilePicture, setProfilePicture] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const baseURL = "http://localhost:5000";
   const navigate = useNavigate();
@@ -30,6 +31,18 @@ const CounselorDashboard = () => {
       navigate("/login/counselor");
     } else {
       setUserName(userData.name || "Counselor");
+
+      // ✅ Fetch counselor profile to get latest profile picture
+      axios
+        .get(`${baseURL}/api/counselor/profile/${userData.userId}`)
+        .then((res) => {
+          if (res.data?.success && res.data.data?.profilePicture) {
+            setProfilePicture(res.data.data.profilePicture);
+          }
+        })
+        .catch((err) =>
+          console.error("Error fetching counselor profile for dashboard:", err)
+        );
 
       // ✅ Fetch notifications
       axios
@@ -104,29 +117,24 @@ const CounselorDashboard = () => {
       {/* Welcome */}
       <section className="mb-8 flex items-center justify-between">
           <div className="flex items-center space-x-3">
+            {profilePicture && (
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                <img
+                  src={`${baseURL}${profilePicture}`}
+                  alt="Counselor"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
             <h2 className="text-2xl font-semibold text-gray-800">
               Welcome, {userName}!
             </h2>
             <button
               onClick={goToProfile}
-              className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition"
+              className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium text-gray-800 transition"
               title="Go to Profile"
             >
-              {/* Profile Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-7 w-7 text-gray-700"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5.121 17.804A4 4 0 0112 15a4 4 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              Go to Profile
             </button>
           </div>
 
