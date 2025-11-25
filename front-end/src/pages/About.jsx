@@ -1,48 +1,54 @@
 // pages/About.jsx
-import { CheckCircle, Users, Heart, Shield, Target } from 'lucide-react';
-
 function About() {
-
-  
-
-
   return (
-    <div className="min-h-screen bg-[#f0fff0] py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">About MindConnect</h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Many students struggle with mental health challenges but hesitate to seek help directly. MindConnect motivates regular check-ins through our intuitive platform, 
-                provides a safe space for expression, and connects students with professional 
-                counselors before problems escalate.
-          </p>
-        </div>
+    <div className="min-h-screen bg-white">   {/* <-- PAGE IS NOW WHITE */}
 
-        {/* Mission Section */}
-        <div className="bg-white rounded-xl p-8 shadow-md mb-12">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="md:w-1/3 flex justify-center">
-              <div className="bg-[#e6ffee] p-6 rounded-full">
-                <Target className="h-16 w-16 text-[#98FF98]" />
-              </div>
-            </div>
-            <div className="md:w-2/3">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
-              <p className="text-gray-700 mb-4">
-              MindConnect was created to help students deal with mental health challenges in school. We believe all students should have access to good mental health support, no matter who they are or where they come from.
-              </p>
-              <p className="text-gray-700">
-              Our platform connects students with mental health professionals, giving them a safe and easy way to get help without fear or judgment.
-              </p>
-            </div>
+      {/* Hero Section (Mint Green Only at Top) */}
+      <div className="bg-[#ccf7c8] py-20">
+        <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row items-center gap-10">
+
+          {/* Left Text */}
+          <div className="md:w-1/2">
+            <h1 className="text-5xl font-bold text-gray-900 mb-6">
+              About MindConnect
+            </h1>
           </div>
+
+          {/* Right Image */}
+          <div className="md:w-1/2 flex justify-center">
+            <img 
+              src="/images/nhs-video.jpg"
+              alt="MindConnect Mission"
+              className="rounded-xl shadow-lg object-cover w-full h-[300px] md:h-[350px]"
+            />
+          </div>
+
         </div>
-
-       
-    
-
       </div>
+
+      {/* Mission Section (Pure White) */}
+      <div className="bg-white py-20">
+        <div className="container mx-auto px-4 max-w-5xl">
+        <p className="text-lg leading-relaxed mb-6 font-[Georgia] text-gray-700">
+          <span className="float-left text-6xl font-bold leading-none mr-3 font-[Georgia] text-gray-900">
+            M
+          </span>
+            Many students struggle with mental health challenges but hesitate to seek help directly. MindConnect 
+            provides a safe space for regular check-ins, emotional expression, and access to professional counselors
+            before problems escalate. goes with MindConnect was created to help students deal with mental health challenges
+              in school. We believe all students deserve access to good mental health support, no matter who they are or where
+              they come from
+          </p>
+
+          
+        <p className="text-lg leading-relaxed font-[Georgia] text-gray-700">
+            Our platform connects students with licensed counselors, giving them a safe and easy way 
+            to get help without fear or judgment.
+          </p>
+
+        </div>
+      </div>
+
     </div>
   );
 }
