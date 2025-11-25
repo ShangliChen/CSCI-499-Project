@@ -52,64 +52,124 @@ function App() {
   const getNavClass = (path) => {
     return currentPath === path
       ? 'bg-[#98FF98] text-black border-[#98FF98]'
-      : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100';
+      : 'bg-white text-black border-gray-300 hover:bg-gray-100';
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0fff0]">
+    <div className="min-h-screen flex flex-col bg-[#F0FFF0]">
       {/* Header */}
-      <header className="bg-[#f0fff0] py-3 sticky top-0 z-10 shadow-sm">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-2 cursor-pointer">
-            <Brain className="h-8 w-8 text-[#98FF98]" />
-            <span className="text-2xl font-bold text-gray-900">MindConnect</span>
+          <header className="bg-[#f0fff0] py-3 sticky top-0 z-10 shadow-sm">
+      <div className="container mx-auto px-8 flex items-center justify-between">
+
+        {/* Logo */}
+        <div className="flex items-center space-x-2">
+          <Brain className="h-7 w-7 text-[#4CAF50]" />
+
+          <span className="text-3xl font-semibold text-gray-900">MindConnect</span>
+        </div>
+
+        {/* Middle Tabs (slightly bold + clean spacing) */}
+        <nav className="flex items-center space-x-10">
+
+          <Link
+            to="/"
+            className={`text-gray-800 font-medium text-lg pb-2 transition ${
+              currentPath === '/' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
+            }`}
+          >
+            Home
           </Link>
 
-          {/* Navigation */}
-          <div className="flex items-center space-x-3">
-            <Link
-              to="/"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
+          <Link
+            to="/about"
+            className={`text-gray-800 font-medium text-lg pb-2 transition ${
+              currentPath === '/about' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
+            }`}
+          >
+            About
+          </Link>
+
+          <Link
+            to="/resource"
+            className={`text-gray-800 font-medium text-lg pb-2 transition ${
+              currentPath === '/resource' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
+            }`}
+          >
+            Resource
+          </Link>
+
+          <Link
+            to="/forum"
+            className={`text-gray-800 font-medium text-lg pb-2 transition ${
+              currentPath === '/forum' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
+            }`}
+          >
+            Forum
+          </Link>
+
+          <button
+            onClick={handleDashboardClick}
+            className={`text-gray-800 font-medium text-lg pb-2 transition ${
+              currentPath.startsWith('/dashboard') ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
+            }`}
+          >
+            Dashboard
+          </button>
+
+        </nav>
+
+
+
+        {/* Right Side */}
+        <div className="flex items-center space-x-6">
+
+          {user ? (
+            <button 
+              onClick={handleLogout}
+              className="text-gray-800 font-medium hover:text-black transition"
             >
-              Home
-            </Link>
-            <Link
-              to="/about"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/about' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              About
-            </Link>
-            <Link
-              to="/resource"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/resource' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              Resource
-            </Link>
-            <Link
-              to="/forum"
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath === '/forum' ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              Forum
-            </Link>
-            <button
-              onClick={handleDashboardClick}
-              className={`px-4 py-2 rounded-lg font-medium transition border ${currentPath.startsWith('/dashboard') ? 'bg-[#98FF98] text-black border-[#98FF98]' : 'bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100'}`}
-            >
-              Dashboard
+              Logout
             </button>
-            {user ? (
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg font-medium transition border bg-white text-[#98FF98] border-gray-300 hover:bg-gray-100"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link to="/user-type" className={`px-4 py-2 rounded-lg font-medium transition border ${getNavClass('/user-type')}`}>Login</Link>
-            )}
-          </div>
+          ) : (
+            <Link 
+              to="/user-type"
+              className="text-gray-800 font-medium hover:text-black transition"
+            >
+              Login
+            </Link>
+          )}
+
+          {/* Blue rounded button */}
+          <Link
+            to="/signup/student"
+            className="
+              relative overflow-hidden 
+              px-6 py-2 text-lg font-medium rounded-full 
+              border-2 border-[#98D7C2] text-black 
+              transition-all duration-500 group
+            "
+          >
+            {/* fill animation layer */}
+            <span
+              className="
+                absolute inset-0 bg-[#98D7C2] 
+                translate-x-[-100%] 
+                group-hover:translate-x-0 
+                transition-transform duration-500
+              "
+            ></span>
+
+            {/* text stays visible above the fill */}
+            <span className="relative z-10">Get Started</span>
+          </Link>
+
+
         </div>
-      </header>
+
+      </div>
+    </header>
+
+
 
       {/* Main Content */}
       <main className="flex-grow">
