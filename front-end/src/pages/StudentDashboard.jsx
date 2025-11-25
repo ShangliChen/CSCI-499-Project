@@ -362,8 +362,19 @@ const StudentDashboard = () => {
                 >
                   ✅ Find a Counselor
                 </li>
-                <li>✅ Coping Techniques</li>
-                <li>✅ Read Articles</li>
+                <li
+                  className="cursor-pointer hover:text-gray-900"
+                  onClick={() => navigate("/coping-techniques")}
+                >
+                  ✅ Coping Techniques
+                </li>
+                <li
+                  className="cursor-pointer hover:text-gray-900"
+                  onClick={() => navigate("/articles")}
+                >
+                  ✅ Read Articles
+                </li>
+
               </ul>
             </div>
           </div>
