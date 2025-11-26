@@ -589,6 +589,60 @@ app.post('/api/admin/counselors/:id/reject', adminAuth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+// save student favorite games
+app.post("/api/games/favorites/:userId", async (req, res) => {
+  try {
+    const { favorites } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { favorites },
+      { new: true }
+    );
+
+    res.json({ success: true, favorites: user.favorites });
+  } catch (error) {
+    console.error("❌ Error saving favorites:", error);
+    res.status(500).json({ success: false, message: "Error saving favorites" });
+  }
+});
+// save student recent play 
+app.post("/api/games/recent/:userId", async (req, res) => {
+  try {
+    const { recentGames } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { recentGames },
+      { new: true }
+    );
+
+    res.json({ success: true, recentGames: user.recentGames });
+  } catch (error) {
+    console.error("❌ Error saving recent games:", error);
+    res.status(500).json({ success: false, message: "Error saving recent games" });
+  }
+});
+
+// Load student favorite + recent games
+app.get("/api/games/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select("favorites recentGames");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      favorites: user.favorites || [],
+      recentGames: user.recentGames || []
+    });
+  } catch (error) {
+    console.error("❌ Error loading game data:", error);
+    res.status(500).json({ success: false, message: "Error loading game data" });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
@@ -820,3 +874,4 @@ app.put("/api/bookings/:id/meeting-info", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error while updating meeting info" });
   }
 });
+

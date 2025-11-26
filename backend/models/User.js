@@ -28,6 +28,20 @@ const UserSchema = new mongoose.Schema(
       enum: ["student", "counselor"],
       required: true,
     },
+    favorites: [
+    {
+      title: String,
+      category: String,
+      url: String,
+    }
+  ],
+    recentGames: [
+    {
+      title: String,
+      category: String,
+      url: String,
+    }
+  ],
     // Student-specific fields
     dob: { type: Date, default: null },
     phoneNumber: { type: String, default: null },

@@ -594,12 +594,17 @@ const StudentDashboard = () => {
                 </li>
                 <li
                   className="cursor-pointer hover:text-gray-900"
-                  onClick={() => navigate("/student/notifications")}
+                  onClick={() => navigate("/coping-techniques")}
                 >
-                  ✅ Notifications
+                  ✅ Coping Techniques
                 </li>
-                <li>✅ Coping Techniques</li>
-                <li>✅ Read Articles</li>
+                <li
+                  className="cursor-pointer hover:text-gray-900"
+                  onClick={() => navigate("/articles")}
+                >
+                  ✅ Read Articles
+                </li>
+
               </ul>
             </div>
           </div>
