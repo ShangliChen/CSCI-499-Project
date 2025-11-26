@@ -7,7 +7,8 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
-import User from './models/User.js';
+import User from "./models/User.js";
+import Notification from "./models/notification.js";
 import assessmentRoutes from "./routes/assessmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import forumRoutes from "./routes/forumRoutes.js";
@@ -461,7 +462,12 @@ app.post("/api/student/upload-profile-pic/:id", upload.single("profilePicture"),
     user.profilePicture = `/uploads/${filename}`;
     await user.save();
 
-    res.status(200).json({ success: true, message: "Profile picture uploaded successfully", imagePath: req.file.path });
+    // Return the same web path we store on the user document
+    res.status(200).json({
+      success: true,
+      message: "Profile picture uploaded successfully",
+      imagePath: user.profilePicture,
+    });
   } catch (error) {
     console.error("❌ Error uploading profile picture:", error);
     res.status(500).json({ success: false, message: "Server error while uploading profile picture" });
@@ -630,6 +636,96 @@ app.get("/api/bookings/student/:studentId", async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching bookings" });
   }
 });
+
+// ✅ Student reschedules an existing booking
+app.put("/api/bookings/:id/reschedule", async (req, res) => {
+  try {
+    const { date, time, meetingType } = req.body || {};
+
+    if (!date || !time) {
+      return res
+        .status(400)
+        .json({ success: false, message: "New date and time are required" });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
+    }
+
+    if (booking.status === "canceled" || booking.status === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Only upcoming confirmed bookings can be rescheduled",
+      });
+    }
+
+    // Prevent double booking: same counselor, date and time, different booking, not canceled
+    const conflict = await Booking.findOne({
+      _id: { $ne: booking._id },
+      counselor: booking.counselor,
+      date,
+      time,
+      status: { $ne: "canceled" },
+    });
+
+    if (conflict) {
+      return res.status(400).json({
+        success: false,
+        message: "This time slot is no longer available. Please choose another.",
+      });
+    }
+
+    booking.date = date;
+    booking.time = time;
+    if (typeof meetingType === "string" && meetingType.trim()) {
+      booking.meetingType = meetingType.trim();
+    }
+
+    // When rescheduling, clear any previously sent meeting-specific details
+    booking.meetingLink = undefined;
+    booking.meetingLocation = undefined;
+    booking.meetingDetails = undefined;
+    booking.endTime = undefined;
+
+    await booking.save();
+
+    // Create a notification for the counselor about this change
+    try {
+      const populatedBooking = await booking.populate("student", "name email school_id");
+      const student = populatedBooking.student;
+      const msg = student
+        ? `${student.name} rescheduled their counseling session to ${date} at ${time}.`
+        : `A student rescheduled a counseling session to ${date} at ${time}.`;
+
+      await Notification.create({
+        student: booking.student,
+        message: msg,
+      });
+    } catch (notifErr) {
+      // Do not fail the reschedule if notification creation fails
+      console.error("❌ Error creating reschedule notification:", notifErr);
+    }
+
+    // Re-populate counselor for frontend convenience (shape similar to list endpoints)
+    await booking.populate("counselor", "name email");
+
+    res.json({
+      success: true,
+      message: "Booking rescheduled successfully",
+      data: booking,
+    });
+  } catch (error) {
+    console.error("❌ Reschedule booking error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while rescheduling booking",
+    });
+  }
+});
+
 app.put("/api/bookings/:id/cancel", async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(

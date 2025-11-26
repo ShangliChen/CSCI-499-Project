@@ -27,12 +27,7 @@ const ViewAllAppointments = () => {
         const data = await res.json();
 
         if (data.success && Array.isArray(data.data)) {
-          const now = new Date();
-
-          // ✅ Only show upcoming confirmed or completed past appointments
-          const filtered = data.data
-            .filter((b) => b.status !== "canceled") // ✅ Hide canceled
-            .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+          const filtered = data.data.filter((b) => b.status !== "canceled"); // ✅ Hide canceled
 
           setBookings(filtered);
         }
@@ -55,26 +50,67 @@ const ViewAllAppointments = () => {
           You currently have no appointment history.
         </p>
       ) : (
-        <div className="space-y-4 max-w-3xl mx-auto">
-          {bookings.map((b) => (
+        (() => {
+          const now = new Date();
+
+          const upcoming = bookings
+            .map((b) => ({
+              ...b,
+              dateTime: new Date(`${b.date}T${b.time}`),
+            }))
+            .filter(
+              (b) =>
+                b.dateTime instanceof Date &&
+                !Number.isNaN(b.dateTime.getTime()) &&
+                b.dateTime >= now
+            )
+            .sort(
+              (a, b) => a.dateTime - b.dateTime // soonest upcoming first
+            );
+
+          const past = bookings
+            .map((b) => ({
+              ...b,
+              dateTime: new Date(`${b.date}T${b.time}`),
+            }))
+            .filter(
+              (b) =>
+                b.dateTime instanceof Date &&
+                !Number.isNaN(b.dateTime.getTime()) &&
+                b.dateTime < now
+            )
+            .sort(
+              (a, b) => b.dateTime - a.dateTime // most recent past first
+            );
+
+          const renderCard = (b, isUpcoming) => (
             <div key={b._id} className="bg-white rounded-xl shadow p-6">
               <p className="font-semibold text-gray-800">
                 Counselor: {b.counselor?.name}
               </p>
-
-        🗓️ {formatDateTime(b.date, b.time)} – {b.endTime || "1 hour"}
-
-
+              <p className="text-gray-700">
+                🗓️ {formatDateTime(b.date, b.time)} – {b.endTime || "1 hour"}
+              </p>
               <p className="text-gray-700">
                 Type: {b.meetingType?.toUpperCase()}
               </p>
 
               {(b.meetingLink || b.meetingLocation || b.meetingDetails) && (
                 <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
-                  <p className="text-sm font-semibold text-gray-800 mb-1">Meeting Details</p>
+                  <p className="text-sm font-semibold text-gray-800 mb-1">
+                    Meeting Details
+                  </p>
                   {b.meetingLink && (
                     <p className="text-sm">
-                      Link: <a href={b.meetingLink} className="text-[#2e8b57] underline" target="_blank" rel="noreferrer">Join Session</a>
+                      Link:{" "}
+                      <a
+                        href={b.meetingLink}
+                        className="text-[#2e8b57] underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Join Session
+                      </a>
                     </p>
                   )}
                   {b.meetingLocation && (
@@ -86,18 +122,24 @@ const ViewAllAppointments = () => {
                 </div>
               )}
 
-              {/* ✅ Cancel Button for confirmed appointments */}
-              {b.status === "confirmed" && (
+              {/* ✅ Cancel Button only for future confirmed appointments */}
+              {isUpcoming && b.status === "confirmed" && (
                 <button
                   className="mt-3 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700"
                   onClick={async () => {
-                    if (window.confirm("Are you sure you want to cancel this appointment?")) {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to cancel this appointment?"
+                      )
+                    ) {
                       await fetch(`${baseURL}/api/bookings/${b._id}/cancel`, {
                         method: "PUT",
                       });
 
                       // ✅ Immediately remove from UI
-                      setBookings((prev) => prev.filter((item) => item._id !== b._id));
+                      setBookings((prev) =>
+                        prev.filter((item) => item._id !== b._id)
+                      );
                     }
                   }}
                 >
@@ -105,8 +147,30 @@ const ViewAllAppointments = () => {
                 </button>
               )}
             </div>
-          ))}
-        </div>
+          );
+
+          return (
+            <div className="space-y-8 max-w-3xl mx-auto">
+              {upcoming.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Upcoming Appointments
+                  </h2>
+                  {upcoming.map((b) => renderCard(b, true))}
+                </div>
+              )}
+
+              {past.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Past Appointments
+                  </h2>
+                  {past.map((b) => renderCard(b, false))}
+                </div>
+              )}
+            </div>
+          );
+        })()
       )}
     </div>
   );

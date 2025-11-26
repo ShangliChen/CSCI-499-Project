@@ -112,6 +112,56 @@ const CounselorDashboard = () => {
 
   const unreadNotifications = notifications.filter((n) => !n.read);
 
+  // Derive upcoming (future) appointments from all non-canceled ones
+  const upcomingAppointments = (() => {
+    if (!Array.isArray(appointments)) return [];
+    const now = new Date();
+    return appointments
+      .map((a) => ({
+        ...a,
+        dateTime: new Date(`${a.date}T${a.time}`),
+      }))
+      .filter(
+        (a) =>
+          a.status === "confirmed" &&
+          a.dateTime instanceof Date &&
+          !Number.isNaN(a.dateTime.getTime()) &&
+          a.dateTime >= now
+      )
+      .sort((a, b) => a.dateTime - b.dateTime);
+  })();
+
+  // Derive "My Students" from all non-canceled appointments (most recent first)
+  const myStudents = (() => {
+    if (!Array.isArray(appointments)) return [];
+
+    const byStudent = new Map();
+
+    appointments.forEach((a) => {
+      const student = a.student;
+      if (!student || !student._id || !a.date || !a.time) return;
+
+      const dateTime = new Date(`${a.date}T${a.time}`);
+      if (Number.isNaN(dateTime.getTime())) return;
+
+      const key = String(student._id);
+      const existing = byStudent.get(key);
+
+      if (!existing || dateTime > existing.lastDateTime) {
+        byStudent.set(key, {
+          studentId: student._id,
+          name: student.name || "Student",
+          email: student.email || "",
+          lastDateTime: dateTime,
+        });
+      }
+    });
+
+    return Array.from(byStudent.values())
+      .sort((a, b) => b.lastDateTime - a.lastDateTime)
+      .slice(0, 5);
+  })();
+
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-8">
       {/* Welcome */}
@@ -202,17 +252,18 @@ const CounselorDashboard = () => {
     <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
       <h3 className="text-lg font-semibold mb-4">Upcoming Appointments</h3>
 
-      {appointments.length === 0 ? (
+      {upcomingAppointments.length === 0 ? (
         <p className="text-gray-600">No upcoming appointments.</p>
       ) : (
         <>
-      {appointments.slice(0, 3).map((a) => (
+      {upcomingAppointments.slice(0, 3).map((a) => (
         <div key={a._id} className="border-b border-gray-200 py-2">
           <p className="font-medium text-gray-800">
             {a.student?.name || "Student"}
           </p>
           <p className="text-sm text-gray-600">
-            🗓️ {formatDateTime(a.date, a.time)} – {a.endTime || "1 hour session"}
+            🗓️ {formatDateTime(a.date, a.time)} –{" "}
+            {a.endTime || "1 hour session"}
           </p>
           <p className="text-sm text-gray-700">
             Email: {a.student?.email || "N/A"}
@@ -260,34 +311,53 @@ const CounselorDashboard = () => {
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1 flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-semibold mb-4">My Students</h3>
-            <ul className="space-y-4">
-              {["Alex", "Jordan", "Maya"].map((name, i) => (
-                <li key={i} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full" />
-                    <span>{name}</span>
-                  </div>
-                  <div>
-                    {name === "Maya" ? (
-                      <button className="text-[#BDFCC9] hover:underline">
-                        Message
+            {myStudents.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Students you meet with will appear here.
+              </p>
+            ) : (
+              <ul className="space-y-4">
+                {myStudents.map((s) => (
+                  <li
+                    key={s.studentId}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                        {(s.name && s.name.charAt(0).toUpperCase()) || "S"}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {s.name}
+                        </div>
+                        {s.email && (
+                          <div className="text-xs text-gray-500">
+                            {s.email}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() =>
+                          navigate(`/counselor/user/${s.studentId}`)
+                        }
+                        className="text-[#2e8b57] text-sm font-medium hover:underline"
+                      >
+                        View Details
                       </button>
-                    ) : (
-                      <button className="text-[#BDFCC9] hover:underline">
-                        View Profile
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="mt-6 text-right">
             <button
-              onClick={() => navigate("/counselor/assessments")}
-              className="text-sm text-[#BDFCC9] hover:underline"
+              onClick={() => navigate("/counselor/view-all-appointments")}
+              className="text-sm text-[#2e8b57] hover:underline"
             >
-              View All
+              View All Appointments
             </button>
           </div>
         </div>
