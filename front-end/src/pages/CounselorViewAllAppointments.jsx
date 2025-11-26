@@ -37,12 +37,8 @@ const CounselorViewAllAppointments = () => {
         const data = await res.json();
 
         if (data.success && Array.isArray(data.data)) {
-          const sorted = data.data.sort(
-            (a, b) =>
-              new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`)
-          );
-          const filtered = sorted.filter((b) => b.status !== "canceled");
-            setBookings(filtered);
+          const filtered = data.data.filter((b) => b.status !== "canceled");
+          setBookings(filtered);
         } else {
           console.error("❌ Unexpected data format:", data);
         }
@@ -101,82 +97,164 @@ const CounselorViewAllAppointments = () => {
           You currently have no upcoming or past appointments.
         </p>
       ) : (
-        <div className="space-y-4 max-w-4xl mx-auto">
-          {bookings.map((b) => (
+        (() => {
+          const now = new Date();
+
+          const upcoming = bookings
+            .map((b) => ({
+              ...b,
+              dateTime: new Date(`${b.date}T${b.time}`),
+            }))
+            .filter(
+              (b) =>
+                b.dateTime instanceof Date &&
+                !Number.isNaN(b.dateTime.getTime()) &&
+                b.dateTime >= now &&
+                b.status === "confirmed"
+            )
+            .sort(
+              (a, b) => a.dateTime - b.dateTime // soonest upcoming first
+            );
+
+          const past = bookings
+            .map((b) => ({
+              ...b,
+              dateTime: new Date(`${b.date}T${b.time}`),
+            }))
+            .filter(
+              (b) =>
+                b.dateTime instanceof Date &&
+                !Number.isNaN(b.dateTime.getTime()) &&
+                b.dateTime < now
+            )
+            .sort(
+              (a, b) => b.dateTime - a.dateTime // most recent past first
+            );
+
+          const renderCard = (b, isUpcoming) => (
             <div
-            key={b._id}
-            className="bg-white rounded-xl shadow p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center"
+              key={b._id}
+              className="bg-white rounded-xl shadow p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center"
             >
-            <div className="space-y-1">
+              <div className="space-y-1">
                 <p className="font-semibold text-gray-900 text-lg">
-                 {b.student?.name || "Unknown Student"}
+                  {b.student?.name || "Unknown Student"}
                 </p>
                 <p className="text-gray-800 text-sm">
-                 <span className="font-medium">{b.student?.email || "No email"}</span>
+                  <span className="font-medium">
+                    {b.student?.email || "No email"}
+                  </span>
                 </p>
                 {b.student?.dob && (
-                <p className="text-gray-800 text-sm">
-                     Age: {new Date().getFullYear() - new Date(b.student.dob).getFullYear()} years
-                </p>
+                  <p className="text-gray-800 text-sm">
+                    Age{" "}
+                    {new Date().getFullYear() -
+                      new Date(b.student.dob).getFullYear()}{" "}
+                    years
+                  </p>
                 )}
-              <p className="text-gray-800 text-sm">
-                {formatDateTime(b.date, b.time)} – {b.endTime || "1 hour"}
-              </p>
-
-              
-              <p className="text-gray-800 text-sm capitalize">
-                 Type: {b.meetingType}
-              </p>
-              <p className="text-gray-800 text-sm">
-                 Note: {b.note || "No note provided"}
-              </p>
-              {/* Meeting info (if any) */}
-              {(b.meetingLink || b.meetingLocation || b.meetingDetails) && (
-                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
-                  <p className="text-sm text-gray-800 font-semibold mb-1">Meeting Details</p>
-                  {b.meetingLink && (
-                    <p className="text-sm">
-                      Link: <a className="text-[#2e8b57] underline" href={b.meetingLink} target="_blank" rel="noreferrer">{b.meetingLink}</a>
+                <p className="text-gray-800 text-sm">
+                  {formatDateTime(b.date, b.time)} –{" "}
+                  {b.endTime || "1 hour"}
+                </p>
+                <p className="text-gray-800 text-sm capitalize">
+                  Type: {b.meetingType}
+                </p>
+                <p className="text-gray-800 text-sm">
+                  Note: {b.note || "No note provided"}
+                </p>
+                {/* Meeting info (if any) */}
+                {(b.meetingLink ||
+                  b.meetingLocation ||
+                  b.meetingDetails) && (
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                    <p className="text-sm text-gray-800 font-semibold mb-1">
+                      Meeting Details
                     </p>
-                  )}
-                  {b.meetingLocation && (
-                    <p className="text-sm">Location: {b.meetingLocation}</p>
-                  )}
-                  {b.meetingDetails && (
-                    <p className="text-sm">Notes: {b.meetingDetails}</p>
-                  )}
+                    {b.meetingLink && (
+                      <p className="text-sm">
+                        Link:{" "}
+                        <a
+                          className="text-[#2e8b57] underline"
+                          href={b.meetingLink}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {b.meetingLink}
+                        </a>
+                      </p>
+                    )}
+                    {b.meetingLocation && (
+                      <p className="text-sm">
+                        Location: {b.meetingLocation}
+                      </p>
+                    )}
+                    {b.meetingDetails && (
+                      <p className="text-sm">
+                        Notes: {b.meetingDetails}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <p
+                  className={`text-sm font-semibold ${
+                    b.status === "confirmed"
+                      ? "text-green-600"
+                      : b.status === "canceled"
+                      ? "text-red-600"
+                      : "text-gray-500"
+                  }`}
+                >
+                  Status: {b.status}
+                </p>
+              </div>
+              <div className="self-stretch sm:self-auto mt-4 sm:mt-0 flex flex-col gap-2 items-end">
+                <button
+                  onClick={() =>
+                    navigate(`/counselor/user/${b.student?._id}`)
+                  }
+                  className="text-[#2e8b57] font-semibold hover:underline"
+                >
+                  View Assessment →
+                </button>
+                {isUpcoming && (
+                  <button
+                    onClick={() => openEditor(b)}
+                    className="px-3 py-1 rounded bg-[#2e8b57] text-white hover:bg-[#267349]"
+                  >
+                    {b.meetingLink ||
+                    b.meetingLocation ||
+                    b.meetingDetails
+                      ? "Update Meeting Info"
+                      : "Send Meeting Info"}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="space-y-8 max-w-4xl mx-auto">
+              {upcoming.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Upcoming Appointments
+                  </h2>
+                  {upcoming.map((b) => renderCard(b, true))}
                 </div>
               )}
-              <p
-              className={`text-sm font-semibold ${
-                    b.status === "confirmed"
-                    ? "text-green-600"
-                    : b.status === "canceled"
-                    ? "text-red-600"
-                    : "text-gray-500"
-                }`}
-                >
-                Status: {b.status}
-                </p>
-            </div>
-            <div className="self-stretch sm:self-auto mt-4 sm:mt-0 flex flex-col gap-2 items-end">
-              <button
-                  onClick={() => navigate(`/counselor/user/${b.student?._id}`)}
-                  className="text-[#2e8b57] font-semibold hover:underline"
-              >
-                  View Assessment →
-              </button>
-              <button
-                onClick={() => openEditor(b)}
-                className="px-3 py-1 rounded bg-[#2e8b57] text-white hover:bg-[#267349]"
-              >
-                {b.meetingLink || b.meetingLocation || b.meetingDetails ? 'Update Meeting Info' : 'Send Meeting Info'}
-              </button>
-            </div>
-            </div>
 
-          ))}
-        </div>
+              {past.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Past Appointments
+                  </h2>
+                  {past.map((b) => renderCard(b, false))}
+                </div>
+              )}
+            </div>
+          );
+        })()
       )}
 
       {/* Editor Modal */}

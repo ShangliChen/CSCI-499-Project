@@ -17,7 +17,14 @@ const StudentDashboard = () => {
   const [userName, setUserName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [upcomingBooking, setUpcomingBooking] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null);
   const [checkInCompleted, setCheckInCompleted] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleAvailability, setRescheduleAvailability] = useState([]);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTimes, setRescheduleTimes] = useState([]);
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  const [rescheduleMessage, setRescheduleMessage] = useState("");
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
@@ -51,7 +58,12 @@ const StudentDashboard = () => {
       try {
         const res = await fetch(`${baseURL}/api/student/profile/${stored.userId}`);
         const data = await res.json();
-        if (data.success) setUserName(data.data.name);
+        if (data.success && data.data) {
+          setUserName(data.data.name);
+          if (data.data.profilePicture) {
+            setProfilePicture(data.data.profilePicture);
+          }
+        }
       } catch (error) {
         console.error("❌ Error fetching profile:", error);
       }
@@ -121,6 +133,117 @@ const StudentDashboard = () => {
       ],
     };
 
+  const hasUpcomingBooking = (() => {
+    if (!upcomingBooking || !upcomingBooking.date || !upcomingBooking.time) {
+      return false;
+    }
+    const dateTime = new Date(`${upcomingBooking.date}T${upcomingBooking.time}`);
+    if (Number.isNaN(dateTime.getTime())) return false;
+    return (
+      upcomingBooking.status === "confirmed" &&
+      dateTime >= new Date()
+    );
+  })();
+
+  const startReschedule = async () => {
+    if (!upcomingBooking || !upcomingBooking.counselor?._id) return;
+    setRescheduleMessage("");
+    setRescheduleDate("");
+    setRescheduleTime("");
+    setRescheduleTimes([]);
+
+    try {
+      const res = await fetch(
+        `${baseURL}/api/counselor/availability/${upcomingBooking.counselor._id}`
+      );
+      const data = await res.json();
+      if (data.success && Array.isArray(data.availability)) {
+        const now = new Date();
+        const futureAvailability = data.availability.filter((a) => {
+          const d = new Date(a.date);
+          return !Number.isNaN(d.getTime()) && d >= now;
+        });
+        setRescheduleAvailability(futureAvailability);
+      } else {
+        setRescheduleAvailability([]);
+      }
+    } catch (err) {
+      console.error("❌ Error loading availability for reschedule:", err);
+      setRescheduleAvailability([]);
+      setRescheduleMessage(
+        "Unable to load counselor availability. Please try again later."
+      );
+    }
+
+    setShowReschedule(true);
+  };
+
+  const handleRescheduleDateChange = async (value) => {
+    setRescheduleDate(value);
+    setRescheduleTime("");
+    setRescheduleMessage("");
+
+    const entry = rescheduleAvailability.find((a) => a.date === value);
+    const daySlots = Array.isArray(entry?.timeSlots) ? entry.timeSlots : [];
+
+    if (!daySlots.length || !upcomingBooking?.counselor?._id) {
+      setRescheduleTimes([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${baseURL}/api/bookings/booked/${upcomingBooking.counselor._id}/${value}`
+      );
+      const data = await res.json();
+      const booked = Array.isArray(data.bookedTimes) ? data.bookedTimes : [];
+      const bookedSet = new Set(booked.map((b) => b.time));
+      const available = daySlots.filter((t) => !bookedSet.has(t));
+      setRescheduleTimes(available);
+    } catch (err) {
+      console.error("❌ Error loading booked times for reschedule:", err);
+      // Fallback: show all counselor slots for that day
+      setRescheduleTimes(daySlots);
+    }
+  };
+
+  const submitReschedule = async () => {
+    if (!rescheduleDate || !rescheduleTime) {
+      setRescheduleMessage("Please choose a new date and time.");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${baseURL}/api/bookings/${upcomingBooking._id}/reschedule`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: rescheduleDate,
+            time: rescheduleTime,
+            meetingType: upcomingBooking.meetingType,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setUpcomingBooking(data.data);
+        setShowReschedule(false);
+        setRescheduleMessage("");
+      } else {
+        setRescheduleMessage(
+          data.message || "Unable to reschedule. Please choose another slot."
+        );
+      }
+    } catch (err) {
+      console.error("❌ Error rescheduling booking:", err);
+      setRescheduleMessage(
+        "Server error while rescheduling. Please try again."
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f0] font-sans px-8 py-10">
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -129,20 +252,35 @@ const StudentDashboard = () => {
         <div className="space-y-8">
           {/* Header */}
           <div className="flex items-center space-x-4">
-            <h1 className="text-4xl font-bold text-gray-800">
-              Welcome, {userName || "Student"}!
-            </h1>
             <button
               onClick={() => navigate(`/student/profile/${studentId}`)}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
+              className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
               title="View Profile"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-gray-700" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M5.121 17.804A9.953 9.953 0 0112 15c2.21 0 4.244.716 5.879 1.921M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
+              {profilePicture ? (
+                <img
+                  src={`${baseURL}${profilePicture}`}
+                  alt="Student profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-gray-700 text-sm font-medium">
+                  {(userName && userName.charAt(0).toUpperCase()) || "S"}
+                </span>
+              )}
             </button>
+            <div className="flex items-center space-x-3">
+              <h1 className="text-4xl font-bold text-gray-800">
+                Welcome, {userName || "Student"}!
+              </h1>
+              <button
+                onClick={() => navigate(`/student/profile/${studentId}`)}
+                className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium text-gray-800 transition"
+                title="Go to Profile"
+              >
+                Go to Profile
+              </button>
+            </div>
           </div>
 
           <p className="text-lg text-gray-600">
@@ -250,7 +388,7 @@ const StudentDashboard = () => {
 
 
             {/* ✅ UPCOMING BOOKING CONDITION */}
-            {upcomingBooking ? (
+            {hasUpcomingBooking ? (
               <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
                 <h2 className="text-lg font-semibold mb-2">Upcoming Counseling Session</h2>
 
@@ -319,7 +457,99 @@ const StudentDashboard = () => {
               >
                 View All
               </button>
+              <button
+                onClick={startReschedule}
+                className="px-4 py-2 bg-[#98FF98] text-black rounded-md font-normal hover:bg-[#7EE794] transition"
+              >
+                Change Schedule
+              </button>
             </div>
+            {showReschedule && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                  Choose a new time for this session
+                </h3>
+                {rescheduleAvailability.length === 0 ? (
+                  <p className="text-sm text-gray-600">
+                    No future availability found for this counselor.
+                  </p>
+                ) : (
+                  <>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Date
+                    </label>
+                    <select
+                      value={rescheduleDate}
+                      onChange={(e) =>
+                        handleRescheduleDateChange(e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded-md p-2 text-sm mb-3"
+                    >
+                      <option value="">Select a date</option>
+                      {rescheduleAvailability.map((a) => (
+                        <option key={a.date} value={a.date}>
+                          {new Date(a.date).toLocaleDateString()}
+                        </option>
+                      ))}
+                    </select>
+
+                    {rescheduleDate && (
+                      <>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Time
+                        </label>
+                        {rescheduleTimes.length > 0 ? (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {rescheduleTimes.map((time) => (
+                              <button
+                                key={time}
+                                type="button"
+                                onClick={() => setRescheduleTime(time)}
+                                className={`px-3 py-1 rounded-full border text-xs ${
+                                  rescheduleTime === time
+                                    ? "bg-[#2e8b57] text-white border-[#2e8b57]"
+                                    : "bg-[#d4f8d4] text-gray-800 border-gray-300 hover:bg-[#b6e6b6]"
+                                }`}
+                              >
+                                {time}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600 mb-3">
+                            No available time slots for this date.
+                          </p>
+                        )}
+                      </>
+                    )}
+
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={submitReschedule}
+                        className="px-4 py-2 bg-[#2e8b57] text-white rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!rescheduleDate || !rescheduleTime}
+                      >
+                        Confirm New Time
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowReschedule(false);
+                          setRescheduleMessage("");
+                        }}
+                        className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+                {rescheduleMessage && (
+                  <p className="mt-2 text-xs text-red-600">{rescheduleMessage}</p>
+                )}
+              </div>
+            )}
               </div>
             ) : (
               <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
