@@ -27,7 +27,13 @@ import ViewAllAppointments from "./pages/ViewAllAppointments";
 import NotificationPage from "./pages/NotificationPage";
 import CounselorViewAllAppointments from "./pages/CounselorViewAllAppointments";
 import RelaxingGames from "./pages/RelaxingGames";
-
+import ArticlesPage from "./pages/ArticlesPage";
+import Article1 from "./pages/articles/Article1";
+import Article2 from "./pages/articles/Article2";
+import Article3 from "./pages/articles/Article3";
+import Article4 from "./pages/articles/Article4";
+import Article5 from "./pages/articles/Article5";
+import CopingTechniques from "./pages/CopingTechniques";
 import CounselorList from "./pages/CounselorList";
 
 function App() {
@@ -206,8 +212,13 @@ function App() {
           <Route path="/counselor/notifications" element={<NotificationPage />} />
           <Route path="/counselor/view-all-appointments"element={<CounselorViewAllAppointments />}/>
           <Route path="/resources/relaxing-games" element={<RelaxingGames />} />
-
-          
+          <Route path="/articles" element={<ArticlesPage />} />
+          <Route path="/articles/1" element={<Article1 />} />
+          <Route path="/articles/2" element={<Article2 />} />
+          <Route path="/articles/3" element={<Article3 />} />
+          <Route path="/articles/4" element={<Article4 />} />
+          <Route path="/articles/5" element={<Article5 />} />
+          <Route path="/coping-techniques" element={<CopingTechniques />} />
           <Route path="/counselors" element={<CounselorList />} />
 
         </Routes>
