@@ -614,6 +614,21 @@ app.listen(PORT, () => {
 
       await booking.save();
 
+      // Create a notification for this new booking (student + counselor views)
+      try {
+        const student = await User.findById(studentId).select("name");
+        const message = student
+          ? `New counseling session scheduled for ${student.name} on ${date} at ${time}.`
+          : `New counseling session scheduled on ${date} at ${time}.`;
+        await Notification.create({
+          student: studentId,
+          message,
+        });
+      } catch (notifErr) {
+        // Don't fail booking if notification creation fails
+        console.error("❌ Booking notification creation error:", notifErr);
+      }
+
       res.json({ success: true, message: "Booking saved!", data: booking });
 
     } catch (error) {

@@ -139,6 +139,7 @@ function App() {
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/counselor/notifications" element={<NotificationPage />} />
+          <Route path="/student/notifications" element={<NotificationPage />} />
 
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />

@@ -592,6 +592,12 @@ const StudentDashboard = () => {
                 >
                   ✅ Find a Counselor
                 </li>
+                <li
+                  className="cursor-pointer hover:text-gray-900"
+                  onClick={() => navigate("/student/notifications")}
+                >
+                  ✅ Notifications
+                </li>
                 <li>✅ Coping Techniques</li>
                 <li>✅ Read Articles</li>
               </ul>
