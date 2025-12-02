@@ -1,9 +1,42 @@
 // routes/counselorRequestRoutes.js
 import express from 'express';
+import mongoose from "mongoose";
 import User from '../models/User.js'; // Import User model to check student/counselor existence
 import Request from '../models/Request.js'; // Import the Request model
 
 const router = express.Router();
+
+
+// PUT (UPDATE COUNSELOR CAPACITY)
+router.put('/counselor/:counselorId/capacity', async (req, res) => {
+  const { counselorId } = req.params;
+  const { capacity } = req.body;
+
+  if (!capacity || capacity < 1) {
+    return res.status(400).json({ success: false, message: "Capacity must be >= 1" });
+  }
+
+  try {
+    const counselor = await User.findById(counselorId);
+    if (!counselor || counselor.role !== "counselor") {
+      return res.status(404).json({ success: false, message: "Counselor not found" });
+    }
+
+    counselor.capacity = capacity;
+    await counselor.save();
+
+    res.json({
+      success: true,
+      message: `Capacity updated to ${capacity}`,
+      capacity: counselor.capacity
+    });
+  } catch (err) {
+    console.error("Error updating capacity:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 
 // POST route to send a request to a counselor
 router.post('/', async (req, res) => {
@@ -25,6 +58,20 @@ router.post('/', async (req, res) => {
     if (!counselor || counselor.role !== 'counselor') {
       return res.status(404).json({ success: false, message: "Counselor not found." });
     }
+      
+    // Check if counselor has room
+    const assignedCount = await Request.countDocuments({
+      counselorId,
+      status: "accepted",
+    });
+
+    if (assignedCount >= (counselor.capacity || 1)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Counselor is at full capacity" 
+      });
+    }
+
 
     // Create a new request
     const newRequest = new Request({
@@ -171,6 +218,62 @@ router.delete('/:requestId', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+
+
+// DELETE assigned student
+router.delete("/assigned/:counselorId/:studentId", async (req, res) => {
+  const { counselorId, studentId } = req.params;
+
+  console.log("Removing student:", counselorId, studentId); // <- add this here
+
+  try {
+    const request = await Request.findOneAndDelete({
+      counselorId,
+      studentId,
+      status: "accepted",
+    });
+
+    if (!request)
+      return res.status(404).json({ success: false, message: "Assigned student not found" });
+
+    res.json({ success: true, message: "Student removed from assigned list" });
+  } catch (err) {
+    console.error("Error in deleting assigned student:", err); // also update this line
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+// GET counselor capacity + assigned count
+router.get("/capacity/:counselorId", async (req, res) => {
+  const { counselorId } = req.params;
+
+  try {
+    const counselor = await User.findById(counselorId);
+
+    if (!counselor || counselor.role !== "counselor") {
+      return res.status(404).json({ success: false, message: "Counselor not found" });
+    }
+
+    const assignedCount = await Request.countDocuments({
+      counselorId,
+      status: "accepted",
+    });
+
+    res.json({
+      success: true,
+      capacity: counselor.capacity || 2,
+      assignedCount,
+      available: counselor.capacity - assignedCount,
+      isFull: assignedCount >= counselor.capacity
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 
 
