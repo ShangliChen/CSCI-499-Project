@@ -35,6 +35,8 @@ import Article4 from "./pages/articles/Article4";
 import Article5 from "./pages/articles/Article5";
 import CopingTechniques from "./pages/CopingTechniques";
 import CounselorList from "./pages/CounselorList";
+import Emergency from "./pages/Emergency";
+
 
 function App() {
   const location = useLocation();
@@ -62,67 +64,98 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F0FFF0]">
-      {/* Header */}
-          <header className="bg-[#f0fff0] py-3 sticky top-0 z-10 shadow-sm">
+  <div className="min-h-screen flex flex-col bg-[#F0FFF0]">
+    {/* Header */}
+    <header className="bg-[#f0fff0] py-3 sticky top-0 z-10 shadow-sm">
       <div className="container mx-auto px-8 flex items-center justify-between">
 
         {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <Brain className="h-7 w-7 text-[#4CAF50]" />
+      <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition">
+        <Brain className="h-7 w-7 text-[#4CAF50]" />
+        <span className="text-3xl font-semibold text-gray-900">MindConnect</span>
+      </Link>
 
-          <span className="text-3xl font-semibold text-gray-900">MindConnect</span>
-        </div>
 
-        {/* Middle Tabs (slightly bold + clean spacing) */}
+        {/* Middle Tabs */}
         <nav className="flex items-center space-x-10">
 
+          {/* Home */}
           <Link
             to="/"
-            className={`text-gray-800 font-medium text-lg pb-2 transition ${
-              currentPath === '/' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
-            }`}
+            className={`
+              text-gray-800 font-medium text-lg pb-2 
+              transition-all duration-300
+              ${currentPath === '/' 
+                ? 'border-b-4 border-[#135D37]' 
+                : 'border-b-4 border-transparent hover:border-[#135D37]'
+              }
+            `}
           >
             Home
           </Link>
 
+          {/* About */}
           <Link
             to="/about"
-            className={`text-gray-800 font-medium text-lg pb-2 transition ${
-              currentPath === '/about' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
-            }`}
+            className={`
+              text-gray-800 font-medium text-lg pb-2 
+              transition-all duration-300
+              ${currentPath === '/about' 
+                ? 'border-b-4 border-[#135D37]' 
+                : 'border-b-4 border-transparent hover:border-[#135D37]'
+              }
+            `}
           >
             About
           </Link>
 
+          {/* Resource */}
           <Link
             to="/resource"
-            className={`text-gray-800 font-medium text-lg pb-2 transition ${
-              currentPath === '/resource' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
-            }`}
+            className={`
+              text-gray-800 font-medium text-lg pb-2 
+              transition-all duration-300
+              ${currentPath === '/resource' 
+                ? 'border-b-4 border-[#135D37]' 
+                : 'border-b-4 border-transparent hover:border-[#135D37]'
+              }
+            `}
           >
             Resource
           </Link>
 
+          {/* Forum */}
           <Link
             to="/forum"
-            className={`text-gray-800 font-medium text-lg pb-2 transition ${
-              currentPath === '/forum' ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
-            }`}
+            className={`
+              text-gray-800 font-medium text-lg pb-2 
+              transition-all duration-300
+              ${currentPath === '/forum' 
+                ? 'border-b-4 border-[#135D37]' 
+                : 'border-b-4 border-transparent hover:border-[#135D37]'
+              }
+            `}
           >
             Forum
           </Link>
 
+          {/* Dashboard */}
           <button
             onClick={handleDashboardClick}
-            className={`text-gray-800 font-medium text-lg pb-2 transition ${
-              currentPath.startsWith('/dashboard') ? 'border-b-4 border-[#135D37]' : 'border-b-4 border-transparent hover:border-[#135D37]'
-            }`}
+            className={`
+              text-gray-800 font-medium text-lg pb-2 
+              transition-all duration-300
+              ${currentPath.startsWith('/dashboard') 
+                ? 'border-b-4 border-[#135D37]' 
+                : 'border-b-4 border-transparent hover:border-[#135D37]'
+              }
+            `}
           >
             Dashboard
           </button>
 
         </nav>
+
 
 
 
@@ -220,6 +253,8 @@ function App() {
           <Route path="/articles/5" element={<Article5 />} />
           <Route path="/coping-techniques" element={<CopingTechniques />} />
           <Route path="/counselors" element={<CounselorList />} />
+          <Route path="/emergency" element={<Emergency />} />
+
 
         </Routes>
       </main>
