@@ -68,6 +68,7 @@ const UserSchema = new mongoose.Schema(
   specialization: { type: [String], default: [] },
   sessionType: { type: [String], default: [] },
   targetStudent: { type: [String], default: [] },
+  capacity: { type: Number, default: 5 },
   
 
 
