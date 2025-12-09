@@ -386,192 +386,259 @@ const StudentDashboard = () => {
               />
               <p className="text-sm text-gray-500 mt-2">Connect, share, and grow together.</p>
             </div>
+{/* ✅ UPCOMING BOOKING CONDITION - UPDATED STYLING */}
+{hasUpcomingBooking ? (
+  <div className="bg-white p-6 rounded-xl shadow hover:shadow-md transition-all duration-300">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-xl font-bold text-gray-800">Upcoming Counseling Session</h2>
+      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+        {upcomingBooking.status || "confirmed"}
+      </span>
+    </div>
 
-
-            {/* ✅ UPCOMING BOOKING CONDITION */}
-            {hasUpcomingBooking ? (
-              <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
-                <h2 className="text-lg font-semibold mb-2">Upcoming Counseling Session</h2>
-
-                <p className="text-gray-700 font-medium">
-                  With: {upcomingBooking?.counselor?.name}
-                </p>
-                <p className="text-gray-600">
-                  Date: {new Date(upcomingBooking.date).toLocaleDateString()} &nbsp; 
-                  Time: {upcomingBooking.time}
-                </p>
-                <p className="text-gray-700">
-                  Preferred Type: {upcomingBooking.meetingType?.toUpperCase()}
-                </p>
-
-                {/* Meeting info shown if counselor provided */}
-                {(upcomingBooking.meetingLink || upcomingBooking.meetingLocation || upcomingBooking.meetingDetails) && (
-                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
-                    <p className="text-sm font-semibold text-gray-800 mb-1">Meeting Details</p>
-                    {upcomingBooking.meetingLink && (
-                      <p className="text-sm">
-                        Link: {" "}
-                        <a
-                          href={upcomingBooking.meetingLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[#2e8b57] underline"
-                        >
-                          Join Session
-                        </a>
-                      </p>
-                    )}
-                    {upcomingBooking.meetingLocation && (
-                      <p className="text-sm">Location: {upcomingBooking.meetingLocation}</p>
-                    )}
-                    {upcomingBooking.meetingDetails && (
-                      <p className="text-sm">Notes: {upcomingBooking.meetingDetails}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Status */}
-                <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 
-                  rounded-full text-sm font-medium">
-                  Status: {upcomingBooking.status}
-                </span>
-
-              {/* ✅ Buttons on same line */}
-              <div className="mt-4 flex gap-3 flex-wrap">
-              <button
-                onClick={async () => {
-                  if (window.confirm("Cancel this appointment?")) {
-                    await fetch(`${baseURL}/api/bookings/${upcomingBooking._id}/cancel`, {
-                      method: "PUT",
-                    });
-                    window.location.reload();
-                  }
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded-md font-normal hover:bg-red-600 transition"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => navigate("/student/view-all-appointments")}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-normal hover:bg-gray-300 transition"
-              >
-                View All
-              </button>
-              <button
-                onClick={startReschedule}
-                className="px-4 py-2 bg-[#98FF98] text-black rounded-md font-normal hover:bg-[#7EE794] transition"
-              >
-                Change Schedule
-              </button>
+    {/* Counselor Info */}
+    <div className="mb-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+          {upcomingBooking.counselor?.profilePicture ? (
+            <img
+              src={`${baseURL}${upcomingBooking.counselor.profilePicture}`}
+              alt={upcomingBooking.counselor.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-600 font-semibold">
+              {upcomingBooking.counselor?.name?.charAt(0) || "C"}
             </div>
-            {showReschedule && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">
-                  Choose a new time for this session
-                </h3>
-                {rescheduleAvailability.length === 0 ? (
-                  <p className="text-sm text-gray-600">
-                    No future availability found for this counselor.
-                  </p>
-                ) : (
-                  <>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Date
-                    </label>
-                    <select
-                      value={rescheduleDate}
-                      onChange={(e) =>
-                        handleRescheduleDateChange(e.target.value)
-                      }
-                      className="w-full border border-gray-300 rounded-md p-2 text-sm mb-3"
-                    >
-                      <option value="">Select a date</option>
-                      {rescheduleAvailability.map((a) => (
-                        <option key={a.date} value={a.date}>
-                          {new Date(a.date).toLocaleDateString()}
-                        </option>
+          )}
+        </div>
+        <div>
+          <p className="font-semibold text-gray-800">With: {upcomingBooking?.counselor?.name}</p>
+          <p className="text-sm text-gray-600">
+            {Array.isArray(upcomingBooking.counselor?.specialization) 
+              ? upcomingBooking.counselor.specialization.join(", ")
+              : upcomingBooking.counselor?.specialization || "General Counselor"}
+          </p>
+        </div>
+      </div>
+
+      {/* Session Details Card */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500 mb-1">Date</p>
+            <p className="text-lg font-semibold text-gray-800">
+              {new Date(upcomingBooking.date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500 mb-1">Time</p>
+            <p className="text-lg font-semibold text-gray-800">{upcomingBooking.time}</p>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm font-medium text-gray-500 mb-1">Session Type</p>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+            {upcomingBooking.meetingType?.toUpperCase() || "IN-PERSON"}
+          </span>
+        </div>
+
+        {/* Meeting Details Section */}
+        {(upcomingBooking.meetingLink || upcomingBooking.meetingLocation || upcomingBooking.meetingDetails) && (
+          <div className="pt-4 border-t border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3">Meeting Details</h4>
+            <div className="space-y-2">
+              {upcomingBooking.meetingLink && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Link:</span>
+                  <a
+                    href={upcomingBooking.meetingLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#2e8b57] hover:text-[#267349] underline font-medium"
+                  >
+                    Join Session
+                  </a>
+                </div>
+              )}
+              {upcomingBooking.meetingLocation && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Location:</span>
+                  <span className="text-sm font-medium text-gray-800">{upcomingBooking.meetingLocation}</span>
+                </div>
+              )}
+              {upcomingBooking.meetingDetails && (
+                <div className="flex items-start gap-2">
+                  <span className="text-sm text-gray-600">Notes:</span>
+                  <span className="text-sm text-gray-800 flex-1">{upcomingBooking.meetingDetails}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+          {/* ✅ Buttons Row */}
+    <div className="mt-6 flex flex-wrap gap-3">
+      <button
+        onClick={async () => {
+          if (window.confirm("Are you sure you want to cancel this appointment?")) {
+            await fetch(`${baseURL}/api/bookings/${upcomingBooking._id}/cancel`, {
+              method: "PUT",
+            });
+            window.location.reload();
+          }
+        }}
+        className="px-4 py-2 bg-red-500 text-white rounded-md font-normal hover:bg-red-600 transition"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={() => navigate("/student/view-all-appointments")}
+        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-normal hover:bg-gray-300 transition"
+      >
+        View All
+      </button>
+      
+      <button
+        onClick={startReschedule}
+        className="px-4 py-2 bg-[#2e8b57] text-white rounded-md font-normal hover:bg-[#267349] transition"
+      >
+        Change Schedule
+      </button>
+    </div>
+    {/* Reschedule Form */}
+    {showReschedule && (
+      <div className="mt-6 pt-6 border-t border-gray-200 animate-fadeIn">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Choose a New Time</h3>
+        
+        {rescheduleAvailability.length === 0 ? (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              ⚠️ No future availability found for this counselor.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                <select
+                  value={rescheduleDate}
+                  onChange={(e) => handleRescheduleDateChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                >
+                  <option value="">Choose a date</option>
+                  {rescheduleAvailability.map((a) => (
+                    <option key={a.date} value={a.date}>
+                      {new Date(a.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {rescheduleDate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Available Times</label>
+                  {rescheduleTimes.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {rescheduleTimes.map((time) => (
+                        <button
+                          key={time}
+                          type="button"
+                          onClick={() => setRescheduleTime(time)}
+                          className={`p-3 rounded-lg border text-center transition-all ${
+                            rescheduleTime === time
+                              ? "bg-[#2e8b57] text-white border-[#2e8b57]"
+                              : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {time}
+                        </button>
                       ))}
-                    </select>
-
-                    {rescheduleDate && (
-                      <>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Time
-                        </label>
-                        {rescheduleTimes.length > 0 ? (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {rescheduleTimes.map((time) => (
-                              <button
-                                key={time}
-                                type="button"
-                                onClick={() => setRescheduleTime(time)}
-                                className={`px-3 py-1 rounded-full border text-xs ${
-                                  rescheduleTime === time
-                                    ? "bg-[#2e8b57] text-white border-[#2e8b57]"
-                                    : "bg-[#d4f8d4] text-gray-800 border-gray-300 hover:bg-[#b6e6b6]"
-                                }`}
-                              >
-                                {time}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-600 mb-3">
-                            No available time slots for this date.
-                          </p>
-                        )}
-                      </>
-                    )}
-
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        type="button"
-                        onClick={submitReschedule}
-                        className="px-4 py-2 bg-[#2e8b57] text-white rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!rescheduleDate || !rescheduleTime}
-                      >
-                        Confirm New Time
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowReschedule(false);
-                          setRescheduleMessage("");
-                        }}
-                        className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200"
-                      >
-                        Cancel
-                      </button>
                     </div>
-                  </>
-                )}
-                {rescheduleMessage && (
-                  <p className="mt-2 text-xs text-red-600">{rescheduleMessage}</p>
-                )}
-              </div>
-            )}
-              </div>
-            ) : (
-              <div className="bg-white p-6 rounded-xl shadow hover:shadow-md">
-                <h2 className="text-lg font-semibold mb-2">No Upcoming Counseling Session</h2>
-                <p className="text-gray-600">Book a session to get started.</p>
-
-                <button
-                  onClick={() => navigate("/resources/booking")}
-                  className="mt-4 px-4 py-2 bg-[#98FF98] text-black rounded-md font-normal hover:bg-[#7EE794]"
-                >
-                  Book Now
-                </button>
-
-                <button
-                  onClick={() => navigate("/student/view-all-appointments")}
-                  className="mt-4 ml-2 px-4 py-2 bg-[#98FF98] text-black rounded-md font-normal hover:bg-[#7EE794]"
-                >
-                  View All
-                </button>
-              </div>
-            )}
+                  ) : (
+                    <p className="text-sm text-gray-500 p-3 bg-gray-50 rounded-lg">
+                      No available time slots for this date.
+                    </p>
+                  )}
+                </div>
+              )}
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={submitReschedule}
+            disabled={!rescheduleDate || !rescheduleTime}
+            className="px-4 py-2 bg-[#2e8b57] text-white rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#267349] transition"
+          >
+            Confirm New Time
+          </button>
+          <button
+            onClick={() => {
+              setShowReschedule(false);
+              setRescheduleMessage("");
+            }}
+            className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+        </div>
+            </div>
+          </>
+        )}
+        
+        {rescheduleMessage && (
+          <div className={`mt-3 p-3 rounded-lg ${
+            rescheduleMessage.includes("success") 
+              ? "bg-green-50 text-green-800 border border-green-200" 
+              : "bg-red-50 text-red-800 border border-red-200"
+          }`}>
+            <p className="text-sm">{rescheduleMessage}</p>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+) : (
+  // No Booking State
+  <div className="bg-white p-6 rounded-xl shadow hover:shadow-md transition-all duration-300 text-center">
+    <div className="mb-6">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-bold text-gray-800 mb-2">No Upcoming Session</h2>
+      <p className="text-gray-600">Book a session to get started with your wellness journey.</p>
+    </div>
+    
+    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <button
+        onClick={() => navigate("/resources/booking")}
+        className="px-6 py-3 bg-[#98FF98] hover:bg-[#7EE794] text-gray-800 rounded-lg font-medium transition-colors"
+      >
+        Book Now
+      </button>
+      <button
+        onClick={() => navigate("/student/view-all-appointments")}
+        className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors"
+      >
+        View All Appointments
+      </button>
+    </div>
+  </div>
+)}
 
           </div>
         </div>
