@@ -6,7 +6,6 @@ const AssessmentList = () => {
   const [students, setStudents] = useState([]);
   const [assignedStudents, setAssignedStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -46,19 +45,47 @@ const AssessmentList = () => {
 
   // Apply search filter
   const matchesSearch = (student) => {
-      if (!student) return false;
+    if (!student) return false;
 
-      const name = student.name ? student.name.toLowerCase() : "";
-      const school = student.school_id ? student.school_id.toLowerCase() : "";
+    const name = student.name ? student.name.toLowerCase() : "";
+    const school = student.school_id ? student.school_id.toLowerCase() : "";
 
-      const term = searchTerm.toLowerCase();
+    const term = searchTerm.toLowerCase();
 
-      return name.includes(term) || school.includes(term);
-    };
-
+    return name.includes(term) || school.includes(term);
+  };
 
   const filteredAssigned = assignedStudents.filter(matchesSearch);
   const filteredOthers = otherStudents.filter(matchesSearch);
+
+    const handleRemoveStudent = async (studentId) => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return;
+
+      if (!window.confirm("Are you sure you want to remove this student?")) return;
+
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/counselor-requests/assigned/${user.userId}/${studentId}`,
+          { method: "DELETE" }
+        );
+
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.message || "Failed to remove student.");
+          return;
+        }
+
+        // Update frontend state
+        setAssignedStudents((prev) => prev.filter((s) => s._id !== studentId));
+        alert("Student removed successfully.");
+      } catch (err) {
+        console.error("Failed to remove student:", err);
+        alert("Failed to remove student. Try again later.");
+      }
+    };
+
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-8">
@@ -66,7 +93,7 @@ const AssessmentList = () => {
         Student Assessment Records
       </h1>
 
-      {/* ⭐ Search Bar */}
+      {/* Search Bar */}
       <input
         type="text"
         placeholder="Search by name or school ID..."
@@ -75,9 +102,7 @@ const AssessmentList = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* ===================== */}
-      {/* ⭐ 1. YOUR STUDENTS */}
-      {/* ===================== */}
+      {/* Assigned Students */}
       <h2 className="text-xl font-semibold mb-3 text-green-700">
         Your Students
       </h2>
@@ -114,13 +139,35 @@ const AssessmentList = () => {
                       ? Math.round(student.assessment_score)
                       : "N/A"}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 flex items-center space-x-2">
                     <Link
                       to={`/counselor/user/${student._id}`}
                       className="inline-block bg-[#b3e6b3] text-white px-4 py-1.5 rounded-full text-xs font-medium hover:bg-blue-700 transition"
                     >
                       See More
                     </Link>
+
+                    {/* Trash Icon */}
+                    <button
+                      onClick={() => handleRemoveStudent(student._id)}
+                      className="text-red-600 hover:text-red-800 p-1 rounded"
+                      title="Remove Student"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4"
+                        />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -129,9 +176,7 @@ const AssessmentList = () => {
         )}
       </div>
 
-      {/* ===================== */}
-      {/* ⭐ 2. OTHER STUDENTS */}
-      {/* ===================== */}
+      {/* Other Students */}
       <h2 className="text-xl font-semibold mb-3 text-gray-700">
         Other Students
       </h2>

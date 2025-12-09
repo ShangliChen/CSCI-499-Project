@@ -3,11 +3,18 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
+
 const CounselorDashboard = () => {
   const [userName, setUserName] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [profilePicture, setProfilePicture] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const baseURL = API_BASE_URL;
+  const [assignedStudents, setAssignedStudents] = useState([]);
+  const [counselorCapacity, setCounselorCapacity] = useState(0);
+  const [assignedCount, setAssignedCount] = useState(0);
+  const [newCapacity, setNewCapacity] = useState("");
+  const baseURL = "http://localhost:5000";
   const navigate = useNavigate();
 
   // Format date & time nicely (e.g., Tuesday, Feb 12 at 2:30 PM)
@@ -22,6 +29,33 @@ const CounselorDashboard = () => {
       hour12: true,      // AM/PM
     });
   };
+    
+  // State for the checklist
+    const [dailyChecklist, setDailyChecklist] = useState({
+      notifications: false,
+      appointments: false,
+      forum: false,
+    });
+
+    // Handler for toggling a checklist item
+    const toggleChecklistItem = (item) => {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || !userData.userId) return;
+
+      const key = `dailyChecklist_${userData.userId}`;
+
+      setDailyChecklist((prev) => {
+        const updated = { ...prev, [item]: !prev[item] };
+        const today = new Date().toISOString().split("T")[0];
+        localStorage.setItem(
+          key,
+          JSON.stringify({ date: today, checklist: updated })
+        );
+        return updated;
+      });
+    };
+
+
 
   // Fetch user and notifications
   useEffect(() => {
@@ -70,8 +104,72 @@ const CounselorDashboard = () => {
         .catch((err) =>
           console.error("Error fetching counselor appointments:", err)
         );
+        
+        
+        const fetchAssignedStudents = async () => {
+          try {
+            const counselorId = userData.userId;
+            const res = await fetch(
+              `http://localhost:5000/api/counselor-requests/assigned/${counselorId}`
+            );
+            const data = await res.json();
+            setAssignedStudents(data.students || []);
+          } catch (err) {
+            console.error("Error fetching assigned students:", err);
+          }
+        };
+        fetchAssignedStudents();
+        
+        
+        
     }
   }, [navigate]);
+    
+    
+    useEffect(() => {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || !userData.userId) return;
+
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const key = `dailyChecklist_${userData.userId}`;
+      const savedData = JSON.parse(localStorage.getItem(key)) || {};
+
+      if (savedData.date === today && savedData.checklist) {
+        setDailyChecklist(savedData.checklist);
+      } else {
+        const resetChecklist = {
+          notifications: false,
+          appointments: false,
+          forum: false,
+        };
+        setDailyChecklist(resetChecklist);
+        localStorage.setItem(key, JSON.stringify({ date: today, checklist: resetChecklist }));
+      }
+    }, []);
+    
+    useEffect(() => {
+      const fetchCapacity = async () => {
+        const userData = JSON.parse(localStorage.getItem("user"));
+        if (!userData || !userData.userId) return;
+
+        try {
+          const res = await axios.get(
+            `${baseURL}/api/counselor-requests/capacity/${userData.userId}`
+          );
+          if (res.data.success) {
+            setCounselorCapacity(res.data.capacity);
+            setAssignedCount(res.data.assignedCount);
+            setNewCapacity(res.data.capacity); // default input value
+          }
+        } catch (err) {
+          console.error("Error fetching counselor capacity:", err);
+        }
+      };
+
+      fetchCapacity();
+    }, [assignedStudents]); // update if assignedStudents changes
+
+
 
   // Handle Profile navigation
   const goToProfile = () => {
@@ -161,6 +259,40 @@ const CounselorDashboard = () => {
       .sort((a, b) => b.lastDateTime - a.lastDateTime)
       .slice(0, 5);
   })();
+    
+    
+  // Handler for updating capacity
+    const handleUpdateCapacity = async () => {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData || !userData.userId) return;
+
+      const capacityNum = parseInt(newCapacity);
+      if (isNaN(capacityNum) || capacityNum < 1) {
+        alert("Capacity must be a number greater than or equal to 1.");
+        return;
+      }
+
+      if (capacityNum < assignedCount) {
+        alert(
+          `Cannot set capacity below the number of assigned students (${assignedCount}).`
+        );
+        return;
+      }
+
+      try {
+        const res = await axios.put(
+          `${baseURL}/api/counselor-requests/counselor/${userData.userId}/capacity`,
+          { capacity: capacityNum }
+        );
+        if (res.data.success) {
+          setCounselorCapacity(capacityNum);
+          alert(`Capacity updated to ${capacityNum}`); // optional notification
+        }
+      } catch (err) {
+        console.error("Error updating capacity:", err);
+        alert("Failed to update capacity. Try again later.");
+      }
+    };
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] p-8">
@@ -249,68 +381,57 @@ const CounselorDashboard = () => {
       {/* Main Dashboard Grid */}
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ✅ Upcoming Appointments */}
-    <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
-      <h3 className="text-lg font-semibold mb-4">Upcoming Appointments</h3>
-
-      {upcomingAppointments.length === 0 ? (
-        <p className="text-gray-600">No upcoming appointments.</p>
-      ) : (
-        <>
-      {upcomingAppointments.slice(0, 3).map((a) => (
-        <div key={a._id} className="border-b border-gray-200 py-2">
-          <p className="font-medium text-gray-800">
-            {a.student?.name || "Student"}
-          </p>
-          <p className="text-sm text-gray-600">
-            🗓️ {formatDateTime(a.date, a.time)} –{" "}
-            {a.endTime || "1 hour session"}
-          </p>
-          <p className="text-sm text-gray-700">
-            Email: {a.student?.email || "N/A"}
-          </p>
-          <p className="text-sm text-gray-700">
-            Note: {a.note || "No note provided"}
-          </p>
-          {a.student?.dob && (
-            <p className="text-sm text-gray-700">
-              Age: {new Date().getFullYear() - new Date(a.student.dob).getFullYear()} yrs
-            </p>
-          )}
-          <p className="text-sm text-gray-500 capitalize">
-            Type: {a.meetingType}
-          </p>
-        </div>
-      ))}
-
-
-        {appointments.length > 0 && (
-          <button
-            onClick={() => navigate("/counselor/view-all-appointments")}
-            className="mt-4 w-full bg-[#2e8b57] text-white py-2 rounded hover:bg-[#267349]"
-          >
-            View All Appointments
-          </button>
-        )}
-        </>
-      )}
-    </div>
-
-
-        {/* Student Progress */}
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
-          <h3 className="text-lg font-semibold mb-4">Student Progress</h3>
-          <div className="w-full h-32 bg-blue-100 rounded flex items-center justify-center text-[#BDFCC9] font-semibold">
-            Graph Placeholder
-          </div>
-          <p className="text-center mt-2 text-sm text-gray-500">
-            Overall student wellbeing
-          </p>
+          <h3 className="text-lg font-semibold mb-4">Upcoming Appointments</h3>
+
+          {upcomingAppointments.length === 0 ? (
+            <p className="text-gray-600">No upcoming appointments.</p>
+          ) : (
+            <>
+          {upcomingAppointments.slice(0, 3).map((a) => (
+            <div key={a._id} className="border-b border-gray-200 py-2">
+              <p className="font-medium text-gray-800">
+                {a.student?.name || "Student"}
+              </p>
+              <p className="text-sm text-gray-600">
+                🗓️ {formatDateTime(a.date, a.time)} –{" "}
+                {a.endTime || "1 hour session"}
+              </p>
+              <p className="text-sm text-gray-700">
+                Email: {a.student?.email || "N/A"}
+              </p>
+              <p className="text-sm text-gray-700">
+                Note: {a.note || "No note provided"}
+              </p>
+              {a.student?.dob && (
+                <p className="text-sm text-gray-700">
+                  Age: {new Date().getFullYear() - new Date(a.student.dob).getFullYear()} yrs
+                </p>
+              )}
+              <p className="text-sm text-gray-500 capitalize">
+                Type: {a.meetingType}
+              </p>
+            </div>
+          ))}
+
+
+            {appointments.length > 0 && (
+              <button
+                onClick={() => navigate("/counselor/view-all-appointments")}
+                className="mt-4 w-full bg-[#2e8b57] text-white py-2 rounded hover:bg-[#267349]"
+              >
+                View All Appointments
+              </button>
+            )}
+            </>
+          )}
         </div>
 
-        {/* My Students */}
+
+     {/* Students from Recent Appointments— now in 2nd box */}
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1 flex flex-col justify-between">
           <div>
-            <h3 className="text-lg font-semibold mb-4">My Students</h3>
+            <h3 className="text-lg font-semibold mb-4">Students from Recent Appointments</h3>
             {myStudents.length === 0 ? (
               <p className="text-sm text-gray-500">
                 Students you meet with will appear here.
@@ -337,21 +458,18 @@ const CounselorDashboard = () => {
                         )}
                       </div>
                     </div>
-                    <div>
-                      <button
-                        onClick={() =>
-                          navigate(`/counselor/user/${s.studentId}`)
-                        }
-                        className="text-[#2e8b57] text-sm font-medium hover:underline"
-                      >
-                        View Details
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => navigate(`/counselor/user/${s.studentId}`)}
+                      className="text-[#2e8b57] text-sm font-medium hover:underline"
+                    >
+                      View Details
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
           </div>
+
           <div className="mt-6 text-right">
             <button
               onClick={() => navigate("/counselor/view-all-appointments")}
@@ -362,32 +480,166 @@ const CounselorDashboard = () => {
           </div>
         </div>
 
+        {/* My Students — 3rd Box with assigned students */}
+        <div className="bg-white p-6 rounded-xl shadow-md col-span-1 flex flex-col justify-between">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">My Students</h3>
+
+            {assignedStudents.length === 0 ? (
+              <p className="text-sm text-gray-500">No assigned students found.</p>
+            ) : (
+              <ul className="space-y-3">
+                {assignedStudents.slice(0, 3).map((s) => (
+                  <li
+                    key={s._id}
+                    className="flex items-center space-x-3"
+                  >
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                      {(s.name && s.name.charAt(0).toUpperCase()) || "S"}
+                    </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {s.name}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="mt-6 text-right">
+            <button
+              onClick={() => navigate("/counselor/assessments")}
+              className="text-sm text-[#2e8b57] hover:underline"
+            >
+              View All Students
+            </button>
+          </div>
+        </div>
+
+{/* Update Counselor Capacity */}
+<div className="bg-white p-6 rounded-xl shadow-md col-span-1">
+  <h3 className="text-lg font-semibold mb-4">Update My Capacity</h3>
+  <p className="text-sm text-gray-600 mb-2">
+    Current capacity: <strong>{counselorCapacity}</strong>
+  </p>
+  <p className="text-sm text-gray-600 mb-4">
+    Assigned students: <strong>{assignedCount}</strong>
+  </p>
+
+  {/* Capacity Progress Bar */}
+  <div className="mt-4">
+    <p className="text-sm text-gray-600 mb-1">
+      Capacity Usage: {assignedCount}/{counselorCapacity}
+    </p>
+
+    <div className="w-full bg-gray-200 rounded-full h-3">
+      <div
+        className="bg-[#2e8b57] h-3 rounded-full transition-all duration-300"
+        style={{ width: `${(assignedCount / counselorCapacity) * 100}%` }}
+      ></div>
+    </div>
+  </div>
+
+  <div className="flex items-center space-x-2 mt-4">
+    <input
+      type="number"
+      min={assignedCount || 1}
+      value={newCapacity}
+      onChange={(e) => setNewCapacity(e.target.value)}
+      className="border border-gray-300 rounded px-2 py-1 w-24"
+    />
+    <button
+      onClick={handleUpdateCapacity}
+      className="bg-[#2e8b57] text-white px-3 py-1 rounded hover:bg-[#267349]"
+    >
+      Update
+    </button>
+  </div>
+
+  {assignedCount > 0 && (
+    <p className="text-xs text-gray-500 mt-2">
+      Capacity cannot be lower than assigned students.
+    </p>
+  )}
+</div>
+
+          
+          
+          
+        {/*Daily Checklist */}
+        <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
+          <h3
+            className={`text-lg font-semibold mb-4 ${
+              Object.values(dailyChecklist).every(Boolean) ? "text-gray-800" : "text-[#ff7f7f]"
+            }`}
+          >
+            Daily Checklist
+          </h3>
+          <ul className="space-y-3 text-gray-700">
+            <li className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={dailyChecklist.notifications}
+                onChange={() => toggleChecklistItem("notifications")}
+              />
+              <label
+                className="cursor-pointer hover:text-green-700"
+                onClick={() => navigate("/counselor/notifications")}
+              >
+                Check Notifications (Severe Cases)
+              </label>
+            </li>
+
+            <li className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={dailyChecklist.appointments}
+                onChange={() => toggleChecklistItem("appointments")}
+              />
+              <label
+                className="cursor-pointer hover:text-green-700"
+                onClick={() => navigate("/counselor/view-all-appointments")}
+              >
+                Review Appointments
+              </label>
+            </li>
+
+            <li className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={dailyChecklist.forum}
+                onChange={() => toggleChecklistItem("forum")}
+              />
+              <label
+                className="cursor-pointer hover:text-green-700"
+                onClick={() => navigate("/forum")}
+              >
+                Check Forum Posts
+              </label>
+            </li>
+          </ul>
+        </div>
+          
         {/* Quick Actions */}
         <div className="bg-white p-6 rounded-xl shadow-md col-span-1">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <ul className="space-y-2 text-gray-700">
-            <li>✔ Monthly mental health checking</li>
-            <li>✔ Safe student forums</li>
+            <li
+              className="cursor-pointer hover:text-[#2e8b57]"
+              onClick={() => navigate("/counselor/assessments")}
+            >
+              ✔ Monthly Mental Health Checking
+            </li>
+            <li
+              className="cursor-pointer hover:text-[#2e8b57]"
+              onClick={() => navigate("/forum")}
+            >
+              ✔ Safe Student Forums
+            </li>
           </ul>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-md col-span-2">
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
-            <div className="flex items-center space-x-2">
-              <input type="checkbox" checked readOnly />
-              <label>Schedule New Session</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input type="checkbox" checked readOnly />
-              <label>Review Check-ins</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input type="checkbox" checked readOnly />
-              <label>Access Resources</label>
-            </div>
-          </div>
-        </div>
+
       </main>
 
       {/* Footer */}

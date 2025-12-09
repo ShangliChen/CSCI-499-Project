@@ -38,84 +38,85 @@ const BookingPage = () => {
   // *******************************
   // 1) Fetch real counselors + availability
   // *******************************
-  useEffect(() => {
-    const fetchCounselors = async () => {
-      try {
-        const res = await fetch(`${baseURL}/api/counselors`);
-        const payload = await res.json();
+  // 1) Fetch real counselors + availability (Updated to include profilePicture)
+useEffect(() => {
+  const fetchCounselors = async () => {
+    try {
+      const res = await fetch(`${baseURL}/api/counselors`);
+      const payload = await res.json();
 
-        if (!payload || payload.success === false) {
-          console.error("Failed to load counselors");
-          setCounselors([]);
-          return;
-        }
+      if (!payload || payload.success === false) {
+        console.error("Failed to load counselors");
+        setCounselors([]);
+        return;
+      }
 
-        // Handle both response shapes
-        // A) payload.counselors = [{..., availability: [...] }]
-        // B) payload.counselors = [...], payload.availability = [...]
-        const rawCounselors = Array.isArray(payload.counselors) ? payload.counselors : [];
-        const rawAvailability = Array.isArray(payload.availability) ? payload.availability : null;
+      // Handle both response shapes
+      const rawCounselors = Array.isArray(payload.counselors) ? payload.counselors : [];
+      const rawAvailability = Array.isArray(payload.availability) ? payload.availability : null;
 
-        if (!rawAvailability) {
-          // Shape A: counselors already have availability embedded
-          const normalized = rawCounselors.map(c => ({
+      if (!rawAvailability) {
+        // Shape A: counselors already have availability embedded
+        const normalized = rawCounselors.map(c => ({
+          _id: c._id,
+          name: c.name,
+          email: c.email,
+          license: c.license,
+          specialization: c.specialization,
+          profilePicture: c.profilePicture || "", // ✅ Add this line
+          availability: Array.isArray(c.availability) ? c.availability : []
+        }));
+        setCounselors(normalized);
+      } else {
+        // Shape B: merge availability into counselors by _id
+        const byId = new Map();
+        rawCounselors.forEach(c => {
+          byId.set(String(c._id), {
             _id: c._id,
             name: c.name,
             email: c.email,
             license: c.license,
             specialization: c.specialization,
-            // ensure array
-            availability: Array.isArray(c.availability) ? c.availability : []
-          }));
-          setCounselors(normalized);
-        } else {
-          // Shape B: merge availability into counselors by _id
-          const byId = new Map();
-          rawCounselors.forEach(c => {
-            byId.set(String(c._id), {
-              _id: c._id,
-              name: c.name,
-              email: c.email,
-              license: c.license,
-              specialization: c.specialization,
+            profilePicture: c.profilePicture || "", // ✅ Add this line
+            availability: []
+          });
+        });
+
+        rawAvailability.forEach(a => {
+          const counselorId =
+            typeof a.counselor === "string" ? a.counselor : a.counselor?._id;
+          if (!counselorId) return;
+
+          // If this counselor wasn't in list, create a minimal one from availability
+          if (!byId.has(String(counselorId))) {
+            byId.set(String(counselorId), {
+              _id: counselorId,
+              name: typeof a.counselor === "object" && a.counselor?.name ? a.counselor.name : "Counselor",
+              email: "N/A",
+              license: "",
+              specialization: "",
+              profilePicture: "", // ✅ Add this line
               availability: []
             });
+          }
+
+          const entry = byId.get(String(counselorId));
+          entry.availability.push({
+            date: a.date,
+            timeSlots: Array.isArray(a.timeSlots) ? a.timeSlots : []
           });
+        });
 
-          rawAvailability.forEach(a => {
-            const counselorId =
-              typeof a.counselor === "string" ? a.counselor : a.counselor?._id;
-            if (!counselorId) return;
-
-            // If this counselor wasn't in list, create a minimal one from availability
-            if (!byId.has(String(counselorId))) {
-              byId.set(String(counselorId), {
-                _id: counselorId,
-                name: typeof a.counselor === "object" && a.counselor?.name ? a.counselor.name : "Counselor",
-                email: "N/A",
-                license: "",
-                specialization: "",
-                availability: []
-              });
-            }
-
-            const entry = byId.get(String(counselorId));
-            entry.availability.push({
-              date: a.date, // "YYYY-MM-DD"
-              timeSlots: Array.isArray(a.timeSlots) ? a.timeSlots : []
-            });
-          });
-
-          setCounselors(Array.from(byId.values()));
-        }
-      } catch (err) {
-        console.error("Error fetching counselors:", err);
-        setCounselors([]);
+        setCounselors(Array.from(byId.values()));
       }
-    };
+    } catch (err) {
+      console.error("Error fetching counselors:", err);
+      setCounselors([]);
+    }
+  };
 
-    fetchCounselors();
-  }, []);
+  fetchCounselors();
+}, []);
 
   // *******************************
   // 2) Original calendar generator — kept as-is but we’ll gate clickable days by real availability
@@ -476,14 +477,80 @@ const handleNextMonth = () => {
                       ? c.specializations.join(", ")
                       : "CBT, ACT, Trauma"}
                   </p>
+5: {
+  title: "Recommended Counselors",
+  content: (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {filteredCounselors.map((c) => (
+          <div
+            key={c._id}
+            onClick={() => handleCounselorSelect(c)}
+            className={`cursor-pointer p-6 rounded-xl border shadow-md transition-all ${
+              selectedCounselor?._id === c._id
+                ? "border-[#2e8b57] bg-[#ccf2d9]"
+                : "border-gray-200 bg-[#d4f8d4] hover:border-gray-300"
+            }`}
+          >
+            {/* Profile Image or Letter Avatar - UPDATED */}
+            <div className="flex justify-center mb-4">
+              {c.profilePicture ? (
+                <img
+                  src={`${baseURL}${c.profilePicture}`} // ✅ Use baseURL
+                  alt={`${c.name}'s profile`}
+                  className="w-20 h-20 rounded-full object-cover border-2 border-white shadow"
+                  onError={(e) => {
+                    // Fallback if image fails to load
+                    e.target.style.display = 'none';
+                    const parent = e.target.parentElement;
+                    const fallback = parent.querySelector('.fallback-avatar');
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-lg font-bold text-gray-700 border-2 border-white shadow">
+                  {c.name?.charAt(0).toUpperCase() || "C"}
                 </div>
+              )}
+              {/* Hidden fallback avatar */}
+              <div 
+                className="fallback-avatar hidden w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-lg font-bold text-gray-700 border-2 border-white shadow"
+              >
+                {c.name?.charAt(0).toUpperCase() || "C"}
               </div>
-            ))}
-          </div>
-        </div>
-      )
-    },
+            </div>
 
+            {/* Name */}
+            <h2 className="text-lg font-semibold text-center text-gray-900">
+              {c.name || "Unnamed Counselor"}
+            </h2>
+
+            {/* Specialization */}
+            <p className="text-sm text-center text-gray-700 mb-4">
+              {Array.isArray(c.specializations) && c.specializations.length > 0
+                ? c.specializations.join(", ")
+                : typeof c.specialization === "string" && c.specialization.trim()
+                ? c.specialization
+                : "General Counselor"}
+            </p>
+
+            {/* Info Box */}
+            <div className="bg-white rounded-lg p-4 shadow-sm text-sm text-gray-800">
+              <p className="mb-1"><strong>Email:</strong> {c.email || "N/A"}</p>
+              <p className="mb-1"><strong>License Number:</strong> {c.license || "N/A"}</p>
+              <p className="mb-1">
+                <strong>Specializations:</strong>{" "}
+                {Array.isArray(c.specializations) && c.specializations.length > 0
+                  ? c.specializations.join(", ")
+                  : "CBT, ACT, Trauma"}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+},
 
 
 6: {

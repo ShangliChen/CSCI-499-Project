@@ -58,6 +58,49 @@ export default function RelaxingGames() {
       icon: <Gamepad2 className="h-12 w-12 text-[#7DD87D]" />,
       url: "https://slither.io/",
     },
+    {
+      title: "Calm Piano",
+      category: "Sound",
+      icon: <Waves className="h-12 w-12 text-[#7DD87D]" />,
+      url: "https://playhop.com/app/731004"
+    },
+
+    {
+      title: "Lumber Harvest",
+      category: "Arcade",
+      icon: <Gamepad2 className="h-12 w-12 text-[#7DD87D]" />,
+      url: "https://www.crazygames.com/game/lumber-harvest-tree-cutting-game",
+    },
+
+    {
+      title: "Hot Pot Cooking",
+      category: "Puzzle",
+      icon: <Gamepad2 className="h-12 w-12 text-[#7DD87D]" />,
+      url: "https://www.crazygames.com/game/hot-pot-game",
+    },
+
+    {
+      title: "Open House",
+      category: "Puzzle",
+      icon: <Gamepad2 className="h-12 w-12 text-[#7DD87D]" />,
+      url: "https://www.crazygames.com/game/open-house",
+    },
+
+    {
+      title: "Stone Grass",
+      category: "Arcade",
+      icon: <Waves className="h-12 w-12 text-[#7DD87D]" />,
+      url: "https://www.crazygames.com/game/stone-grass-mowing-simulator",
+    },
+
+
+    {
+      title: "Solitaire Bliss",
+      category: "Puzzle",
+      icon: <Gamepad2 className="h-12 w-12 text-[#7DD87D]" />,
+      url: "https://www.solitairebliss.com/"
+    },
+
   ];
 
   const categories = ["All", "Puzzle", "Sound", "Drawing", "Arcade"];
@@ -315,13 +358,19 @@ export default function RelaxingGames() {
                 Play →
               </button>
 
-              <button onClick={() => toggleFavorite(game)}>
-                {favorites.find((f) => f.title === game.title) ? (
-                  <Heart className="text-red-500" />
-                ) : (
-                  <HeartOff className="text-gray-400" />
-                )}
-              </button>
+            <button
+              onClick={() => user && toggleFavorite(game)}
+              disabled={!user}
+              title={user ? "Add to favorites" : "Log in to save favorites"}
+              className={!user ? "cursor-not-allowed opacity-50" : ""}
+            >
+              {favorites.find((f) => f.title === game.title) ? (
+                <Heart className="text-red-500" />
+              ) : (
+                <HeartOff className="text-gray-400" />
+              )}
+            </button>
+
             </div>
           </div>
         ))}
