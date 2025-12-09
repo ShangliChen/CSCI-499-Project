@@ -541,7 +541,7 @@ const handleNextMonth = () => {
                     : typeof c.specialization === "string" &&
                       c.specialization.trim()
                     ? c.specialization
-                    : "General Counselor"}
+                    : "Counselor"}
                 </p>
 
                 {/* Info Box */}

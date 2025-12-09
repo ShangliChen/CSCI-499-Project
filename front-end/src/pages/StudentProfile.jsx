@@ -60,6 +60,33 @@ const StudentProfile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+    
+    
+    // Compute min and max dates
+    const today = new Date();
+    const maxDOB = new Date();
+    maxDOB.setFullYear(today.getFullYear() - 5); // Student must be at least 5
+    const minDOB = new Date();
+    minDOB.setFullYear(today.getFullYear() - 100); // Student max 100 years old
+
+    // Function to validate DOB
+    const [dobWarning, setDobWarning] = useState("");
+
+    const handleDobChange = (e) => {
+      const value = e.target.value;
+      setFormData(prev => ({ ...prev, dob: value }));
+
+      const selectedDate = new Date(value);
+      if (selectedDate > maxDOB) {
+        setDobWarning("Date of birth cannot be less than 5 years ago.");
+      } else if (selectedDate < minDOB) {
+        setDobWarning("Date of birth cannot be more than 100 years ago.");
+      } else {
+        setDobWarning("");
+      }
+    };
+
+
 
   const baseURL = API_BASE_URL;
 
@@ -382,6 +409,68 @@ const StudentProfile = () => {
             )}
           </div>
 
+          {/* CENTER COLUMN */}
+          <div className="space-y-6">
+            {/* Account Details */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">Account Details</h3>
+              <form onSubmit={handleUpdate} className="grid grid-cols-1 gap-4">
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  placeholder="Full Name"
+                  onChange={handleChange}
+                  className="border border-gray-300 p-2 rounded-md"
+                />
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  placeholder="Phone Number"
+                  onChange={handleChange}
+                  className="border border-gray-300 p-2 rounded-md"
+                />
+                <input
+                  type="date"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleDobChange}
+                  className="border border-gray-300 p-2 rounded-md"
+                  min={minDOB.toISOString().split("T")[0]}
+                  max={maxDOB.toISOString().split("T")[0]}
+                />
+                {dobWarning && (
+                  <p className="text-red-600 text-sm mt-1">{dobWarning}</p>
+                )}
+
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  placeholder="Address"
+                  onChange={handleChange}
+                  className="border border-gray-300 p-2 rounded-md"
+                />
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  placeholder="Short Bio"
+                  onChange={handleChange}
+                  className="border border-gray-300 p-2 rounded-md"
+                  rows="3"
+                />
+                <button
+                  type="submit"
+                  className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-md"
+                >
+                  Save Changes
+                </button>
+              </form>
+
+              {message && (
+                <p className="mt-4 text-sm text-green-600 text-center">{message}</p>
+              )}
           {/* Counselor Card - Expandable */}
           <div className="bg-white rounded-xl shadow">
             <div 
