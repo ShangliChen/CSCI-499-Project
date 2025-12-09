@@ -462,18 +462,16 @@ const handleNextMonth = () => {
                     ? c.specializations.join(", ")
                     : typeof c.specialization === "string" && c.specialization.trim()
                     ? c.specialization
-                    : "General Counselor"}
+                    : "Counselor"}
                 </p>
 
                 {/* Info Box */}
                 <div className="bg-white rounded-lg p-4 shadow-sm text-sm text-gray-800">
                   <p className="mb-1"><strong>Email:</strong> {c.email || "N/A"}</p>
-                  <p className="mb-1"><strong>License Number:</strong> {c.license || "N/A"}</p>
-                  <p className="mb-1">
-                    <strong>Specializations:</strong>{" "}
-                    {Array.isArray(c.specializations) && c.specializations.length > 0
-                      ? c.specializations.join(", ")
-                      : "CBT, ACT, Trauma"}
+                  
+                  <p className="text-gray-700 mt-1">
+                    <strong>Specialization:</strong>{" "}
+                        {c.specialization?.join(", ") || "N/A"}
                   </p>
                 </div>
               </div>

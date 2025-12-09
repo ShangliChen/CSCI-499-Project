@@ -36,6 +36,33 @@ const StudentProfile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+    
+    
+    // Compute min and max dates
+    const today = new Date();
+    const maxDOB = new Date();
+    maxDOB.setFullYear(today.getFullYear() - 5); // Student must be at least 5
+    const minDOB = new Date();
+    minDOB.setFullYear(today.getFullYear() - 100); // Student max 100 years old
+
+    // Function to validate DOB
+    const [dobWarning, setDobWarning] = useState("");
+
+    const handleDobChange = (e) => {
+      const value = e.target.value;
+      setFormData(prev => ({ ...prev, dob: value }));
+
+      const selectedDate = new Date(value);
+      if (selectedDate > maxDOB) {
+        setDobWarning("Date of birth cannot be less than 5 years ago.");
+      } else if (selectedDate < minDOB) {
+        setDobWarning("Date of birth cannot be more than 100 years ago.");
+      } else {
+        setDobWarning("");
+      }
+    };
+
+
 
   const baseURL = "http://localhost:5000";
 
@@ -399,9 +426,15 @@ const StudentProfile = () => {
                   type="date"
                   name="dob"
                   value={formData.dob}
-                  onChange={handleChange}
+                  onChange={handleDobChange}
                   className="border border-gray-300 p-2 rounded-md"
+                  min={minDOB.toISOString().split("T")[0]}
+                  max={maxDOB.toISOString().split("T")[0]}
                 />
+                {dobWarning && (
+                  <p className="text-red-600 text-sm mt-1">{dobWarning}</p>
+                )}
+
                 <input
                   type="text"
                   name="address"

@@ -14,9 +14,7 @@ import StudentProfile from "./pages/StudentProfile";
 import CounselorProfile from "./pages/CounselorProfile";
 import AssessmentList from "./pages/AssessmentList";
 import AssessmentSelection from "./pages/AssessmentSelection";
-import StressAssessment from "./pages/StressAssessment";
 import AnxietyAssessment from "./pages/AnxietyAssessment";
-import DepressionAssessment from "./pages/DepressionAssessment";
 import BookingPage from "./pages/BookingPage";
 import SelfHelpGuide from './pages/SelfHelpGuide';
 import AssessmentDetailsView from './pages/AssessmentDetailsView'; 
@@ -36,6 +34,7 @@ import Article5 from "./pages/articles/Article5";
 import CopingTechniques from "./pages/CopingTechniques";
 import CounselorList from "./pages/CounselorList";
 import Emergency from "./pages/Emergency";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 
 function App() {
@@ -221,25 +220,20 @@ function App() {
           <Route path="/login/:userType" element={<Login />} />
           <Route path="/signup/:userType" element={<Signup />} />
           <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/counselors/:id" element={<AdminCounselorDetail />} />
           <Route path="/counselor-docs" element={<CounselorDocs />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/counselor" element={<CounselorDashboard />} />
           <Route path="/student/profile/:id" element={<StudentProfile />} />
           <Route path="/counselor/profile/:id" element={<CounselorProfile />} />
-          <Route path="/counselor/assessments" element={<AssessmentList />} />
+          <Route path="/counselor/assessments" element={<RequireAuth roles={["counselor"]}><AssessmentList /></RequireAuth>} />
           <Route path="/resources/assessment-selection" element={<AssessmentSelection />} />
-          <Route path="/resources/stress-assessment" element={<StressAssessment />} />
-          <Route path="/resources/anxiety-assessment" element={<AnxietyAssessment />} />
-          <Route path="/resources/depression-assessment" element={<DepressionAssessment />} />
+          <Route path="/resources/anxiety-assessment" element={<RequireAuth roles={["student"]}><AnxietyAssessment /></RequireAuth>} />
           <Route path="/resources/booking" element={<BookingPage />} />
           <Route path="/resources/self-help-guide" element={<SelfHelpGuide />} />
           <Route path="/counselor/user/:userId" element={<AssessmentDetailsView />} />
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/counselor/notifications" element={<NotificationPage />} />
           <Route path="/student/notifications" element={<NotificationPage />} />
-
           <Route path="/student/view-all-appointments" element={<ViewAllAppointments />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
@@ -255,6 +249,23 @@ function App() {
           <Route path="/coping-techniques" element={<CopingTechniques />} />
           <Route path="/counselors" element={<CounselorList />} />
           <Route path="/emergency" element={<Emergency />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboard />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/counselors/:id"
+              element={
+                <AdminProtectedRoute>
+                  <AdminCounselorDetail />
+                </AdminProtectedRoute>
+              }
+            />
 
 
         </Routes>
