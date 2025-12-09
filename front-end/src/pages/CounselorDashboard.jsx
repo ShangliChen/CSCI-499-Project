@@ -8,7 +8,6 @@ const CounselorDashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [profilePicture, setProfilePicture] = useState(null);
   const [appointments, setAppointments] = useState([]);
-  const baseURL = API_BASE_URL;
   const navigate = useNavigate();
 
   // Format date & time nicely (e.g., Tuesday, Feb 12 at 2:30 PM)
@@ -35,7 +34,7 @@ const CounselorDashboard = () => {
 
       // ✅ Fetch counselor profile to get latest profile picture
       axios
-        .get(`${baseURL}/api/counselor/profile/${userData.userId}`)
+        .get(`${API_BASE_URL}/api/counselor/profile/${userData.userId}`)
         .then((res) => {
           if (res.data?.success && res.data.data?.profilePicture) {
             setProfilePicture(res.data.data.profilePicture);
@@ -47,7 +46,7 @@ const CounselorDashboard = () => {
 
       // ✅ Fetch notifications
       axios
-        .get(`${baseURL}/api/assessments/notifications/recent`)
+        .get(`${API_BASE_URL}/api/assessments/notifications/recent`)
         .then((res) => {
           console.log("Notifications from backend:", res.data);
           const data = res.data.map((n) => ({ ...n, read: n.read || false }));
@@ -57,7 +56,7 @@ const CounselorDashboard = () => {
 
       // ✅ Fetch counselor's appointments
       axios
-        .get(`${baseURL}/api/bookings/counselor/${userData.userId}`)
+        .get(`${API_BASE_URL}/api/bookings/counselor/${userData.userId}`)
         .then((res) => {
           if (res.data.success) {
             // 🔥 Filter out canceled appointments
@@ -95,7 +94,7 @@ const CounselorDashboard = () => {
   const handleNotificationClick = async (notifId, studentId) => {
       try {
         // Mark as read on backend
-        await axios.post(`${baseURL}/api/assessments/notifications/${notifId}/read`);
+        await axios.post(`${API_BASE_URL}/api/assessments/notifications/${notifId}/read`);
 
         // Update local state immediately
         setNotifications((prev) =>
@@ -171,7 +170,7 @@ const CounselorDashboard = () => {
             {profilePicture && (
               <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
                 <img
-                  src={`${baseURL}${profilePicture}`}
+                  src={`${API_BASE_URL}${profilePicture}`}
                   alt="Counselor"
                   className="w-full h-full object-cover"
                 />
