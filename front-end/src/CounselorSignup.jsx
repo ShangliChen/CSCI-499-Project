@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./config";
 
 function CounselorSignup() {
   const [name, setName] = useState("");
@@ -15,7 +16,7 @@ function CounselorSignup() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("http://localhost:5000/security-questions");
+        const res = await fetch(`${API_BASE_URL}/security-questions`);
         const data = await res.json();
         if (Array.isArray(data.questions)) setQuestions(data.questions);
       } catch (e) {
@@ -36,7 +37,7 @@ function CounselorSignup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/signup/counselor", {
+      const res = await fetch(`${API_BASE_URL}/signup/counselor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, school_id: schoolId, email, password, license, securityQuestion, securityAnswer }),

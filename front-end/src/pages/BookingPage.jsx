@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const BookingPage = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
 
   // --- Auth guard (unchanged)
   useEffect(() => {
@@ -440,7 +441,7 @@ const handleNextMonth = () => {
                 <div className="flex justify-center mb-4">
                   {c.profilePicture ? (
                     <img
-                      src={`http://localhost:5000${c.profilePicture}`}
+                      src={`${baseURL}${c.profilePicture}`}
                       alt="Counselor"
                       className="w-20 h-20 rounded-lg object-cover bg-gray-200"
                     />

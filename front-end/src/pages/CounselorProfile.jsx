@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 const CounselorProfile = () => {
   const { id } = useParams();
@@ -26,7 +27,7 @@ const CounselorProfile = () => {
   const [availability, setAvailability] = useState([]);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedAvailDate, setSelectedAvailDate] = useState("");
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
 
   // Preset half‑hour time slots from 9:00–17:00
   const presetSlots = [

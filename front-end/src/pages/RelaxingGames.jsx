@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Gamepad2, Waves, PenLine, Heart, HeartOff, Shuffle } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 export default function RelaxingGames() {
   const user = JSON.parse(localStorage.getItem("user")); // Logged-in user
@@ -76,7 +77,7 @@ export default function RelaxingGames() {
   useEffect(() => {
     if (!user) return;
 
-    fetch(`http://localhost:5000/api/games/${user.userId}`)
+    fetch(`${API_BASE_URL}/api/games/${user.userId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -113,7 +114,7 @@ export default function RelaxingGames() {
       ].slice(0, 3);
 
       if (user) {
-        fetch(`http://localhost:5000/api/games/recent/${user.userId}`, {
+        fetch(`${API_BASE_URL}/api/games/recent/${user.userId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recentGames: updated }),
@@ -157,7 +158,7 @@ export default function RelaxingGames() {
       }
 
       if (user) {
-        fetch(`http://localhost:5000/api/games/favorites/${user.userId}`, {
+        fetch(`${API_BASE_URL}/api/games/favorites/${user.userId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ favorites: updatedClean }),
@@ -172,7 +173,7 @@ export default function RelaxingGames() {
   const clearRecentGames = () => {
     setRecentGames([]);
     if (user) {
-      fetch(`http://localhost:5000/api/games/recent/${user.userId}`, {
+      fetch(`${API_BASE_URL}/api/games/recent/${user.userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recentGames: [] }),

@@ -8,4 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  preview: {
+    host: true,
+    // Allow Railway-hosted preview domains
+    allowedHosts: ['.up.railway.app'],
+  },
 })

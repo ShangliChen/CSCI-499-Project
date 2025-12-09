@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 const CounselorDashboard = () => {
   const [userName, setUserName] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [profilePicture, setProfilePicture] = useState(null);
   const [appointments, setAppointments] = useState([]);
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
   const navigate = useNavigate();
 
   // Format date & time nicely (e.g., Tuesday, Feb 12 at 2:30 PM)
@@ -46,7 +47,7 @@ const CounselorDashboard = () => {
 
       // ✅ Fetch notifications
       axios
-        .get("http://localhost:5000/api/assessments/notifications/recent")
+        .get(`${baseURL}/api/assessments/notifications/recent`)
         .then((res) => {
           console.log("Notifications from backend:", res.data);
           const data = res.data.map((n) => ({ ...n, read: n.read || false }));
@@ -56,7 +57,7 @@ const CounselorDashboard = () => {
 
       // ✅ Fetch counselor's appointments
       axios
-        .get(`http://localhost:5000/api/bookings/counselor/${userData.userId}`)
+        .get(`${baseURL}/api/bookings/counselor/${userData.userId}`)
         .then((res) => {
           if (res.data.success) {
             // 🔥 Filter out canceled appointments
@@ -94,7 +95,7 @@ const CounselorDashboard = () => {
   const handleNotificationClick = async (notifId, studentId) => {
       try {
         // Mark as read on backend
-        await axios.post(`http://localhost:5000/api/assessments/notifications/${notifId}/read`);
+        await axios.post(`${baseURL}/api/assessments/notifications/${notifId}/read`);
 
         // Update local state immediately
         setNotifications((prev) =>
