@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config";
 
-const baseURL = "http://localhost:5000";
+const baseURL = API_BASE_URL;
 
 const SPECIALIZATIONS = [
   "CBT",

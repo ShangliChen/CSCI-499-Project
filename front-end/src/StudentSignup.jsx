@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "./config";
 
 function StudentSignup() {
   const [name, setName] = useState("");
@@ -15,7 +16,7 @@ function StudentSignup() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("http://localhost:5000/security-questions");
+        const res = await fetch(`${API_BASE_URL}/security-questions`);
         const data = await res.json();
         if (Array.isArray(data.questions)) setQuestions(data.questions);
       } catch (e) {
@@ -40,7 +41,7 @@ function StudentSignup() {
     console.log("Sending data:", studentData);
 
     try {
-      const res = await fetch("http://localhost:5000/signup/student", {
+      const res = await fetch(`${API_BASE_URL}/signup/student`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(studentData),

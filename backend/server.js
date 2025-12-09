@@ -22,7 +22,7 @@ import counselorRequestRoutes from "./routes/counselorRequestRoutes.js";
 dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Security questions (served to clients)
 const SECURITY_QUESTIONS = [
@@ -874,4 +874,3 @@ app.put("/api/bookings/:id/meeting-info", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error while updating meeting info" });
   }
 });
-

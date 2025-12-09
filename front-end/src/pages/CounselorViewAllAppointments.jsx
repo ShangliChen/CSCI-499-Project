@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const CounselorViewAllAppointments = () => {
   const [bookings, setBookings] = useState([]);
@@ -10,7 +11,7 @@ const CounselorViewAllAppointments = () => {
   const [endTime, setEndTime] = useState("");
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
 
   // Format date & time nicely (e.g., Wednesday, Feb 12 at 2:30 PM)
   const formatDateTime = (date, time) => {

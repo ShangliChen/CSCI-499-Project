@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,6 +11,18 @@ import {
   LineElement,
   Tooltip,
 } from "chart.js";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Settings, 
+  User, 
+  Lock, 
+  Bell, 
+  BarChart3, 
+  Calendar,
+  Activity,
+  ArrowLeft
+} from "lucide-react";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip);
 
@@ -30,6 +43,17 @@ const StudentProfile = () => {
     darkMode: false,
     sessionReminders: true,
   });
+  
+  // State for expandable sections
+  const [expandedSections, setExpandedSections] = useState({
+    profile: true,
+    account: true,
+    security: false,
+    preferences: false,
+    activity: true,
+    counselor: true
+  });
+  
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -64,7 +88,7 @@ const StudentProfile = () => {
 
 
 
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
 
   useEffect(() => {
     const storedPrefs = localStorage.getItem(`studentProfilePrefs_${id}`);
@@ -130,6 +154,13 @@ const StudentProfile = () => {
     fetchAll();
   }, [id]);
 
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -139,9 +170,11 @@ const StudentProfile = () => {
     try {
       const res = await axios.put(`${baseURL}/api/student/profile/${id}`, formData);
       setMessage(res.data.message);
+      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
       console.error(err);
       setMessage("Error updating profile");
+      setTimeout(() => setMessage(""), 3000);
     }
   };
 
@@ -156,9 +189,11 @@ const StudentProfile = () => {
       });
       setMessage(res.data.message);
       setStudent(prev => ({ ...prev, profilePicture: res.data.imagePath }));
+      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
       console.error(err);
       setMessage("Error uploading picture");
+      setTimeout(() => setMessage(""), 3000);
     }
   };
 
@@ -182,10 +217,12 @@ const StudentProfile = () => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setMessage("❌ New password and confirmation do not match.");
+      setTimeout(() => setMessage(""), 3000);
       return;
     }
     if (passwordForm.newPassword.length < 6) {
       setMessage("❌ New password must be at least 6 characters.");
+      setTimeout(() => setMessage(""), 3000);
       return;
     }
     try {
@@ -204,8 +241,10 @@ const StudentProfile = () => {
           confirmPassword: "",
         });
         setShowPasswordForm(false);
+        setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage(res.data.message || "❌ Failed to update password.");
+        setTimeout(() => setMessage(""), 3000);
       }
     } catch (error) {
       console.error("Error changing password:", error);
@@ -213,6 +252,7 @@ const StudentProfile = () => {
         error.response?.data?.message ||
         "❌ Server error while changing password.";
       setMessage(serverMessage);
+      setTimeout(() => setMessage(""), 3000);
     }
   };
 
@@ -282,122 +322,91 @@ const StudentProfile = () => {
   }
 
   return (
-      <div className="min-h-screen bg-[#f5f5f5] py-10 px-4">
-        <div className="max-w-screen-2xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-[#f5f5f5] py-10 px-4">
+      {/* Header with Back Button */}
+      <div className="max-w-screen-2xl mx-auto mb-6">
+        <button
+          onClick={() => navigate("/dashboard/student")}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          <ArrowLeft size={20} />
+          <span>Back to Dashboard</span>
+        </button>
+      </div>
 
-          {/* LEFT COLUMN */}
-          <div className="space-y-6">
-            {/* Profile Card */}
-            <div className="bg-white rounded-xl shadow p-6 text-center">
-              <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden mx-auto mb-4">
-                {student.profilePicture ? (
-                  <img
-                    src={`${baseURL}${student.profilePicture}`}
-                    alt="Profile"
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
-                    No Image
+      <div className="max-w-screen-2xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* LEFT COLUMN */}
+        <div className="space-y-6">
+          {/* Profile Card - Expandable */}
+          <div className="bg-white rounded-xl shadow">
+            <div 
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleSection('profile')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <User size={20} className="text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Profile</h3>
+              </div>
+              {expandedSections.profile ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+            
+            {expandedSections.profile && (
+              <div className="px-6 pb-6">
+                <div className="text-center">
+                  <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden mx-auto mb-4">
+                    {student.profilePicture ? (
+                      <img
+                        src={`${baseURL}${student.profilePicture}`}
+                        alt="Profile"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
+                        No Image
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <h2 className="text-lg font-semibold text-gray-800">{formData.name}</h2>
-              <p className="text-sm text-gray-500">{formData.email}</p>
+                  <h2 className="text-lg font-semibold text-gray-800">{formData.name}</h2>
+                  <p className="text-sm text-gray-500">{formData.email}</p>
+                </div>
 
-              <form onSubmit={handleUpload} className="mt-4 w-full">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setProfilePic(e.target.files[0])}
-                  className="block w-full text-sm text-gray-700 mb-2"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 rounded-lg"
-                >
-                  Upload Photo
-                </button>
-              </form>
-            </div>
-
-            {/* Quick Links */}
-            <div className="bg-white rounded-xl shadow p-6 text-center">
-              <h3 className="font-semibold text-gray-800 mb-3">Quick Actions</h3>
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => navigate("/dashboard/student")}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-2 rounded-lg"
-                >
-                  Back to Dashboard
-                </button>
-                <button
-                  onClick={() => navigate("/student/view-all-appointments")}
-                  className="bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 rounded-lg"
-                >
-                  View All Appointments
-                </button>
-              </div>
-            </div>
-
-            {/* Counselor Card */}
-            <div className="bg-white rounded-xl shadow p-6 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#e5f4f2] flex items-center justify-center text-4xl">
-                👩‍⚕️
-              </div>
-              {assignedCounselor ? (
-                <>
-                  <h3 className="font-semibold text-gray-800">
-                    {assignedCounselor.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {Array.isArray(assignedCounselor.specialization) &&
-                    assignedCounselor.specialization.length > 0
-                      ? assignedCounselor.specialization.join(", ")
-                      : "Counselor"}
-                  </p>
-                  {assignedCounselor.email && (
-                    <p className="mt-1 text-xs text-gray-500">
-                      {assignedCounselor.email}
-                    </p>
-                  )}
-                </>
-              ) : hasPendingRequest ? (
-                <>
-                  <h3 className="font-semibold text-gray-800">
-                    Counselor Request Pending
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-3">
-                    Waiting for{" "}
-                    <span className="font-medium">
-                      {counselorRequest?.counselor?.name || "counselor"}
-                    </span>{" "}
-                    to accept your request.
-                  </p>
+                <form onSubmit={handleUpload} className="mt-4">
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Update Profile Picture
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setProfilePic(e.target.files[0])}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
                   <button
-                    onClick={() => navigate("/counselors")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg"
+                    type="submit"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 rounded-lg transition-colors"
                   >
-                    View Counselors
+                    Upload Photo
                   </button>
-                </>
-              ) : (
-                <>
-                  <h3 className="font-semibold text-gray-800">
-                    No Counselor Assigned
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-3">
-                    Choose a counselor to work with you.
-                  </p>
-                  <button
-                    onClick={() => navigate("/counselors")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg"
-                  >
-                    Find a Counselor
-                  </button>
-                </>
-              )}
-            </div>
+                </form>
+
+                {/* Quick Actions */}
+                <div className="mt-6 pt-6 border-t">
+                  <h4 className="font-medium text-gray-700 mb-3">Quick Actions</h4>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => navigate("/student/view-all-appointments")}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-2 rounded-lg transition-colors"
+                    >
+                      View All Appointments
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* CENTER COLUMN */}
@@ -462,168 +471,459 @@ const StudentProfile = () => {
               {message && (
                 <p className="mt-4 text-sm text-green-600 text-center">{message}</p>
               )}
-            </div>
-
-            {/* Change Password */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-semibold text-gray-800">Security</h3>
-                <button
-                  onClick={() => setShowPasswordForm(prev => !prev)}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  {showPasswordForm ? "Cancel" : "Change Password"}
-                </button>
+          {/* Counselor Card - Expandable */}
+          <div className="bg-white rounded-xl shadow">
+            <div 
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleSection('counselor')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <User size={20} className="text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Counselor</h3>
               </div>
-              {showPasswordForm && (
-                <form onSubmit={handleChangePassword} className="space-y-3">
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordInputChange}
-                    placeholder="Current Password"
-                    className="border border-gray-300 p-2 rounded-md w-full text-sm"
-                  />
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordInputChange}
-                    placeholder="New Password"
-                    className="border border-gray-300 p-2 rounded-md w-full text-sm"
-                  />
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordInputChange}
-                    placeholder="Confirm New Password"
-                    className="border border-gray-300 p-2 rounded-md w-full text-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md w-full text-sm"
-                  >
-                    Save New Password
-                  </button>
-                </form>
-              )}
+              {expandedSections.counselor ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </div>
-
-            {/* App Preferences */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">App Preferences</h3>
-              <ul className="space-y-3 text-sm text-gray-700">
-                <li className="flex justify-between items-center">
-                  <span>Notifications Enabled</span>
-                  <button
-                    type="button"
-                    onClick={() => handlePreferenceToggle("notifications")}
-                    className={`w-10 h-5 rounded-full flex items-center ${
-                      preferences.notifications
-                        ? "bg-blue-500 justify-end"
-                        : "bg-gray-300 justify-start"
-                    }`}
-                  >
-                    <span className="bg-white w-4 h-4 rounded-full mx-1 shadow" />
-                  </button>
-                </li>
-                <li className="flex justify-between items-center">
-                  <span>Session Reminders</span>
-                  <button
-                    type="button"
-                    onClick={() => handlePreferenceToggle("sessionReminders")}
-                    className={`w-10 h-5 rounded-full flex items-center ${
-                      preferences.sessionReminders
-                        ? "bg-blue-500 justify-end"
-                        : "bg-gray-300 justify-start"
-                    }`}
-                  >
-                    <span className="bg-white w-4 h-4 rounded-full mx-1 shadow" />
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN */}
-          <div className="space-y-6">
-            {/* Activity Overview Chart */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Activity Overview</h3>
-              {assessments.length > 0 ? (
-                <Line
-                  data={miniChartData}
-                  options={{
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                      x: { display: false },
-                      y: { display: false },
-                    },
-                  }}
-                  height={100}
-                />
-              ) : (
-                <p className="text-sm text-gray-500 mt-2 text-center">
-                  No assessment data yet.
-                </p>
-              )}
-              <p className="text-sm text-gray-500 mt-2 text-center">
-                Mood assessments over time
-              </p>
-            </div>
-
-            {/* Activity Stats */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Activity Overview</h3>
-              <ul className="text-sm text-gray-700 space-y-2">
-                <li>✓ Total Sessions: {totalSessions}</li>
-                <li>
-                  ✓ Upcoming Session:{" "}
-                  {nextBooking
-                    ? `${nextBooking.dateTime.toLocaleDateString()} at ${
-                        nextBooking.time
-                      }`
-                    : "None"}
-                </li>
-                <li>
-                  ✓ Last Session:{" "}
-                  {lastBooking
-                    ? `${lastBooking.dateTime.toLocaleDateString()} at ${
-                        lastBooking.time
-                      }`
-                    : "No past sessions"}
-                </li>
-                <li>
-                  ✓ Latest Assessment:{" "}
-                  {latestAssessment
-                    ? `${new Date(
-                        latestAssessment.date_taken
-                      ).toLocaleDateString()} — Score ${
-                        latestAssessment.overall_result
-                      } (${latestAssessment.overall_status})`
-                    : "Not available"}
-                </li>
-              </ul>
-            </div>
+            
+            {expandedSections.counselor && (
+              <div className="px-6 pb-6 text-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#e5f4f2] flex items-center justify-center text-4xl">
+                  👩‍⚕️
+                </div>
+                {assignedCounselor ? (
+                  <>
+                    <h3 className="font-semibold text-gray-800">
+                      {assignedCounselor.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {Array.isArray(assignedCounselor.specialization) &&
+                      assignedCounselor.specialization.length > 0
+                        ? assignedCounselor.specialization.join(", ")
+                        : "Counselor"}
+                    </p>
+                    {assignedCounselor.email && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        {assignedCounselor.email}
+                      </p>
+                    )}
+                  </>
+                ) : hasPendingRequest ? (
+                  <>
+                    <h3 className="font-semibold text-gray-800">
+                      Counselor Request Pending
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Waiting for{" "}
+                      <span className="font-medium">
+                        {counselorRequest?.counselor?.name || "counselor"}
+                      </span>{" "}
+                      to accept your request.
+                    </p>
+                    <button
+                      onClick={() => navigate("/counselors")}
+                      className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+                    >
+                      View Counselors
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-semibold text-gray-800">
+                      No Counselor Assigned
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Choose a counselor to work with you.
+                    </p>
+                    <button
+                      onClick={() => navigate("/counselors")}
+                      className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+                    >
+                      Find a Counselor
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-12 text-center text-sm text-gray-500 w-full">
-          <div className="flex justify-between max-w-6xl mx-auto border-t pt-6 px-4">
+        {/* CENTER COLUMN */}
+        <div className="space-y-6">
+          {/* Account Details - Expandable */}
+          <div className="bg-white rounded-xl shadow">
+            <div 
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleSection('account')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Settings size={20} className="text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Account Details</h3>
+              </div>
+              {expandedSections.account ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+            
+            {expandedSections.account && (
+              <div className="px-6 pb-6">
+                <form onSubmit={handleUpdate} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bio
+                    </label>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      rows="3"
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-md font-medium transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Security - Expandable */}
+          <div className="bg-white rounded-xl shadow">
+            <div 
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleSection('security')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Lock size={20} className="text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Security</h3>
+              </div>
+              {expandedSections.security ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+            
+            {expandedSections.security && (
+              <div className="px-6 pb-6">
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowPasswordForm(!showPasswordForm)}
+                    className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <span className="font-medium text-gray-700">Change Password</span>
+                    <ChevronDown size={18} className={`transform transition-transform ${showPasswordForm ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showPasswordForm && (
+                    <form onSubmit={handleChangePassword} className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          name="currentPassword"
+                          value={passwordForm.currentPassword}
+                          onChange={handlePasswordInputChange}
+                          className="w-full border border-gray-300 p-2 rounded-md text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          name="newPassword"
+                          value={passwordForm.newPassword}
+                          onChange={handlePasswordInputChange}
+                          className="w-full border border-gray-300 p-2 rounded-md text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={passwordForm.confirmPassword}
+                          onChange={handlePasswordInputChange}
+                          className="w-full border border-gray-300 p-2 rounded-md text-sm"
+                        />
+                      </div>
+                      
+                      <button
+                        type="submit"
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md text-sm"
+                      >
+                        Save New Password
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* App Preferences - Expandable */}
+          <div className="bg-white rounded-xl shadow">
+            <div 
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleSection('preferences')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Bell size={20} className="text-yellow-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">App Preferences</h3>
+              </div>
+              {expandedSections.preferences ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+            
+            {expandedSections.preferences && (
+              <div className="px-6 pb-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Bell size={18} className="text-gray-500" />
+                      <div>
+                        <p className="font-medium text-gray-700">Notifications</p>
+                        <p className="text-sm text-gray-500">Get notified about sessions and updates</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handlePreferenceToggle("notifications")}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        preferences.notifications ? 'bg-blue-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        preferences.notifications ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Calendar size={18} className="text-gray-500" />
+                      <div>
+                        <p className="font-medium text-gray-700">Session Reminders</p>
+                        <p className="text-sm text-gray-500">Remind before counseling sessions</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handlePreferenceToggle("sessionReminders")}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        preferences.sessionReminders ? 'bg-blue-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        preferences.sessionReminders ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+          {/* Activity Overview - Expandable */}
+          <div className="bg-white rounded-xl shadow">
+            <div 
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleSection('activity')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <BarChart3 size={20} className="text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Activity Overview</h3>
+              </div>
+              {expandedSections.activity ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+            
+            {expandedSections.activity && (
+              <div className="px-6 pb-6">
+                {/* Chart Section */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Mood Trend</h4>
+                  {assessments.length > 0 ? (
+                    <div className="h-48">
+                      <Line
+                        data={miniChartData}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { display: false } },
+                          scales: {
+                            x: { 
+                              display: true,
+                              ticks: { font: { size: 10 } }
+                            },
+                            y: { 
+                              display: true,
+                              ticks: { font: { size: 10 } }
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-500">
+                        No assessment data available yet
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats Section */}
+                <div className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Activity size={16} className="text-blue-600" />
+                      <h5 className="font-medium text-blue-800">Activity Stats</h5>
+                    </div>
+                    <ul className="text-sm text-gray-700 space-y-2">
+                      <li className="flex justify-between">
+                        <span>Total Sessions</span>
+                        <span className="font-medium">{totalSessions}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Upcoming Session</span>
+                        <span className="font-medium">
+                          {nextBooking
+                            ? `${nextBooking.dateTime.toLocaleDateString()}`
+                            : "None"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Last Session</span>
+                        <span className="font-medium">
+                          {lastBooking
+                            ? `${lastBooking.dateTime.toLocaleDateString()}`
+                            : "None"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Latest Assessment</span>
+                        <span className="font-medium">
+                          {latestAssessment
+                            ? `Score: ${latestAssessment.overall_result}`
+                            : "N/A"}
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Message Toast */}
+      {message && (
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg animate-fadeIn">
+          {message}
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="mt-12 text-center text-sm text-gray-500">
+        <div className="max-w-6xl mx-auto border-t pt-6 px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
             <span>© 2025 MindConnect</span>
-            <div className="space-x-4">
-              <a href="#" className="hover:underline">Contact</a>
-              <a href="#" className="hover:underline">Privacy Policy</a>
+            <div className="flex gap-4 mt-2 md:mt-0">
+              <a href="#" className="hover:underline hover:text-gray-700 transition-colors">
+                Contact
+              </a>
+              <a href="#" className="hover:underline hover:text-gray-700 transition-colors">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:underline hover:text-gray-700 transition-colors">
+                Terms of Service
+              </a>
             </div>
           </div>
-        </footer>
-      </div>
-    );
+        </div>
+      </footer>
 
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
 };
 
 export default StudentProfile;

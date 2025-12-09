@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config";
 
 const Forum = () => {
   const user = JSON.parse(localStorage.getItem("user"));
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
 
   const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState("");

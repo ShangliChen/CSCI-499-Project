@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./config";
 
 function CounselorLogin() {
   const [schoolId, setSchoolId] = useState("");
@@ -15,7 +16,7 @@ function CounselorLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/login/counselor", {
+      const res = await fetch(`${API_BASE_URL}/login/counselor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ school_id: schoolId, password }),
@@ -53,7 +54,7 @@ function CounselorLogin() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/forgot-password/init", {
+      const res = await fetch(`${API_BASE_URL}/forgot-password/init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ school_id: schoolId })
@@ -76,7 +77,7 @@ function CounselorLogin() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/forgot-password/reset", {
+      const res = await fetch(`${API_BASE_URL}/forgot-password/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ school_id: schoolId, answer: recoveryAnswer, newPassword })
