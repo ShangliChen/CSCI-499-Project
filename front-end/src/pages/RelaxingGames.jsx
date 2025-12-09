@@ -357,13 +357,19 @@ export default function RelaxingGames() {
                 Play →
               </button>
 
-              <button onClick={() => toggleFavorite(game)}>
-                {favorites.find((f) => f.title === game.title) ? (
-                  <Heart className="text-red-500" />
-                ) : (
-                  <HeartOff className="text-gray-400" />
-                )}
-              </button>
+            <button
+              onClick={() => user && toggleFavorite(game)}
+              disabled={!user}
+              title={user ? "Add to favorites" : "Log in to save favorites"}
+              className={!user ? "cursor-not-allowed opacity-50" : ""}
+            >
+              {favorites.find((f) => f.title === game.title) ? (
+                <Heart className="text-red-500" />
+              ) : (
+                <HeartOff className="text-gray-400" />
+              )}
+            </button>
+
             </div>
           </div>
         ))}
