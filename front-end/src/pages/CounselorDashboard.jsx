@@ -3,18 +3,20 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-
 const CounselorDashboard = () => {
   const [userName, setUserName] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [profilePicture, setProfilePicture] = useState(null);
   const [appointments, setAppointments] = useState([]);
-  const baseURL = API_BASE_URL;
   const [assignedStudents, setAssignedStudents] = useState([]);
   const [counselorCapacity, setCounselorCapacity] = useState(0);
   const [assignedCount, setAssignedCount] = useState(0);
   const [newCapacity, setNewCapacity] = useState("");
-  const baseURL = "http://localhost:5000";
+  const [dailyChecklist, setDailyChecklist] = useState({
+    notifications: false,
+    appointments: false,
+    forum: false,
+  });
   const navigate = useNavigate();
 
   // Format date & time nicely (e.g., Tuesday, Feb 12 at 2:30 PM)
@@ -30,30 +32,23 @@ const CounselorDashboard = () => {
     });
   };
     
-  // State for the checklist
-    const [dailyChecklist, setDailyChecklist] = useState({
-      notifications: false,
-      appointments: false,
-      forum: false,
+  // Handler for toggling a checklist item
+  const toggleChecklistItem = (item) => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData || !userData.userId) return;
+
+    const key = `dailyChecklist_${userData.userId}`;
+
+    setDailyChecklist((prev) => {
+      const updated = { ...prev, [item]: !prev[item] };
+      const today = new Date().toISOString().split("T")[0];
+      localStorage.setItem(
+        key,
+        JSON.stringify({ date: today, checklist: updated })
+      );
+      return updated;
     });
-
-    // Handler for toggling a checklist item
-    const toggleChecklistItem = (item) => {
-      const userData = JSON.parse(localStorage.getItem("user"));
-      if (!userData || !userData.userId) return;
-
-      const key = `dailyChecklist_${userData.userId}`;
-
-      setDailyChecklist((prev) => {
-        const updated = { ...prev, [item]: !prev[item] };
-        const today = new Date().toISOString().split("T")[0];
-        localStorage.setItem(
-          key,
-          JSON.stringify({ date: today, checklist: updated })
-        );
-        return updated;
-      });
-    };
+  };
 
 
 

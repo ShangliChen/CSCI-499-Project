@@ -58,8 +58,6 @@ const CounselorProfile = () => {
     security: false
   });
 
-  const baseURL = "http://localhost:5000";
-
   // Preset half‑hour time slots from 9:00–17:00
   const presetSlots = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
