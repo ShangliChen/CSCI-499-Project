@@ -54,7 +54,7 @@ function Resource() {
           {resources.map((item, index) => (
             <div
               key={index}
-              className="bg-[#c8f9c4] rounded-xl p-8 shadow-md text-center"
+              className="bg-[#dfffea] rounded-xl p-8 shadow-md text-center"
             >
               {/* Smaller Circle Logo */}
               <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 shadow">
@@ -73,7 +73,7 @@ function Resource() {
 
         <Link
           to={item.link}
-          className="mt-4 inline-block bg-[#6FD17F] text-green-1200 px-5 py-2 rounded-full text-base font-semibold hover:bg-[#3e9c45] transition"
+          className="mt-4 inline-block bg-[#98D7C2] text-green-1200 px-5 py-2 rounded-full text-base font-semibold hover:bg-[#7bcfaf] transition"
         >
           Learn More
         </Link>
