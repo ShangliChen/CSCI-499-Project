@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const NotificationPage = () => {
   const [requestNotifications, setRequestNotifications] = useState([]);
@@ -21,7 +22,7 @@ const NotificationPage = () => {
         if (counselorId) {
           // Counselor Requests
           const reqRes = await fetch(
-            `http://localhost:5000/api/counselor-requests/${counselorId}`
+            `${API_BASE_URL}/api/counselor-requests/${counselorId}`
           );
           const reqData = await reqRes.json();
           if (reqData.success) {
@@ -30,14 +31,14 @@ const NotificationPage = () => {
 
           // Assessment Notifications
           const assessRes = await fetch(
-            "http://localhost:5000/api/assessments/notifications"
+            `${API_BASE_URL}/api/assessments/notifications`
           );
           const assessData = await assessRes.json();
           setAssessmentNotifications(sortByNewest(assessData, "date"));
         } else if (studentId) {
           // Student Notifications
           const res = await fetch(
-            `http://localhost:5000/api/assessments/notifications/student/${studentId}`
+            `${API_BASE_URL}/api/assessments/notifications/student/${studentId}`
           );
           const data = await res.json();
           if (data.success && Array.isArray(data.data)) {
@@ -58,7 +59,7 @@ const NotificationPage = () => {
   const handleRequestAction = async (requestId, action) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/counselor-requests/${requestId}/${action}`,
+        `${API_BASE_URL}/api/counselor-requests/${requestId}/${action}`,
         { method: "PUT" }
       );
       const data = await res.json();

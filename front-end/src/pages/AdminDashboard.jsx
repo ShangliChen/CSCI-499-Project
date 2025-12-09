@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function AdminDashboard() {
     const fetchData = async () => {
       try {
         const qs = statusFilter ? `?status=${encodeURIComponent(statusFilter)}` : '';
-        const res = await fetch(`http://localhost:5000/api/admin/counselors${qs}`, {
+        const res = await fetch(`${API_BASE_URL}/api/admin/counselors${qs}`, {
           headers: { 'x-admin-secret': secret },
         });
         const data = await res.json();
@@ -86,4 +87,3 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
-

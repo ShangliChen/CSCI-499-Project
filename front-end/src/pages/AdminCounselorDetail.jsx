@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 function AdminCounselorDetail() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ function AdminCounselorDetail() {
     }
     const load = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/admin/counselors/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/admin/counselors/${id}`, {
           headers: { 'x-admin-secret': secret },
         });
         const data = await res.json();
@@ -33,7 +34,7 @@ function AdminCounselorDetail() {
   const approve = async () => {
     const secret = localStorage.getItem('adminSecret');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/counselors/${id}/approve`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/counselors/${id}/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +54,7 @@ function AdminCounselorDetail() {
   const reject = async () => {
     const secret = localStorage.getItem('adminSecret');
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/counselors/${id}/reject`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/counselors/${id}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ function AdminCounselorDetail() {
     );
   }
 
-  const imageUrl = (p) => (p ? `http://localhost:5000${p}` : null);
+  const imageUrl = (p) => (p ? `${API_BASE_URL}${p}` : null);
 
   return (
     <div className="min-h-screen bg-[#f0fff0] p-6">
@@ -177,4 +178,3 @@ function AdminCounselorDetail() {
 }
 
 export default AdminCounselorDetail;
-

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 // === Reusable Assessment Component ===
 function Assessment({ title, questions, options, interpretScore, onComplete, pdfLink, reverseColors = false }) {
@@ -259,7 +260,7 @@ function Summary({ severityList, combinedIndex }) {
       };
 
       try {
-        const res = await axios.post("http://localhost:5000/api/assessments/save", payload);
+        const res = await axios.post(`${API_BASE_URL}/api/assessments/save`, payload);
         alert("✅ Assessment submitted successfully!");
         console.log("✅ Saved:", res.data);
 

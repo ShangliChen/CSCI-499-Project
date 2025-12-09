@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./config";
 
 function StudentLogin() {
   const [schoolId, setSchoolId] = useState("");
@@ -15,7 +16,7 @@ function StudentLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/login/student", {
+      const res = await fetch(`${API_BASE_URL}/login/student`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ school_id: schoolId, password }),
@@ -46,7 +47,7 @@ function StudentLogin() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/forgot-password/init", {
+      const res = await fetch(`${API_BASE_URL}/forgot-password/init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ school_id: schoolId })
@@ -69,7 +70,7 @@ function StudentLogin() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/forgot-password/reset", {
+      const res = await fetch(`${API_BASE_URL}/forgot-password/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ school_id: schoolId, answer: recoveryAnswer, newPassword })

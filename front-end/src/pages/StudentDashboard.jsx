@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Line } from "react-chartjs-2";
+import { API_BASE_URL } from "../config";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -29,7 +30,7 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const [assessments, setAssessments] = useState([]);
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
     
   // ✅ 1️⃣ New useEffect for Monthly Check-in tracking
   useEffect(() => {
@@ -100,7 +101,7 @@ const StudentDashboard = () => {
 
   const fetchAssessments = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/assessments/user/${studentId}`);
+      const res = await fetch(`${baseURL}/api/assessments/user/${studentId}`);
       const data = await res.json();
 
       // your API might return an array directly, not wrapped in { success, data }

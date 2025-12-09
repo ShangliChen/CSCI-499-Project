@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 function CounselorDocs() {
   const [idPicture, setIdPicture] = useState(null);
@@ -22,7 +23,7 @@ function CounselorDocs() {
     formData.append("licensePicture", licensePicture);
 
     try {
-      const res = await fetch("http://localhost:5000/api/counselor/upload-docs", {
+      const res = await fetch(`${API_BASE_URL}/api/counselor/upload-docs`, {
         method: "POST",
         body: formData,
       });

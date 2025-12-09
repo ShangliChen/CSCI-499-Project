@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -46,6 +47,7 @@ const CounselorProfile = () => {
   const [availability, setAvailability] = useState([]);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedAvailDate, setSelectedAvailDate] = useState("");
+  const baseURL = API_BASE_URL;
   
   // State for expandable sections
   const [expandedSections, setExpandedSections] = useState({

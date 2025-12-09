@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -60,7 +61,7 @@ const StudentProfile = () => {
     confirmPassword: "",
   });
 
-  const baseURL = "http://localhost:5000";
+  const baseURL = API_BASE_URL;
 
   useEffect(() => {
     const storedPrefs = localStorage.getItem(`studentProfilePrefs_${id}`);

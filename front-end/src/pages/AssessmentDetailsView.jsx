@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -26,7 +27,7 @@ export default function AssessmentDetailsView() {
   useEffect(() => {
     const fetchAssessments = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/assessments/user/${userId}`);
+        const res = await axios.get(`${API_BASE_URL}/api/assessments/user/${userId}`);
         if (res.data.length > 0) {
           // Sort descending by date_taken for table (newest first)
           const sortedDescending = [...res.data].sort(
@@ -48,7 +49,7 @@ export default function AssessmentDetailsView() {
     const loadNotes = async () => {
       if (!user || user.role !== 'counselor') return;
       try {
-        const res = await axios.get(`http://localhost:5000/api/counselor/notes/${userId}?counselorId=${user.userId}`);
+        const res = await axios.get(`${API_BASE_URL}/api/counselor/notes/${userId}?counselorId=${user.userId}`);
         if (res.data?.success) setNotes(res.data.data);
       } catch (err) {
         // no-op
@@ -137,7 +138,7 @@ export default function AssessmentDetailsView() {
               const content = newNote.trim();
               if (!content) return;
               try {
-                const res = await axios.post("http://localhost:5000/api/counselor/notes", {
+                const res = await axios.post(`${API_BASE_URL}/api/counselor/notes`, {
                   counselorId: user.userId,
                   studentId: userId,
                   content,
