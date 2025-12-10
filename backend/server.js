@@ -51,9 +51,24 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log("✅ MongoDB connected successfully"))
 .catch(err => console.error("❌ MongoDB connection error:", err));
 
-// Enable CORS for all origins and handle preflight
+// Enable CORS and handle preflight without using the "*" path (Express 5)
 app.use(cors());
-app.options("*", cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json());
 // Serve uploaded files statically from the correct path
 app.use('/uploads', express.static(uploadsDir));
