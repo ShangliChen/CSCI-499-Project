@@ -51,7 +51,9 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log("✅ MongoDB connected successfully"))
 .catch(err => console.error("❌ MongoDB connection error:", err));
 
+// Enable CORS for all origins and handle preflight
 app.use(cors());
+app.options("*", cors());
 app.use(express.json());
 // Serve uploaded files statically from the correct path
 app.use('/uploads', express.static(uploadsDir));
