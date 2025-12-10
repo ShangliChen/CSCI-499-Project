@@ -471,6 +471,9 @@ const StudentProfile = () => {
               {message && (
                 <p className="mt-4 text-sm text-green-600 text-center">{message}</p>
               )}
+            </div>
+          </div>
+
           {/* Counselor Card - Expandable */}
           <div className="bg-white rounded-xl shadow">
             <div 
@@ -892,36 +895,6 @@ const StudentProfile = () => {
           {message}
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="mt-12 text-center text-sm text-gray-500">
-        <div className="max-w-6xl mx-auto border-t pt-6 px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <span>© 2025 MindConnect</span>
-            <div className="flex gap-4 mt-2 md:mt-0">
-              <a href="#" className="hover:underline hover:text-gray-700 transition-colors">
-                Contact
-              </a>
-              <a href="#" className="hover:underline hover:text-gray-700 transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:underline hover:text-gray-700 transition-colors">
-                Terms of Service
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
