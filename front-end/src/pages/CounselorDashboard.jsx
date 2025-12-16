@@ -105,7 +105,7 @@ const CounselorDashboard = () => {
           try {
             const counselorId = userData.userId;
             const res = await fetch(
-              `http://localhost:5000/api/counselor-requests/assigned/${counselorId}`
+              `${API_BASE_URL}/api/counselor-requests/assigned/${counselorId}`
             );
             const data = await res.json();
             setAssignedStudents(data.students || []);

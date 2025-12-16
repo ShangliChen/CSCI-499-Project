@@ -66,7 +66,7 @@ const AssessmentList = () => {
 
       try {
         const res = await fetch(
-          `http://localhost:5000/api/counselor-requests/assigned/${user.userId}/${studentId}`,
+          `${API_BASE_URL}/api/counselor-requests/assigned/${user.userId}/${studentId}`,
           { method: "DELETE" }
         );
 
