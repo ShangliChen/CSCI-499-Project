@@ -149,7 +149,7 @@ const CounselorDashboard = () => {
 
         try {
           const res = await axios.get(
-            `${baseURL}/api/counselor-requests/capacity/${userData.userId}`
+            `${API_BASE_URL}/api/counselor-requests/capacity/${userData.userId}`
           );
           if (res.data.success) {
             setCounselorCapacity(res.data.capacity);
@@ -276,7 +276,7 @@ const CounselorDashboard = () => {
 
       try {
         const res = await axios.put(
-          `${baseURL}/api/counselor-requests/counselor/${userData.userId}/capacity`,
+          `${API_BASE_URL}/api/counselor-requests/counselor/${userData.userId}/capacity`,
           { capacity: capacityNum }
         );
         if (res.data.success) {
