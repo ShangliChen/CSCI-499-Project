@@ -165,18 +165,29 @@ const StudentProfile = () => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.put(`${baseURL}/api/student/profile/${id}`, formData);
-      setMessage(res.data.message);
-      setTimeout(() => setMessage(""), 3000);
-    } catch (err) {
-      console.error(err);
-      setMessage("Error updating profile");
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
+const handleUpdate = async (e) => {
+  e.preventDefault();
+
+  if (dobWarning) {
+    setMessage("❌ Please enter a valid Date of Birth.");
+    setTimeout(() => setMessage(""), 3000);
+    return;
+  }
+
+  try {
+    const res = await axios.put(
+      `${baseURL}/api/student/profile/${id}`,
+      formData
+    );
+    setMessage(res.data.message);
+    setTimeout(() => setMessage(""), 3000);
+  } catch (err) {
+    console.error(err);
+    setMessage("Error updating profile");
+    setTimeout(() => setMessage(""), 3000);
+  }
+};
+
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -409,70 +420,7 @@ const StudentProfile = () => {
             )}
           </div>
 
-          {/* CENTER COLUMN */}
-          <div className="space-y-6">
-            {/* Account Details */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Account Details</h3>
-              <form onSubmit={handleUpdate} className="grid grid-cols-1 gap-4">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  placeholder="Full Name"
-                  onChange={handleChange}
-                  className="border border-gray-300 p-2 rounded-md"
-                />
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  placeholder="Phone Number"
-                  onChange={handleChange}
-                  className="border border-gray-300 p-2 rounded-md"
-                />
-                <input
-                  type="date"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleDobChange}
-                  className="border border-gray-300 p-2 rounded-md"
-                  min={minDOB.toISOString().split("T")[0]}
-                  max={maxDOB.toISOString().split("T")[0]}
-                />
-                {dobWarning && (
-                  <p className="text-red-600 text-sm mt-1">{dobWarning}</p>
-                )}
 
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  placeholder="Address"
-                  onChange={handleChange}
-                  className="border border-gray-300 p-2 rounded-md"
-                />
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  placeholder="Short Bio"
-                  onChange={handleChange}
-                  className="border border-gray-300 p-2 rounded-md"
-                  rows="3"
-                />
-                <button
-                  type="submit"
-                  className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-md"
-                >
-                  Save Changes
-                </button>
-              </form>
-
-              {message && (
-                <p className="mt-4 text-sm text-green-600 text-center">{message}</p>
-              )}
-            </div>
-          </div>
 
           {/* Counselor Card - Expandable */}
           <div className="bg-white rounded-xl shadow">
@@ -597,18 +545,28 @@ const StudentProfile = () => {
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      name="dob"
-                      value={formData.dob}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth
+                  </label>
+
+                  <input
+                    type="date"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={handleDobChange}
+                    min={minDOB.toISOString().split("T")[0]}
+                    max={maxDOB.toISOString().split("T")[0]}
+                    className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  />
+
+                  {dobWarning && (
+                    <p className="text-red-600 text-sm mt-1">
+                      {dobWarning}
+                    </p>
+                  )}
+                </div>
+
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
